@@ -1,0 +1,163 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  AUTHOR
+  REPORTER
+  RESEARCH_AUTHOR
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  BLOCKED
+}
+
+enum PostStatus {
+  DRAFT
+  PENDING
+  PUBLISHED
+  BLOCKED
+}
+
+model User {
+  id        String     @id @default(uuid())
+  name      String
+  email     String     @unique
+  password  String
+  role      Role       @default(AUTHOR)
+  status    UserStatus @default(PENDING)
+  bio       String?
+  avatar    String?
+  position  String?    // e.g. "Senior Labour Correspondent"
+  socials   Json?      // Store socials as { twitter, linkedin, website, email }
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  posts     Post[]
+  issues    Issue[]    @relation("AdminIssues")
+}
+
+model Category {
+  id        String     @id @default(uuid())
+  name      String
+  slug      String     @unique
+  imageUrl  String?
+  parentId  String?
+  color     String?    // From db.js (e.g. orange-600)
+  parent    Category?  @relation("CategoryParent", fields: [parentId], references: [id])
+  children  Category[] @relation("CategoryParent")
+  posts     Post[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([slug])
+}
+
+model Post {
+  id            String     @id @default(uuid())
+  title         String
+  subtitle      String?
+  slug          String     @unique
+  content       Json       // For dynamic blocks (Text, Image, PullQuote, etc.)
+  excerpt       String?
+  featuredImage String?
+  heroCaption   String?
+  featured      Boolean    @default(false)
+  // Among featured=true posts: higher sorts first on homepage hero (PulseHero).
+  homeSpotlightPriority Int @default(0)
+  // Category / subcategory / author listings: higher sorts first (then publishedAt).
+  feedPriority  Int        @default(0)
+  isOpinion     Boolean    @default(false)
+  isVideo       Boolean    @default(false)
+  videoDuration String?
+  countryTag    String?
+  subcategory   String?
+  keyFacts      Json?      // Array of { icon, label, value }
+  pullQuote     Json?      // { text, attribution }
+  isPhotoStory  Boolean    @default(false)
+  authorId      String
+  author        User       @relation(fields: [authorId], references: [id])
+  categoryId    String
+  category      Category   @relation(fields: [categoryId], references: [id])
+  status        PostStatus @default(DRAFT)
+  viewCount     Int        @default(0)
+  tags          PostTag[]
+  issues        Issue[]
+  publishedAt   DateTime?  @default(now())
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([slug])
+}
+
+model Tag {
+  id    String    @id @default(uuid())
+  name  String
+  slug  String    @unique
+  posts PostTag[]
+
+  @@index([slug])
+}
+
+model PostTag {
+  postId String
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tagId  String
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+}
+
+model Issue {
+  id          String   @id @default(uuid())
+  postId      String
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  adminId     String
+  admin       User     @relation("AdminIssues", fields: [adminId], references: [id])
+  comment     String
+  isResolved  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+model Setting {
+  id    String @id @default(uuid())
+  key   String @unique
+  value Json
+}
+
+// Display advertising — one active row per slotKey wins by highest priority.
+model Advertisement {
+  id          String   @id @default(uuid())
+  slotKey     String
+  width       Int
+  height      Int
+  imageUrl    String
+  companyName String?
+  targetUrl   String?
+  active      Boolean  @default(true)
+  priority    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([slotKey, active])
+}

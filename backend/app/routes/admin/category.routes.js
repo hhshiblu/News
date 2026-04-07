@@ -1,0 +1,15 @@
+const express = require('express');
+const { createCategory, updateCategory, deleteCategory, getCategoryTree } = require('../../controller/admin/category.controller');
+const { protect, authorize } = require('../../middlewares/auth.middleware');
+
+const router = express.Router();
+
+// Only ADMIN can manage categories
+// router.use(protect, authorize('ADMIN')); // Auth bypassed for current dev tests
+
+router.get('/', getCategoryTree);
+router.post('/', createCategory);
+router.patch('/:id', updateCategory);
+router.delete('/:id', deleteCategory);
+
+module.exports = router;

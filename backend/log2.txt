@@ -1,0 +1,28 @@
+prisma:error 
+Invalid `prisma.user.deleteMany()` invocation in
+C:\Users\Shiblu\newsportal\backend\seed.js:5:21
+
+  2 
+  3 async function main() {
+  4   // Clear existing to avoid unique constraint if not wiped
+ΓåÆ 5   await prisma.user.deleteMany(
+
+PrismaClientKnownRequestError: 
+Invalid `prisma.user.deleteMany()` invocation in
+C:\Users\Shiblu\newsportal\backend\seed.js:5:21
+
+  2 
+  3 async function main() {
+  4   // Clear existing to avoid unique constraint if not wiped
+ΓåÆ 5   await prisma.user.deleteMany(
+
+    at Gr.handleRequestError (C:\Users\Shiblu\newsportal\backend\node_modules\@prisma\client\runtime\client.js:65:8286)
+    at Gr.handleAndLogRequestError (C:\Users\Shiblu\newsportal\backend\node_modules\@prisma\client\runtime\client.js:65:7581)
+    at Gr.request (C:\Users\Shiblu\newsportal\backend\node_modules\@prisma\client\runtime\client.js:65:7288)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async a (C:\Users\Shiblu\newsportal\backend\node_modules\@prisma\client\runtime\client.js:75:6730)
+    at async main (C:\Users\Shiblu\newsportal\backend\seed.js:5:3) {
+  code: 'ECONNREFUSED',
+  meta: { modelName: 'User' },
+  clientVersion: '7.6.0'
+}
