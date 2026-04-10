@@ -4,6 +4,7 @@ const postRoutes = require('./post.routes');
 const authorRoutes = require('./author.routes');
 const newsletterRoutes = require('./newsletter.routes');
 const tagRoutes = require('./tag.routes');
+const submissionRoutes = require('./submission.routes');
 const { getAdBySlot, getAdSlotPresets } = require('../../controller/public/ad.controller');
 const router = express.Router();
 
@@ -15,5 +16,6 @@ router.use('/posts', postRoutes);
 router.use('/authors', authorRoutes);
 router.use('/newsletter', newsletterRoutes);
 router.use('/tags', tagRoutes);
+router.use('/submissions', submissionRoutes);
 
 module.exports = router;

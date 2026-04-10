@@ -1,5 +1,5 @@
 const express = require('express');
-const { createPost, updatePost, deletePost, approvePost, getAdminPosts } = require('../../controller/admin/post.controller');
+const { createPost, updatePost, deletePost, approvePost, getAdminPosts, updatePostTags } = require('../../controller/admin/post.controller');
 const { protect, authorize } = require('../../middlewares/auth.middleware');
 
 const router = express.Router();
@@ -9,6 +9,7 @@ router.use(protect); // Ensure all routes below are logged in
 router.get('/', getAdminPosts);
 router.post('/', createPost);
 router.patch('/:id', updatePost);
+router.patch('/:id/tags', authorize('ADMIN'), updatePostTags);
 router.delete('/:id', deletePost);
 
 // Admin Only Route

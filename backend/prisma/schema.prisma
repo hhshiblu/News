@@ -161,3 +161,14 @@ model Advertisement {
 
   @@index([slotKey, active])
 }
+
+model PublicSubmission {
+  id          String   @id @default(uuid())
+  senderName  String?
+  senderEmail String?
+  title       String?
+  content     String
+  images      Json?      // JSON array of image URLs
+  status      String   @default("PENDING") // PENDING, REVIEWED
+  createdAt   DateTime @default(now())
+}

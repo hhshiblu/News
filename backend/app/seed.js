@@ -20,7 +20,7 @@ async function main() {
             status: 'ACTIVE',
             bio: 'Chief editor and system administrator.',
             avatar: 'https://i.pravatar.cc/150?u=admin'
-        }
+        }  
     });
     console.log("Admin ensured:", admin.email);
 

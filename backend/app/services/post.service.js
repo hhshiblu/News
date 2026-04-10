@@ -131,11 +131,44 @@ const getPostBySlugService = async (slug) => {
     return post;
 };
 
+const updatePostTagsService = async (postId, tagIds = []) => {
+    if (!Array.isArray(tagIds)) throw new Error("tagIds must be an array");
+
+    const unique = Array.from(new Set(tagIds.filter(Boolean).map(String)));
+    const breakingIds = await getBreakingTagIdSet();
+    const filtered = unique.filter((id) => !breakingIds.has(id));
+
+    const existingTags = await prisma.tag.findMany({
+        where: { id: { in: filtered } },
+        select: { id: true },
+    });
+    const existingIdSet = new Set(existingTags.map((t) => t.id));
+    const validTagIds = filtered.filter((id) => existingIdSet.has(id));
+
+    await prisma.$transaction([
+        prisma.postTag.deleteMany({ where: { postId } }),
+        ...(validTagIds.length
+            ? [prisma.postTag.createMany({ data: validTagIds.map((tagId) => ({ postId, tagId })) })]
+            : []),
+    ]);
+
+    // Return updated post with tags
+    return prisma.post.findUnique({
+        where: { id: postId },
+        include: {
+            author: { select: { name: true, avatar: true, role: true } },
+            category: { select: { name: true, slug: true, color: true } },
+            tags: { include: { tag: { select: { id: true, name: true, slug: true } } } },
+        },
+    });
+};
+
 module.exports = {
     createPostService,
     updatePostService,
     deletePostService,
     approvePostService,
     getPaginatedPostsService,
-    getPostBySlugService
+    getPostBySlugService,
+    updatePostTagsService
 };

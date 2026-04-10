@@ -7,6 +7,8 @@ const uploadRoutes = require('./upload.routes');
 const tagRoutes = require('./tag.routes');
 const issueRoutes = require('./issue.routes');
 const adRoutes = require('./ad.routes');
+const submissionRoutes = require('./submission.routes');
+const newsletterRoutes = require('./newsletter.routes');
 
 const router = express.Router();
 
@@ -18,5 +20,7 @@ router.use('/upload', uploadRoutes);
 router.use('/tags', tagRoutes);
 router.use('/issues', issueRoutes);
 router.use('/ads', adRoutes);
+router.use('/submissions', submissionRoutes);
+router.use('/newsletter', newsletterRoutes);
 
 module.exports = router;

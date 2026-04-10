@@ -75,4 +75,15 @@ const getAdminPosts = async (req, res, next) => {
     }
 };
 
-module.exports = { createPost, updatePost, deletePost, approvePost, getAdminPosts };
+const updatePostTags = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { tagIds } = req.body;
+        const result = await postService.updatePostTagsService(id, tagIds);
+        res.status(200).json({ success: true, data: result });
+    } catch (error) {
+        next(error);
+    }
+};
+
+module.exports = { createPost, updatePost, deletePost, approvePost, getAdminPosts, updatePostTags };
