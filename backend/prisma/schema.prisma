@@ -172,3 +172,30 @@ model PublicSubmission {
   status      String   @default("PENDING") // PENDING, REVIEWED
   createdAt   DateTime @default(now())
 }
+
+model Partner {
+  id         String   @id @default(uuid())
+  name       String
+  logoUrl    String
+  websiteUrl String?
+  active     Boolean  @default(true)
+  priority   Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([active, priority])
+}
+
+model TeamMember {
+  id         String   @id @default(uuid())
+  name       String
+  role       String?
+  photoUrl   String
+  profileUrl String?
+  active     Boolean  @default(true)
+  priority   Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([active, priority])
+}

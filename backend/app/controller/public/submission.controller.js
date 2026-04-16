@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require("../../db_query/prisma");
 
 const submitNews = async (req, res, next) => {
     try {

@@ -3,14 +3,12 @@
 import { useState } from "react";
 import { loginAction } from "@/actions/auth";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 import { ShieldCheck, Mail, Lock, Activity, ArrowRight, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
-    const router = useRouter();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -20,7 +18,7 @@ export default function LoginPage() {
         
         if (res.success) {
             toast.success("Welcome back to Editorial Hub!");
-            router.push("/admin");
+            window.location.assign("/admin");
         } else {
             toast.error(res.message || "Invalid credentials provided.");
         }

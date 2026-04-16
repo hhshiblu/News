@@ -1,10 +1,9 @@
 import { ChevronRight, Bookmark, Share2, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import CategoryHero from "@/components/category/CategoryHero";
 import Sidebar from "@/components/layout/Sidebar";
-import Footer from "@/components/layout/Footer";
-import Navbar from "@/components/layout/Navbar";
 import AdSlot from "@/components/ads/AdSlot";
 import MarketTicker from "@/components/sections/MarketTicker";
 import SectionHeader from "@/components/sections/SectionHeader";
@@ -58,7 +57,7 @@ export async function generateMetadata({ params, searchParams }) {
   };
 }
 
-export default async function ParentCategoryPage({ params, searchParams }) {
+async function ParentCategoryPageContent({ params, searchParams }) {
   const { categorySlug } = await params;
   const sp = await searchParams;
   let page = Math.max(1, parseInt(sp?.page, 10) || 1);
@@ -134,10 +133,9 @@ export default async function ParentCategoryPage({ params, searchParams }) {
 
   if (page > 1) {
     return (
-      <div className="bg-[#fcfcfc] min-h-screen flex flex-col">
-        <Navbar />
+      <div className="bg-[#fcfcfc]">
         <div className="w-full h-px bg-gray-200" />
-        <div className="max-w-[1280px] mx-auto px-4 py-4 flex-1 w-full">
+        <div className="max-w-[1280px] mx-auto px-4 py-4 w-full">
           <div className="flex flex-col lg:flex-row gap-4 lg:gap-5">
             <main className="flex-1 min-w-0">
               <nav className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-gray-400 mb-4 font-[Inter]">
@@ -167,7 +165,6 @@ export default async function ParentCategoryPage({ params, searchParams }) {
             </aside>
           </div>
         </div>
-        <Footer />
       </div>
     );
   }
@@ -181,8 +178,7 @@ export default async function ParentCategoryPage({ params, searchParams }) {
   const editorialFeed = allPosts.slice(12);
 
   return (
-    <div className="bg-[#fcfcfc] min-h-screen flex flex-col">
-      <Navbar />
+    <div className="bg-[#fcfcfc]">
       {/* Ribbon Removed (Live was there) */}
       <div className="w-full h-px bg-gray-200" />
 
@@ -257,7 +253,7 @@ export default async function ParentCategoryPage({ params, searchParams }) {
       {/* Economy-specific: MarketTicker */}
       {categorySlug === "economy" && <MarketTicker />}
 
-      <div className="max-w-[1280px] mx-auto px-4 py-4 flex-1">
+      <div className="max-w-[1280px] mx-auto px-4 py-4">
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-5">
           
           <main className="flex-1 min-w-0">
@@ -381,7 +377,26 @@ export default async function ParentCategoryPage({ params, searchParams }) {
         </div>
       </div>
 
-      <Footer />
     </div>
+  );
+}
+
+function CategoryPageSkeleton() {
+  return (
+    <div className="max-w-[1280px] mx-auto px-4 py-6 animate-pulse">
+      <div className="h-8 w-48 bg-gray-200 rounded mb-4" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 h-72 bg-gray-200 rounded-2xl" />
+        <div className="h-72 bg-gray-200 rounded-2xl" />
+      </div>
+    </div>
+  );
+}
+
+export default function ParentCategoryPage(props) {
+  return (
+    <Suspense fallback={<CategoryPageSkeleton />}>
+      <ParentCategoryPageContent {...props} />
+    </Suspense>
   );
 }

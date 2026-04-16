@@ -4,6 +4,16 @@ const prisma = require("../db_query/prisma");
 const { isValidSlotKey } = require("../constants/adSlots");
 
 const adsDir = path.join(__dirname, "../../uploads/ads");
+const AD_CACHE_TTL_MS = 15000;
+const adSlotCache = new Map();
+
+function clearAdCache(slotKey) {
+  if (slotKey) {
+    adSlotCache.delete(slotKey);
+    return;
+  }
+  adSlotCache.clear();
+}
 
 function deleteAdImageFiles(adId) {
   if (!adId || !fs.existsSync(adsDir)) return;
@@ -25,10 +35,20 @@ function imageUrlForId(adId, ext) {
 
 async function getActiveAdForSlot(slotKey) {
   if (!isValidSlotKey(slotKey)) return null;
-  return prisma.advertisement.findFirst({
+  const cached = adSlotCache.get(slotKey);
+  if (cached && cached.expiresAt > Date.now()) return cached.data;
+
+  const ad = await prisma.advertisement.findFirst({
     where: { slotKey, active: true },
     orderBy: [{ priority: "desc" }, { updatedAt: "desc" }],
   });
+
+  adSlotCache.set(slotKey, {
+    data: ad,
+    expiresAt: Date.now() + AD_CACHE_TTL_MS,
+  });
+
+  return ad;
 }
 
 async function listAds({ slotKey } = {}) {
@@ -52,7 +72,7 @@ async function createAd(data, file, adId) {
   const height = Math.min(2000, Math.max(1, parseInt(data.height, 10) || 250));
   const priority = Math.min(9999, Math.max(0, parseInt(data.priority, 10) || 0));
   const imageUrl = imageUrlForId(id, ext);
-  return prisma.advertisement.create({
+  const created = await prisma.advertisement.create({
     data: {
       id,
       slotKey: data.slotKey,
@@ -68,6 +88,8 @@ async function createAd(data, file, adId) {
       priority,
     },
   });
+  clearAdCache(data.slotKey);
+  return created;
 }
 
 async function updateAd(id, data, file) {
@@ -106,15 +128,26 @@ async function updateAd(id, data, file) {
     patch.imageUrl = imageUrlForId(id, ext);
   }
 
-  return prisma.advertisement.update({
+  const updated = await prisma.advertisement.update({
     where: { id },
     data: patch,
   });
+  clearAdCache(existing.slotKey);
+  if (patch.slotKey && patch.slotKey !== existing.slotKey) {
+    clearAdCache(patch.slotKey);
+  }
+  return updated;
 }
 
 async function deleteAd(id) {
+  const existing = await prisma.advertisement.findUnique({
+    where: { id },
+    select: { slotKey: true },
+  });
   deleteAdImageFiles(id);
-  return prisma.advertisement.delete({ where: { id } });
+  const deleted = await prisma.advertisement.delete({ where: { id } });
+  clearAdCache(existing?.slotKey);
+  return deleted;
 }
 
 module.exports = {

@@ -84,6 +84,8 @@ const getMenuGroups = (role) => {
                 icon: Users,
                 children: [
                   { title: "Authors List", url: "/dashboard/authors" },
+                  { title: "Our Team", url: "/dashboard/team-members" },
+                  { title: "Partners", url: "/dashboard/partners" },
                   { title: "Admin Panel", url: "/dashboard/users" },
                 ],
               },
@@ -148,18 +150,18 @@ export function AdminSidebar({ isOpen, setIsOpen, user = { role: "AUTHOR" } }) {
 
   return (
     <div
-      className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#002d29] md:border-r border-white/5 min-h-screen flex flex-col text-white transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"}`}
+      className={`fixed inset-y-0 left-0 z-50 w-64 min-w-[16rem] shrink-0 bg-[#8B0000] md:border-r border-white/10 min-h-screen flex flex-col text-white transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"}`}
     >
       <div className="flex items-center justify-between p-5 border-b border-white/5 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="flex bg-emerald-500/20 p-2 rounded-xl text-emerald-400">
+          <div className="flex bg-white/10 p-2 rounded-xl text-white">
             <Activity className="h-5 w-5" />
           </div>
           <div className="flex flex-col">
             <h2 className="text-[15px] font-bold tracking-tight">
               LabourPulse
             </h2>
-            <p className="text-[10px] font-semibold text-emerald-400/70 uppercase tracking-widest">
+            <p className="text-[10px] font-semibold text-white/70 uppercase tracking-widest">
               {role} HUB
             </p>
           </div>
@@ -188,12 +190,12 @@ export function AdminSidebar({ isOpen, setIsOpen, user = { role: "AUTHOR" } }) {
                     <button
                       onClick={() => toggleMenu(item.title)}
                       className={`flex items-center justify-between w-full px-3 py-2.5 rounded-xl transition-all duration-200 
-                          ${openMenus[item.title] ? "bg-white/5 text-white shadow-sm" : "hover:bg-white/[0.03] text-white/60"}
+                          ${openMenus[item.title] ? "bg-white/10 text-white shadow-sm" : "hover:bg-white/[0.06] text-white/70"}
                         `}
                     >
                       <div className="flex items-center gap-3">
                         <item.icon
-                          className={`w-[18px] h-[18px] ${openMenus[item.title] ? "text-emerald-400" : "text-current"}`}
+                          className={`w-[18px] h-[18px] ${openMenus[item.title] ? "text-white" : "text-current"}`}
                         />
                         <span className="text-[13px] font-semibold tracking-tight">
                           {item.title}
@@ -215,11 +217,11 @@ export function AdminSidebar({ isOpen, setIsOpen, user = { role: "AUTHOR" } }) {
                             href={child.url}
                             onClick={handleLinkClick}
                             className={`px-3 py-2 block rounded-lg text-[12px] font-medium transition-all duration-200 relative
-                                ${isActive ? "bg-emerald-500/10 text-emerald-400 font-bold" : "text-white/40 hover:text-white/80"}
+                                ${isActive ? "bg-white/10 text-white font-bold" : "text-white/60 hover:text-white"}
                               `}
                           >
                             {isActive && (
-                              <div className="absolute left-[-12px] top-1/2 -translate-y-1/2 w-1 h-3 bg-emerald-500 rounded-full" />
+                              <div className="absolute left-[-12px] top-1/2 -translate-y-1/2 w-1 h-3 bg-white rounded-full" />
                             )}
                             {child.title}
                           </Link>
@@ -232,11 +234,11 @@ export function AdminSidebar({ isOpen, setIsOpen, user = { role: "AUTHOR" } }) {
                     href={item.url}
                     onClick={handleLinkClick}
                     className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl transition-all duration-200 mb-1
-                         ${pathname === item.url ? "bg-emerald-500/10 text-emerald-400 font-bold shadow-sm" : "hover:bg-white/[0.03] text-white/60"}
+                         ${pathname === item.url ? "bg-white/10 text-white font-bold shadow-sm" : "hover:bg-white/[0.06] text-white/70"}
                       `}
                   >
                     <item.icon
-                      className={`w-[18px] h-[18px] ${pathname === item.url ? "text-emerald-400" : "text-current"}`}
+                      className={`w-[18px] h-[18px] ${pathname === item.url ? "text-white" : "text-current"}`}
                     />
                     <span className="text-[13px] font-semibold tracking-tight">
                       {item.title}
@@ -249,9 +251,9 @@ export function AdminSidebar({ isOpen, setIsOpen, user = { role: "AUTHOR" } }) {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-white/5 bg-[#002522]/90 space-y-3 shrink-0">
+      <div className="p-4 border-t border-white/10 bg-[#7A0000] space-y-3 shrink-0">
         <div className="flex items-center gap-3 px-2">
-          <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-[10px] font-black text-emerald-400 overflow-hidden">
+          <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-[10px] font-black text-white overflow-hidden">
             {user?.avatar ? (
               <img src={user.avatar} className="w-full h-full object-cover" />
             ) : (
@@ -262,14 +264,14 @@ export function AdminSidebar({ isOpen, setIsOpen, user = { role: "AUTHOR" } }) {
             <span className="text-[11px] font-bold text-white truncate">
               {user?.name || "Access User"}
             </span>
-            <span className="text-[9px] font-black text-emerald-500/60 uppercase tracking-widest truncate">
+            <span className="text-[9px] font-black text-white/70 uppercase tracking-widest truncate">
               {user?.email || "Pulse Editorial"}
             </span>
           </div>
         </div>
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-rose-400/80 hover:text-rose-400 hover:bg-rose-500/10 transition-all font-black text-[10px] uppercase tracking-[0.2em] group"
+          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-white/90 hover:text-white hover:bg-white/10 transition-all font-black text-[10px] uppercase tracking-[0.2em] group"
         >
           <LogOut className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" />{" "}
           Sign Out Session

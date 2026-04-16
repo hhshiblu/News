@@ -32,9 +32,9 @@ export function SidebarProvider({ children, sidebar }) {
 export default function SidebarTrigger() {
     const { setIsOpen } = useContext(SidebarContext);
     return (
-        <button 
-            onClick={() => setIsOpen(true)} 
-            className="md:hidden p-2.5 bg-gray-50 text-gray-500 hover:bg-emerald-50 hover:text-emerald-600 rounded-xl transition-all cursor-pointer active:scale-95 border border-gray-100"
+        <button
+            onClick={() => setIsOpen(true)}
+            className="md:hidden p-2.5 bg-white/10 text-white hover:bg-white/20 rounded-xl transition-all cursor-pointer active:scale-95 border border-white/20"
         >
             <Menu className="w-5 h-5" />
         </button>

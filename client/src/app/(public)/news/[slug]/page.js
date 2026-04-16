@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 import ReadingProgressBar from "@/components/article/ReadingProgressBar";
 import ShareButtons from "@/components/article/ShareButtons";
 import PullQuote from "@/components/article/PullQuote";
@@ -8,6 +9,7 @@ import RelatedArticles from "@/components/article/RelatedArticles";
 import AdSlot from "@/components/ads/AdSlot";
 import { getPostDetail, getNewsFeed } from "@/actions/public";
 import { authorSlugFromName } from "@/lib/authorSlug";
+import NewsDetailLoading from "./loading";
 
 function ChevronRightIcon({ className = "w-3 h-3 text-gray-200" }) {
   return (
@@ -62,6 +64,13 @@ const normalizePost = (post) => ({
   timestamp: formatTimeAgo(post.publishedAt),
 });
 
+const normalizeRichTextHtml = (html) => {
+  if (typeof html !== "string") return html;
+  return html
+    .replace(/&nbsp;|&#160;|\u00A0/g, " ")
+    .replace(/white-space\s*:\s*nowrap;?/gi, "");
+};
+
 /** Main story column — wide hero + body share one width */
 const ARTICLE_COL = "w-full max-w-[min(100%,52rem)] xl:max-w-[56rem]";
 
@@ -76,11 +85,10 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default async function ArticlePage({ params }) {
+async function ArticlePageContent({ params }) {
   const { slug } = await params;
   const res = await getPostDetail(slug);
   let article = res?.success ? res.data : null;
-
   if (!article) {
     return (
       <div className="max-w-[1280px] mx-auto px-4 py-32 text-center h-[60vh] flex flex-col justify-center">
@@ -185,7 +193,7 @@ export default async function ArticlePage({ params }) {
         </div>
       </div>
 
-      <div className="max-w-[1280px] mx-auto px-4">
+      <div className="max-w-[1280px] mx-auto px-4 overflow-x-hidden">
         <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 pb-10 pt-3">
           <main className="flex-1 min-w-0">
             <div className={`${ARTICLE_COL}`}>
@@ -252,7 +260,7 @@ export default async function ArticlePage({ params }) {
                 <div className="flex-1 min-w-0">
                   <article
                     id="article-content"
-                    className="article-content-flow article-body-readable min-w-0"
+                    className="article-content-flow article-body-readable min-w-0 w-full max-w-full"
                   >
                     {article.subtitle && (
                       <p className="text-sm text-gray-600 leading-relaxed font-[Inter] mb-3 font-medium italic border-l-2 border-primary pl-3">
@@ -260,7 +268,7 @@ export default async function ArticlePage({ params }) {
                       </p>
                     )}
 
-                    <div className="article-body-content space-y-3 text-gray-800 leading-[1.65] font-[Inter] text-[13px] md:text-[14px]">
+                    <div className="article-body-content space-y-3 text-gray-800 leading-[1.65] font-[Inter] text-[13px] md:text-[14px] break-words [overflow-wrap:anywhere] [&_*]:max-w-full [&_a]:break-all [&_pre]:overflow-x-auto">
                       {Array.isArray(article.content) ? (
                         article.content.map((block, idx) => {
                           const type = block.type?.toLowerCase();
@@ -323,9 +331,9 @@ export default async function ArticlePage({ params }) {
                             return (
                               <div
                                 key={idx}
-                                className="prose prose-sm prose-gray max-w-none text-gray-800 article-body-readable [&_h3]:text-base [&_h3]:mt-2.5 [&_h3]:mb-1 [&_p]:text-[13px] md:[&_p]:text-[14px] [&_p]:leading-relaxed"
+                                className="prose prose-sm prose-gray max-w-none text-gray-800 article-body-readable break-words [overflow-wrap:anywhere] [&_h3]:text-base [&_h3]:mt-2.5 [&_h3]:mb-1 [&_p]:text-[13px] md:[&_p]:text-[14px] [&_p]:leading-relaxed"
                                 dangerouslySetInnerHTML={{
-                                  __html: block.content,
+                                  __html: normalizeRichTextHtml(block.content),
                                 }}
                               />
                             );
@@ -335,8 +343,10 @@ export default async function ArticlePage({ params }) {
                         })
                       ) : (
                         <div
-                          className="prose prose-sm prose-gray max-w-none text-gray-800 article-body-readable [&_p]:text-[13px] md:[&_p]:text-[14px]"
-                          dangerouslySetInnerHTML={{ __html: article.content }}
+                          className="prose prose-sm prose-gray max-w-none text-gray-800 article-body-readable break-words [overflow-wrap:anywhere] [&_p]:text-[13px] md:[&_p]:text-[14px]"
+                          dangerouslySetInnerHTML={{
+                            __html: normalizeRichTextHtml(article.content),
+                          }}
                         />
                       )}
                     </div>
@@ -413,5 +423,13 @@ export default async function ArticlePage({ params }) {
         </div>
       </div>
     </>
+  );
+}
+
+export default function ArticlePage({ params }) {
+  return (
+    <Suspense fallback={<NewsDetailLoading />}>
+      <ArticlePageContent params={params} />
+    </Suspense>
   );
 }

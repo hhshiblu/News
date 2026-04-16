@@ -10,19 +10,13 @@ const signToken = (id) => {
 
 const loginUser = async (email, password) => {
   const user = await prisma.user.findUnique({ where: { email } });
-  console.log(user);
-  
   if (!user) throw new Error('Invalid credentials');
-  
+
   const isMatch = await bcrypt.compare(password, user.password);
-  
   if (!isMatch) throw new Error('Invalid credentials');
 
   const token = signToken(user.id);
-  
-  // Exclude password from output
   const { password: _, ...userWithoutPassword } = user;
-  
   return { user: userWithoutPassword, token };
 };
 

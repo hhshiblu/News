@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { X, Mail, Lock, User, Loader2 } from "lucide-react";
 import { loginAction, signupAction } from "@/actions/auth";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 
 // Social Icons SVGs for v1.x compatibility
 const BrandIcons = {
@@ -29,8 +28,6 @@ export default function LoginModal({ isOpen, onClose }) {
     password: ""
   });
 
-  const router = useRouter();
-
   useEffect(() => {
     setMounted(true);
     if (isOpen) {
@@ -55,7 +52,7 @@ export default function LoginModal({ isOpen, onClose }) {
         if (res.success) {
           toast.success("Welcome back!");
           onClose();
-          router.refresh();
+          window.location.reload();
         } else {
           toast.error(res.message || "Login failed");
         }
@@ -64,7 +61,7 @@ export default function LoginModal({ isOpen, onClose }) {
         if (res.success) {
           toast.success("Account created successfully!");
           onClose();
-          router.refresh();
+          window.location.reload();
         } else {
           toast.error(res.message || "Registration failed");
         }

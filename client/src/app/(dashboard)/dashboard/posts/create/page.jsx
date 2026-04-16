@@ -2,13 +2,20 @@
 
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { SquarePen, Type, Video, Trash2, Upload, Tag, Quote, Activity, Shield, Check, X, ChevronDown, MousePointer2, FileText, Zap } from "lucide-react";
+import { Type, Video, Trash2, Upload, Tag, Quote, Activity, Shield, X, ChevronDown, MousePointer2, FileText, Image as ImageIcon } from "lucide-react";
 import "react-quill-new/dist/quill.snow.css";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 // Drop-in React 19 replacement component 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false, loading: () => <p className="text-xs text-gray-500 font-medium">Loading Editor...</p> });
+
+const normalizeEditorHtml = (value) => {
+  if (typeof value !== "string") return value;
+  return value
+    .replace(/&nbsp;|&#160;|\u00A0/g, " ")
+    .replace(/white-space\s*:\s*nowrap;?/gi, "");
+};
 
 export default function CreatePostPage() {
   const router = useRouter();
@@ -128,7 +135,11 @@ export default function CreatePostPage() {
                     parsedBlocks.push({ type: b.type, content: 'http://localhost:5000' + uploadData.url, metaInfo: b.metaInfo });
                 }
             } else {
-                parsedBlocks.push({ type: b.type, content: b.content, metaInfo: b.metaInfo });
+                parsedBlocks.push({
+                  type: b.type,
+                  content: b.type === "text" ? normalizeEditorHtml(b.content) : b.content,
+                  metaInfo: b.metaInfo
+                });
             }
         }
         
@@ -174,36 +185,24 @@ export default function CreatePostPage() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto pb-32 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      
-      {/* Premium Sticky Toolbar */}
-      <div className="sticky top-0 z-40 flex items-center justify-between mb-10 pb-5 pt-4 border-b border-gray-100 bg-white/95 backdrop-blur-md">
-        <div className="flex items-center gap-4">
-            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl shadow-sm border border-emerald-100/50">
-                <SquarePen className="w-6 h-6" />
-            </div>
-            <div>
-                <h1 className="text-2xl font-black text-gray-900 tracking-tight leading-none">Article Studio</h1>
-                <div className="text-[10px] font-bold text-emerald-600/60 uppercase tracking-[0.2em] mt-1.5 flex items-center gap-1.5">
-                   <div className="w-1 h-1 bg-emerald-500 rounded-full animate-pulse" /> Live Composition Mode
-                </div>
-            </div>
+    <div className="max-w-6xl mx-auto pb-28 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h1 className="text-xl md:text-2xl font-black text-gray-900 tracking-tight leading-none">Create Post</h1>
+          <p className="text-[11px] text-gray-500 mt-1">Compact editor for fast newsroom publishing.</p>
         </div>
-        <div className="flex items-center gap-4">
-             <button onClick={() => router.back()} className="px-6 py-3 text-[11px] font-black text-gray-400 hover:text-gray-600 transition-colors uppercase tracking-widest cursor-pointer">Discard</button>
-             <button onClick={handleSubmit} className="px-10 py-3.5 bg-gray-900 text-white font-black text-[11px] rounded-2xl shadow-2xl shadow-black/20 hover:bg-black hover:-translate-y-0.5 transition-all uppercase tracking-[0.2em] active:scale-95 cursor-pointer flex items-center gap-2">
-                <MousePointer2 size={14} className="text-emerald-400" /> Publish Story
-             </button>
-        </div>
+        <button onClick={handleSubmit} className="px-5 py-2.5 bg-primary text-white font-bold text-[11px] rounded-lg hover:bg-[#8B0000] transition-all uppercase tracking-widest cursor-pointer flex items-center gap-2">
+          <MousePointer2 size={14} /> Create Post
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         
         {/* Main Editor Section */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="xl:col-span-2 space-y-4">
             
             {/* Core Metadata */}
-            <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+            <div className="bg-white p-4 md:p-5 rounded-xl border border-gray-100 shadow-sm space-y-4">
                 <div>
                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Headline</label>
                    <input 
@@ -224,7 +223,7 @@ export default function CreatePostPage() {
 
                 <div className="h-px bg-gray-50" />
 
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Primary Category</label>
                        <select value={parentCategoryId} onChange={e => { setParentCategoryId(e.target.value); setChildCategoryId(""); }} className="w-full border-gray-100 bg-gray-50 p-3 text-[13px] font-bold rounded-xl focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all cursor-pointer">
@@ -260,7 +259,7 @@ export default function CreatePostPage() {
             </div>
 
             {/* Featured Image / Thumbnail Upload */}
-            <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+            <div className="bg-white p-4 md:p-5 rounded-xl border border-gray-100 shadow-sm space-y-4">
                 <div className="flex items-center justify-between">
                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Thumbnail / Featured Image</label>
                     {featuredImage && (
@@ -278,7 +277,7 @@ export default function CreatePostPage() {
                         </div>
                     </div>
                 ) : (
-                    <label className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-gray-100 rounded-3xl bg-gray-50/30 hover:bg-emerald-50/30 hover:border-emerald-200 cursor-pointer transition-all">
+                    <label className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-100 rounded-xl bg-gray-50/30 hover:bg-emerald-50/30 hover:border-emerald-200 cursor-pointer transition-all">
                         <div className="p-4 bg-white rounded-2xl shadow-sm mb-4">
                             <Upload className="w-8 h-8 text-emerald-500" />
                         </div>
@@ -299,17 +298,11 @@ export default function CreatePostPage() {
             </div>
 
             {/* Block Builder */}
-            <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-8">
+            <div className="bg-white p-4 md:p-5 rounded-xl border border-gray-100 shadow-sm space-y-4">
                 <div className="flex items-center justify-between">
                     <h2 className="text-xs font-black text-gray-800 uppercase tracking-widest flex items-center gap-2">
                         <Activity className="w-4 h-4 text-emerald-500" /> Narrative Blocks
                     </h2>
-                    <div className="flex items-center gap-2">
-                        <button onClick={() => addBlock('text')} className="p-2 bg-gray-50 text-gray-600 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg transition-colors" title="Add Text"><Type size={16}/></button>
-                        <button onClick={() => addBlock('image')} className="p-2 bg-gray-50 text-gray-600 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg transition-colors" title="Add Image"><FileText size={16}/></button>
-                        <button onClick={() => addBlock('pullquote')} className="p-2 bg-gray-50 text-gray-600 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg transition-colors" title="Add Pullquote"><Quote size={16}/></button>
-                        <button onClick={() => addBlock('video')} className="p-2 bg-gray-50 text-gray-600 hover:bg-emerald-50 hover:text-emerald-600 rounded-lg transition-colors" title="Add Video"><Video size={16}/></button>
-                    </div>
                 </div>
 
                 <div className="space-y-4">
@@ -377,10 +370,10 @@ export default function CreatePostPage() {
         </div>
 
         {/* Sidebar Section */}
-        <div className="space-y-6">
+        <div className="space-y-4">
             
             {/* Publication Config */}
-            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+            <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm space-y-4">
                 <h3 className="text-xs font-black text-gray-800 uppercase tracking-widest border-b border-gray-50 pb-3">Publication Config</h3>
                 <p className="text-[10px] text-gray-500 leading-relaxed bg-gray-50 border border-gray-100 rounded-xl px-3 py-2.5">
                   <strong className="text-gray-700">Featured home cards, Must read, Breaking:</strong> only an{" "}
@@ -406,7 +399,7 @@ export default function CreatePostPage() {
             </div>
 
             {/* Taxonomy & Metadata */}
-            <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm space-y-6">
+            <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm space-y-4">
                 <h3 className="text-xs font-black text-gray-800 uppercase tracking-[0.2em] flex items-center gap-2.5">
                     <div className="w-2 h-2 bg-emerald-500 rounded-full" />
                     Taxonomy & Metadata
@@ -458,6 +451,22 @@ export default function CreatePostPage() {
                     </div>
                 </div>
             </div>
+        </div>
+      </div>
+      <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50">
+        <div className="bg-white border border-gray-200 shadow-xl rounded-xl px-2 py-2 flex items-center gap-1">
+          <button onClick={() => addBlock("text")} className="px-3 py-2 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100 flex items-center gap-1.5">
+            <Type size={14} /> Text
+          </button>
+          <button onClick={() => addBlock("image")} className="px-3 py-2 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100 flex items-center gap-1.5">
+            <ImageIcon size={14} /> Image
+          </button>
+          <button onClick={() => addBlock("pullquote")} className="px-3 py-2 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100 flex items-center gap-1.5">
+            <Quote size={14} /> Quote
+          </button>
+          <button onClick={() => addBlock("video")} className="px-3 py-2 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100 flex items-center gap-1.5">
+            <Video size={14} /> Video
+          </button>
         </div>
       </div>
     </div>

@@ -120,38 +120,14 @@ a, button, [role="button"], .nav-item, .cursor-pointer {
 .nav-item:hover::after {
   transform: scaleX(1);
 }
-.mega-menu {
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(10px);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  pointer-events: none;
-  z-index: 100;
-  top: 100%; /* Ensure it's exactly below the 58px height */
-}
-.nav-item:hover .mega-menu {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-  pointer-events: all;
-}
-/* Visual bridge to prevent hover loss */
-.mega-menu::before {
-  content: '';
-  position: absolute;
-  top: -10px;
-  left: 0;
-  right: 0;
-  height: 10px;
-  background: transparent;
-}
+/* Desktop category mega-menu is portaled in NavbarClient (fixed below header). */
 
 /* ── Mobile sidebar overlay ── */
 .mobile-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.55);
-  z-index: 200;
+  z-index: 2990;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
@@ -168,7 +144,7 @@ a, button, [role="button"], .nav-item, .cursor-pointer {
   bottom: 0;
   width: min(90vw, 420px);
   background: #fff;
-  z-index: 201;
+  z-index: 2991;
   transform: translateX(100%);
   transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   overflow-y: auto;
@@ -257,6 +233,47 @@ a, button, [role="button"], .nav-item, .cursor-pointer {
   text-align: left;
 }
 
+/* Hard guards for pasted/editor HTML so text never clips on the right side */
+.article-body-content,
+.article-body-content * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.article-body-content p,
+.article-body-content li,
+.article-body-content span,
+.article-body-content a,
+.article-body-content strong,
+.article-body-content em {
+  white-space: normal !important;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+.article-body-content p {
+  direction: auto;
+  unicode-bidi: plaintext;
+  text-align: start;
+}
+.article-body-content img,
+.article-body-content video,
+.article-body-content iframe,
+.article-body-content table {
+  max-width: 100% !important;
+  height: auto;
+}
+
+.article-body-content pre,
+.article-body-content code {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.article-body-content p,
+.article-body-content span {
+  text-align: left !important;
+  background-color: transparent !important;
+  color: inherit !important;
+}
 /* ── Pull quote ── */
 .pull-quote {
   border-left: 4px solid var(--color-primary);

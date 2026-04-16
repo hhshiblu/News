@@ -1,13 +1,12 @@
 import { ChevronRight, Bookmark, Share2 } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import CategoryHero from "@/components/category/CategoryHero";
 import CategoryGrid from "@/components/category/CategoryGrid";
 import BigCard from "@/components/news/BigCard";
 import HorizontalCard from "@/components/news/HorizontalCard";
 import Sidebar from "@/components/layout/Sidebar";
-import Footer from "@/components/layout/Footer";
-import Navbar from "@/components/layout/Navbar";
 import AdSlot from "@/components/ads/AdSlot";
 import Pagination from "@/components/ui/Pagination";
 import { CategoryTagRails } from "@/components/category/CategoryDeskRails";
@@ -55,7 +54,7 @@ export async function generateMetadata({ params, searchParams }) {
   };
 }
 
-export default async function SubcategoryPage({ params, searchParams }) {
+async function SubcategoryPageContent({ params, searchParams }) {
   const { categorySlug, childSlug } = await params;
   const sp = await searchParams;
   let page = Math.max(1, parseInt(sp?.page, 10) || 1);
@@ -132,9 +131,8 @@ export default async function SubcategoryPage({ params, searchParams }) {
 
   if (page > 1) {
     return (
-      <div className="bg-[#fcfcfc] min-h-screen flex flex-col">
-        <Navbar />
-        <div className="max-w-[1280px] mx-auto px-4 py-8 flex-1 w-full">
+      <div className="bg-[#fcfcfc]">
+        <div className="max-w-[1280px] mx-auto px-4 py-8 w-full">
           <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
             <main className="flex-1 min-w-0">
               <nav className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-gray-400 mb-4 font-[Inter] flex-wrap">
@@ -164,7 +162,6 @@ export default async function SubcategoryPage({ params, searchParams }) {
             </aside>
           </div>
         </div>
-        <Footer />
       </div>
     );
   }
@@ -176,8 +173,7 @@ export default async function SubcategoryPage({ params, searchParams }) {
   const gridCoverage = displayArticles.slice(4); // Show EVERYTHING from index 4 onwards
 
   return (
-    <div className="bg-[#fcfcfc] min-h-screen flex flex-col">
-      <Navbar />
+    <div className="bg-[#fcfcfc]">
       {/* Modern Breadcrumb & Subcategory Title */}
       <div className="bg-white border-b border-gray-100">
         <div className="max-w-[1280px] mx-auto px-4 py-4 md:py-5">
@@ -208,7 +204,7 @@ export default async function SubcategoryPage({ params, searchParams }) {
         </div>
       </div>
 
-      <div className="max-w-[1280px] mx-auto px-4 py-6 md:py-8 flex-1">
+      <div className="max-w-[1280px] mx-auto px-4 py-6 md:py-8">
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           
           <main className="flex-1 min-w-0">
@@ -318,7 +314,27 @@ export default async function SubcategoryPage({ params, searchParams }) {
         </div>
       </div>
 
-      <Footer />
     </div>
+  );
+}
+
+function ChildCategoryPageSkeleton() {
+  return (
+    <div className="max-w-[1280px] mx-auto px-4 py-6 animate-pulse">
+      <div className="h-8 w-52 bg-gray-200 rounded mb-4" />
+      <div className="h-72 bg-gray-200 rounded-2xl mb-5" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="h-40 bg-gray-200 rounded-xl" />
+        <div className="h-40 bg-gray-200 rounded-xl" />
+      </div>
+    </div>
+  );
+}
+
+export default function SubcategoryPage(props) {
+  return (
+    <Suspense fallback={<ChildCategoryPageSkeleton />}>
+      <SubcategoryPageContent {...props} />
+    </Suspense>
   );
 }

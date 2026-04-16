@@ -14,6 +14,12 @@ const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false, loadin
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 
 const BREAKING_SLUGS = ["breaking-news", "breaking"];
+const normalizeEditorHtml = (value) => {
+  if (typeof value !== "string") return value;
+  return value
+    .replace(/&nbsp;|&#160;|\u00A0/g, " ")
+    .replace(/white-space\s*:\s*nowrap;?/gi, "");
+};
 
 export default function EditPostPage({ params }) {
   const unwrappedParams = React.use(params);
@@ -179,7 +185,11 @@ export default function EditPostPage({ params }) {
             }
         } else {
             // Unmodified Image/Video Blocks carry their original content URL silently! Completely solves "be carefull" delete/add.
-            parsedBlocks.push({ type: b.type, content: b.content, metaInfo: b.videoSource });
+            parsedBlocks.push({
+              type: b.type,
+              content: b.type === "text" ? normalizeEditorHtml(b.content) : b.content,
+              metaInfo: b.videoSource
+            });
         }
     }
     

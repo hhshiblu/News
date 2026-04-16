@@ -4,6 +4,15 @@ import Footer from "@/components/layout/Footer";
 import { Toaster } from "sonner";
 import HomeTopAd from "@/components/layout/HomeTopAd";
 
+export const metadata = {
+  title: {
+    default: "LabourPulse",
+    template: "%s | LabourPulse",
+  },
+  description:
+    "Latest labour, economy, politics, and international news with in-depth reporting.",
+};
+
 export default function PublicLayout({ children }) {
   return (
     <>
@@ -14,7 +23,7 @@ export default function PublicLayout({ children }) {
       <BreakingNewsTicker />
 
       {/* Page Content */}
-      <main>{children}</main>
+      <main className="w-full min-h-[calc(100dvh-18rem)]">{children}</main>
 
       {/* Footer */}
       <Footer />
