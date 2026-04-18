@@ -12,21 +12,10 @@ import Pagination from "@/components/ui/Pagination";
 import { CategoryTagRails } from "@/components/category/CategoryDeskRails";
 import { fetchPublicPosts } from "@/lib/api";
 import { buildTagLanes } from "@/lib/postLanes";
+import { getPublicCategoryBySlugAction } from "@/actions/public-extra.action";
 
 const CHILD_CATEGORY_PAGE_SIZE = 30;
 const ARCHIVE_PAGE_SIZE = 12;
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api/v1/public';
-
-async function getCategoryData(slug) {
-  try {
-    const res = await fetch(`${API_BASE_URL}/categories/${slug}`, { cache: 'no-store' });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch (error) {
-    return null;
-  }
-}
 
 const normalizePost = (post) => ({
   ...post,
@@ -41,8 +30,8 @@ export async function generateMetadata({ params, searchParams }) {
   const { categorySlug, childSlug } = await params;
   const sp = await searchParams;
   const page = Math.max(1, parseInt(sp?.page, 10) || 1);
-  const categoryData = await getCategoryData(childSlug);
-  const parentData = await getCategoryData(categorySlug);
+  const categoryData = await getPublicCategoryBySlugAction(childSlug);
+  const parentData = await getPublicCategoryBySlugAction(categorySlug);
   
   const label = categoryData?.data?.name || (childSlug || "").charAt(0).toUpperCase() + (childSlug || "").slice(1);
   const parentLabel = parentData?.data?.name || (categorySlug || "").charAt(0).toUpperCase() + (categorySlug || "").slice(1);
@@ -61,8 +50,8 @@ async function SubcategoryPageContent({ params, searchParams }) {
   const allPage = Math.max(1, parseInt(sp?.allPage, 10) || 1);
 
   const [categoryRes, parentRes] = await Promise.all([
-    getCategoryData(childSlug),
-    getCategoryData(categorySlug)
+    getPublicCategoryBySlugAction(childSlug),
+    getPublicCategoryBySlugAction(categorySlug)
   ]);
 
   const categoryData = categoryRes?.data;

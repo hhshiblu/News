@@ -68,7 +68,7 @@ export default function PremiumCategoryLayout({ articles, label, icon }) {
              <p className="text-xs text-gray-400 mb-4 font-[Inter]">Join 50k+ readers receiving our specialized newsletter.</p>
              <div className="flex gap-2">
                <input type="email" placeholder="Your email" className="bg-white/10 border border-white/20 px-3 py-2 rounded text-xs w-full focus:outline-none focus:border-white/40" />
-               <button className="bg-primary hover:bg-primary-dark px-4 py-2 rounded text-xs font-bold transition-all">JOIN</button>
+               <button className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded text-xs font-bold transition-all">JOIN</button>
              </div>
           </div>
         </div>

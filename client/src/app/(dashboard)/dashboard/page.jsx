@@ -2,27 +2,13 @@ import { FileText, ShieldAlert, ArrowRight, Activity, TrendingUp, CheckCircle, C
 import Link from "next/link";
 import React from "react";
 import { ViewsChart } from "@/components/DashboardCharts";
-import { cookies } from "next/headers";
 import { getMe } from "@/lib/server-auth";
-
-async function getStats() {
-    try {
-        const cookieStore = await cookies();
-        const res = await fetch("http://localhost:5000/api/v1/admin/posts?limit=5", {
-            headers: { Cookie: cookieStore.toString() },
-            cache: 'no-store'
-        });
-        if (!res.ok) return { total: 0, posts: [] };
-        return await res.json();
-    } catch (e) {
-        return { total: 0, posts: [] };
-    }
-}
+import { getAdminPostsAction } from "@/actions/admin-data.action";
 
 export default async function DashboardPage() {
   const user = await getMe();
   const isAdmin = user?.role === 'ADMIN';
-  const { total, posts } = await getStats();
+  const { total, posts } = await getAdminPostsAction("limit=5");
   const pendingCount = posts.filter(p => p.status === 'PENDING').length;
 
   const stats = [

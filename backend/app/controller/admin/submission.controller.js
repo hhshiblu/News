@@ -43,6 +43,18 @@ const getNewsletterSubscribers = async (req, res, next) => {
     }
 };
 
+const deleteNewsletterSubscriber = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        await prisma.newsletterSubscriber.delete({
+            where: { id }
+        });
+        res.status(200).json({ success: true, message: 'Subscriber removed' });
+    } catch (err) {
+        next(err);
+    }
+};
+
 const deleteSubmission = async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -76,6 +88,7 @@ const downloadImage = async (req, res, next) => {
 module.exports = {
     getSubmissions,
     getNewsletterSubscribers,
+    deleteNewsletterSubscriber,
     deleteSubmission,
     downloadImage
 };

@@ -4,7 +4,7 @@ import { AdminSidebar } from "@/components/AdminSidebar";
 import SidebarTrigger, { SidebarProvider } from "@/components/SidebarTrigger";
 import { Toaster } from "sonner";
 import { Search, Bell, User, ChevronDown, Settings, LogOut } from "lucide-react";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { logoutAction } from "@/actions/auth";
 import { useRouter } from "next/navigation";
 
@@ -18,7 +18,17 @@ export default function DashboardShell({ user, children }) {
   };
 
   return (
-    <SidebarProvider sidebar={<AdminSidebar user={user} />}>
+    <SidebarProvider
+      sidebar={
+        <Suspense
+          fallback={
+            <div className="fixed inset-y-0 left-0 z-50 w-64 min-w-[16rem] shrink-0 bg-[#8B0000] md:relative min-h-screen border-r border-white/10" />
+          }
+        >
+          <AdminSidebar user={user} />
+        </Suspense>
+      }
+    >
       <header className="flex h-[64px] shrink-0 items-center justify-between border-b border-red-800 px-3 lg:px-6 bg-primary z-20 w-full sticky top-0">
         <div className="flex items-center gap-4">
           <SidebarTrigger />
@@ -78,8 +88,8 @@ export default function DashboardShell({ user, children }) {
         </div>
       </header>
 
-      <main className="flex-1 overflow-auto bg-gray-50 p-3 md:p-5 lg:p-6 w-full custom-scrollbar">
-        <div className="mx-auto max-w-7xl w-full">{children}</div>
+      <main className="flex-1 overflow-auto bg-gray-50 px-2 py-3 sm:px-3 sm:py-4 md:px-4 w-full custom-scrollbar">
+        <div className="mx-auto max-w-7xl w-full min-w-0">{children}</div>
       </main>
 
       <Toaster position="top-right" richColors closeButton />

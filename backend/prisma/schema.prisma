@@ -174,28 +174,39 @@ model PublicSubmission {
 }
 
 model Partner {
-  id         String   @id @default(uuid())
-  name       String
-  logoUrl    String
-  websiteUrl String?
-  active     Boolean  @default(true)
-  priority   Int      @default(0)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id           String   @id @default(uuid())
+  name         String
+  logoUrl      String
+  websiteUrl   String?
+  description  String?
+  industry     String?
+  contactEmail String?
+  contactPhone String?
+  address      String?
+  active       Boolean  @default(true)
+  priority     Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([active, priority])
 }
 
 model TeamMember {
-  id         String   @id @default(uuid())
-  name       String
-  role       String?
-  photoUrl   String
-  profileUrl String?
-  active     Boolean  @default(true)
-  priority   Int      @default(0)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id              String   @id @default(uuid())
+  name            String
+  role            String?
+  photoUrl        String
+  description     String?
+  email           String?
+  phone           String?
+  department      String?
+  location        String?
+  experienceYears Int?
+  skills          String?
+  active          Boolean  @default(true)
+  priority        Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([active, priority])
 }

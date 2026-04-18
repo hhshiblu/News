@@ -1,152 +1,136 @@
-import { CircleCheckBig, CircleX, Image as ImageIcon, Search, Filter, ArrowRight, UserCircle2, Clock } from "lucide-react";
+import { CircleCheckBig, Image as ImageIcon, Clock, FileText } from "lucide-react";
 import Link from "next/link";
 import PostActionButtons from "../../../../components/admin/PostActionButtons";
-import { cookies } from "next/headers";
-
-async function getMe() {
-    try {
-        const cookieStore = await cookies();
-        const res = await fetch("http://localhost:5000/api/v1/admin/auth/me", {
-            headers: { Cookie: cookieStore.toString() },
-            cache: 'no-store'
-        });
-        if (!res.ok) return null;
-        const data = await res.json();
-        return data.data;
-    } catch (e) {
-        return null;
-    }
-}
+import { getAdminPostsAction } from "@/actions/admin-data.action";
+import { getMe } from "@/lib/server-auth";
+import PostsStatusFilter from "@/components/dashboard/posts/PostsStatusFilter";
 
 export default async function AllNewsPage({ searchParams }) {
   const resolvedParams = await searchParams;
-  const statusFilter = resolvedParams?.status || 'all';
+  const statusFilter = resolvedParams?.status || "all";
   const user = await getMe();
 
   const queryParams = new URLSearchParams();
-  if(statusFilter !== 'all') {
-      queryParams.append('status', statusFilter.toUpperCase());
+  if (statusFilter !== "all") {
+    queryParams.append("status", statusFilter.toUpperCase());
   }
 
-  let posts = [];
-  try {
-      const cookieStore = await cookies();
-      const res = await fetch(`http://localhost:5000/api/v1/admin/posts?${queryParams.toString()}`, { 
-          headers: { Cookie: cookieStore.toString() },
-          cache: "no-store" 
-      });
-      if(res.ok) {
-          const data = await res.json();
-          posts = data.posts || [];
-      }
-  } catch(e) {
-      console.log("Failed reaching Node.js REST endpoints via Server Components");
-  }
+  const postsRes = await getAdminPostsAction(queryParams.toString());
+  const posts = postsRes.posts || [];
+  const count = posts.length;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700 pb-20">
-      
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black text-gray-900 tracking-tight">Editorial Archives</h1>
-          <p className="text-sm font-medium text-gray-400 mt-1 uppercase tracking-widest">Article Lifecycle & Moderation Hub</p>
+    <div className="space-y-5 animate-in fade-in duration-700 pb-20">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2 gap-y-1">
+            <h1 className="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+              <FileText className="w-5 h-5 text-primary shrink-0" />
+              News articles
+            </h1>
+            <span
+              className="text-[12px] font-semibold tabular-nums text-gray-500"
+              title={`${count} article${count === 1 ? "" : "s"} in this list`}
+            >
+              ({count})
+            </span>
+          </div>
+          <p className="text-[13px] text-gray-500 font-medium mt-1">
+            Filter by status, preview, edit, or moderate stories.
+          </p>
         </div>
-        {user?.role !== 'ADMIN' && (
-          <Link href="/dashboard/posts/create" className="px-6 py-3 bg-emerald-600 text-white font-black text-xs rounded-2xl shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 transition-all uppercase tracking-widest flex items-center gap-2 active:scale-95">
-            + Draft New Story
+        {user?.role !== "ADMIN" && (
+          <Link
+            href="/dashboard/posts/create"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-white font-bold text-[12px] rounded-xl shadow-md shadow-primary/20 hover:bg-primary-dark transition-colors uppercase tracking-wide shrink-0"
+          >
+            + New article
           </Link>
         )}
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex items-center gap-2 bg-white p-1.5 inline-flex rounded-2xl border border-gray-100 shadow-sm">
-        {['all', 'PUBLISHED', 'PENDING', 'BLOCKED'].map((status) => (
-          <Link 
-            key={status}
-            href={`/dashboard/posts?status=${status}`} 
-            className={`px-5 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${statusFilter.toUpperCase() === status.toUpperCase() ? 'bg-gray-900 text-white shadow-lg shadow-black/20' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}
-          >
-            {status === 'all' ? 'Entire Library' : status}
-          </Link>
-        ))}
-      </div>
-
-      {/* Table Container */}
-      <div className="bg-white border border-gray-100 rounded-[32px] shadow-sm overflow-hidden">
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <PostsStatusFilter statusFilter={statusFilter} />
         <div className="overflow-x-auto custom-scrollbar">
-          <table className="w-full text-left text-sm text-gray-600 border-collapse">
-            <thead className="bg-gray-50/50 text-[11px] uppercase font-black text-gray-400 tracking-[0.1em]">
+          <table className="w-full text-left text-sm text-gray-600 border-collapse min-w-[640px]">
+            <thead className="bg-[#fcfdfd] border-b border-gray-200 text-[10px] uppercase font-semibold text-gray-500 tracking-wider">
               <tr>
-                <th className="px-8 py-5 border-b border-gray-50">Visual Asset</th>
-                <th className="px-6 py-5 border-b border-gray-50">Article Identity</th>
-                <th className="px-6 py-5 border-b border-gray-50">Curator</th>
-                <th className="px-6 py-5 border-b border-gray-50">Taxonomy</th>
-                <th className="px-6 py-5 border-b border-gray-50 text-center">Status</th>
-                <th className="px-8 py-5 border-b border-gray-50 text-right">Moderation Actions</th>
+                <th className="px-3 sm:px-4 py-3">Visual</th>
+                <th className="px-3 sm:px-4 py-3">Article</th>
+                <th className="px-3 sm:px-4 py-3">Author</th>
+                <th className="px-3 sm:px-4 py-3">Category</th>
+                <th className="px-3 sm:px-4 py-3 text-center">Status</th>
+                <th className="px-3 sm:px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
-              {posts.map(post => {
-                 let loadedImage = post.featuredImage;
-                 if(!loadedImage && post.content) {
-                    try { 
-                        const contentArr = typeof post.content === 'object' ? post.content : JSON.parse(post.content);
-                        const firstImage = contentArr.find(c => c.type === 'image');
-                        if(firstImage) loadedImage = firstImage.content;
-                    } catch(e) {}
-                 }
+            <tbody className="divide-y divide-gray-100">
+              {posts.map((post) => {
+                let loadedImage = post.featuredImage;
+                if (!loadedImage && post.content) {
+                  try {
+                    const contentArr = typeof post.content === "object" ? post.content : JSON.parse(post.content);
+                    const firstImage = contentArr.find((c) => c.type === "image");
+                    if (firstImage) loadedImage = firstImage.content;
+                  } catch (_) {}
+                }
 
-                 return (
-                 <tr key={post.id} className="hover:bg-gray-50/30 transition-all group">
-                  <td className="px-8 py-4">
-                     {loadedImage ? (
-                         <div className="w-14 h-14 rounded-2xl border border-gray-100 overflow-hidden shadow-sm group-hover:scale-105 transition-transform">
-                             <img src={loadedImage} alt="Cover" className="w-full h-full object-cover" />
-                         </div>
-                     ) : (
-                         <div className="w-14 h-14 rounded-2xl border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-gray-300">
-                             <ImageIcon className="w-5 h-5" />
-                         </div>
-                     )}
-                  </td>
-                  <td className="px-6 py-4">
+                return (
+                  <tr key={post.id} className="hover:bg-gray-50/70 transition-colors group">
+                    <td className="px-3 sm:px-4 py-2.5">
+                      {loadedImage ? (
+                        <div className="w-14 h-14 rounded-2xl border border-gray-100 overflow-hidden shadow-sm group-hover:scale-105 transition-transform">
+                          <img src={loadedImage} alt="" className="w-full h-full object-cover" />
+                        </div>
+                      ) : (
+                        <div className="w-14 h-14 rounded-2xl border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-gray-300">
+                          <ImageIcon className="w-5 h-5" />
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-3 sm:px-4 py-2.5">
                       <div className="flex flex-col gap-1 max-w-md truncate">
-                          <span className="text-[13px] font-black text-gray-900 group-hover:text-emerald-700 transition-colors">{post.title}</span>
-                          <div className="flex items-center gap-3 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-                            <Clock size={12}/> {new Date(post.createdAt).toLocaleDateString()}
-                          </div>
+                        <span className="text-[13px] font-bold text-gray-900 group-hover:text-primary transition-colors">
+                          {post.title}
+                        </span>
+                        <div className="flex items-center gap-3 text-[11px] font-medium text-gray-400 uppercase tracking-wide">
+                          <Clock size={12} /> {new Date(post.createdAt).toLocaleDateString()}
+                        </div>
                       </div>
-                  </td>
-                  <td className="px-6 py-4">
-                     <div className="flex items-center gap-3">
-                         <div className="w-6 h-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-[10px] font-black border border-emerald-100 uppercase">{post.author?.name?.charAt(0)}</div>
-                         <span className="text-[13px] font-bold text-gray-700">{post.author?.name || "Global Editor"}</span>
-                     </div>
-                  </td>
-                  <td className="px-6 py-4">
-                     <span className="text-[11px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-100">{post.category?.name || "Uncategorized"}</span>
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    {post.status === 'PUBLISHED' ? (
-                      <span className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-100">
-                        <CircleCheckBig color="#10b981" size={12} /> Active
+                    </td>
+                    <td className="px-3 sm:px-4 py-2.5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-6 h-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-[10px] font-bold border border-emerald-100 uppercase">
+                          {post.author?.name?.charAt(0)}
+                        </div>
+                        <span className="text-[13px] font-semibold text-gray-700">{post.author?.name || "—"}</span>
+                      </div>
+                    </td>
+                    <td className="px-3 sm:px-4 py-2.5">
+                      <span className="text-[11px] font-bold uppercase tracking-wide text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100">
+                        {post.category?.name || "Uncategorized"}
                       </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-orange-500 bg-orange-50 px-3 py-1.5 rounded-xl border border-orange-100">
-                        <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" /> {post.status}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-8 py-4 text-right">
-                    <PostActionButtons post={post} userRole={user?.role} />
-                  </td>
-                </tr>
-              )})}
+                    </td>
+                    <td className="px-3 sm:px-4 py-2.5 text-center">
+                      {post.status === "PUBLISHED" ? (
+                        <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-100">
+                          <CircleCheckBig color="#059669" size={12} /> Active
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-orange-600 bg-orange-50 px-2.5 py-1 rounded-lg border border-orange-100">
+                          <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" /> {post.status}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-3 sm:px-4 py-2.5 text-right">
+                      <PostActionButtons post={post} userRole={user?.role} />
+                    </td>
+                  </tr>
+                );
+              })}
               {posts.length === 0 && (
                 <tr>
-                  <td colSpan="6" className="px-8 py-20 text-center text-gray-400 text-sm font-bold uppercase tracking-widest">
-                    No editorial records match the query.
+                  <td colSpan={6} className="px-4 py-16 text-center text-gray-400 text-sm font-semibold">
+                    No articles match this filter.
                   </td>
                 </tr>
               )}

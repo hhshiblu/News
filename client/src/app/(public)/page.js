@@ -1,4 +1,5 @@
 import { getNewsFeed, getCategories } from "@/actions/public";
+import { getPublicPartnersAction } from "@/actions/public-extra.action";
 import { Suspense } from "react";
 
 import PulseHero from "@/components/sections/PulseHero";
@@ -24,21 +25,9 @@ export const metadata = {
 
 const MAIN_DESK_POSTS = 14;
 const EXTRA_DESK_POSTS = 8;
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
-
-async function getPublicPartners() {
-  try {
-    const res = await fetch(`${API_BASE}/public/partners`, { cache: "no-store" });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return json?.data || [];
-  } catch (_) {
-    return [];
-  }
-}
 
 async function HomePageContent() {
-  const partners = await getPublicPartners();
+  const partners = await getPublicPartnersAction();
   const catRes = await getCategories();
   const allCats = catRes.data || [];
   const getCat = (slug) =>
@@ -160,21 +149,23 @@ async function HomePageContent() {
           <p className="text-[10px] font-black tracking-[0.22em] uppercase text-gray-500 text-center mb-4 font-[Inter]">
             Trusted Partners
           </p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-            {(partners || []).slice(0, 10).map((partner) => (
-              <a
-                key={partner.id}
-                href={partner.websiteUrl || "#"}
-                target={partner.websiteUrl ? "_blank" : undefined}
-                rel={partner.websiteUrl ? "noopener noreferrer" : undefined}
-                className="group relative rounded-lg border border-gray-100 bg-white p-3 h-20 flex items-center justify-center overflow-hidden"
-              >
-                <img src={partner.logoUrl} alt={partner.name} className="max-h-10 object-contain" />
-                <div className="absolute inset-0 bg-black/60 text-white text-[11px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-center px-2">
-                  {partner.name}
-                </div>
-              </a>
-            ))}
+          <div className="overflow-hidden">
+            <div className="ticker-track">
+              {[...(partners || []).slice(0, 10), ...(partners || []).slice(0, 10)].map((partner, idx) => (
+                <a
+                  key={`${partner.id}-${idx}`}
+                  href={partner.websiteUrl || "#"}
+                  target={partner.websiteUrl ? "_blank" : undefined}
+                  rel={partner.websiteUrl ? "noopener noreferrer" : undefined}
+                  className="group relative rounded-lg border border-gray-100 bg-white p-3 h-20 w-[160px] mx-1.5 shrink-0 flex items-center justify-center overflow-hidden"
+                >
+                  <img src={partner.logoUrl} alt={partner.name} className="max-h-10 object-contain" />
+                  <div className="absolute inset-0 bg-black/60 text-white text-[11px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-center px-2">
+                    {partner.name}
+                  </div>
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       </section>

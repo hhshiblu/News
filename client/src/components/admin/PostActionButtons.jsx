@@ -1,6 +1,6 @@
 "use client";
 
-import { Eye, Pencil, Trash2, Ban, Check, TriangleAlert, X, Tag } from "lucide-react";
+import { Eye, Pencil, Trash2, Ban, Check, TriangleAlert, X, Tag, CircleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { deletePostAction, updatePostStatusAction } from "../../actions/post.action";
 import { createIssueAction } from "../../actions/issue.action";
@@ -13,6 +13,7 @@ export default function PostActionButtons({ post, userRole = 'AUTHOR' }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showIssueModal, setShowIssueModal] = useState(false);
+  const [showIssueListModal, setShowIssueListModal] = useState(false);
   const [showTagsModal, setShowTagsModal] = useState(false);
   const [allTags, setAllTags] = useState([]);
   const [tagSearch, setTagSearch] = useState("");
@@ -20,6 +21,8 @@ export default function PostActionButtons({ post, userRole = 'AUTHOR' }) {
   const [savingTags, setSavingTags] = useState(false);
   const [issueDescription, setIssueDescription] = useState("");
   const [issueSeverity, setIssueSeverity] = useState("MEDIUM");
+  const [postIssues, setPostIssues] = useState([]);
+  const [issueListLoading, setIssueListLoading] = useState(false);
 
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 
@@ -103,6 +106,28 @@ export default function PostActionButtons({ post, userRole = 'AUTHOR' }) {
       }
   };
 
+  const openIssueList = async () => {
+    setShowIssueListModal(true);
+    setIssueListLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/admin/issues`, { credentials: "include" });
+      const data = await res.json();
+      const all = Array.isArray(data?.data) ? data.data : [];
+      const filtered = all.filter((issue) => {
+        const issuePost = issue?.post || {};
+        if (issuePost?.id && issuePost.id === post.id) return true;
+        if (issuePost?.slug && post.slug && issuePost.slug === post.slug) return true;
+        return issuePost?.title && post.title && issuePost.title === post.title;
+      });
+      setPostIssues(filtered);
+    } catch (_) {
+      toast.error("Failed to load issue history");
+      setPostIssues([]);
+    } finally {
+      setIssueListLoading(false);
+    }
+  };
+
   const executeDelete = async () => {
     setIsDeleting(true);
     setShowDeleteModal(false);
@@ -119,30 +144,33 @@ export default function PostActionButtons({ post, userRole = 'AUTHOR' }) {
 
   return (
     <>
-      <div className="flex items-center justify-end gap-1 px-4">
+      <div className="flex flex-nowrap items-center justify-end gap-0.5 sm:gap-1 overflow-x-auto max-w-[min(100vw,28rem)] sm:max-w-none ml-auto py-0.5 [-webkit-overflow-scrolling:touch]">
         {isAdmin && (
             <>
                 {currentStatus !== 'PUBLISHED' ? (
-                <button onClick={handleToggleStatus} className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all cursor-pointer" title="Approve & Publish">
+                <button type="button" onClick={handleToggleStatus} className="shrink-0 p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all cursor-pointer" title="Approve & Publish">
                     <Check className="w-4 h-4" />
                 </button>
                 ) : (
-                <button onClick={handleToggleStatus} className="p-2 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all cursor-pointer" title="Block / Suspend Post">
+                <button type="button" onClick={handleToggleStatus} className="shrink-0 p-2 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all cursor-pointer" title="Block / Suspend Post">
                     <Ban className="w-4 h-4" />
                 </button>
                 )}
                 
-                <button onClick={() => setShowIssueModal(true)} className="p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer" title="Report Editorial Issue">
+                <button type="button" onClick={() => setShowIssueModal(true)} className="shrink-0 p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer" title="Report Editorial Issue">
                     <TriangleAlert className="w-4 h-4" />
+                </button>
+                <button type="button" onClick={openIssueList} className="shrink-0 p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all cursor-pointer" title="View Article Issues">
+                    <CircleAlert className="w-4 h-4" />
                 </button>
             </>
         )}
         
-        <Link href={`/dashboard/posts/${post.id}`} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all cursor-pointer" title="View Article Detail">
+        <Link href={`/dashboard/posts/${post.id}`} className="shrink-0 p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all cursor-pointer" title="View Article Detail">
           <Eye className="w-4 h-4" />
         </Link>
         
-        <Link href={`/dashboard/posts/edit/${post.id}`} className="p-2 text-gray-400 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl transition-all cursor-pointer inline-block" title="Edit Article Properties">
+        <Link href={`/dashboard/posts/edit/${post.id}`} className="shrink-0 p-2 text-gray-400 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl transition-all cursor-pointer inline-flex" title="Edit Article Properties">
           <Pencil className="w-4 h-4" />
         </Link>
 
@@ -150,7 +178,7 @@ export default function PostActionButtons({ post, userRole = 'AUTHOR' }) {
           <button
             type="button"
             onClick={() => setShowTagsModal(true)}
-            className="p-2 text-gray-400 hover:text-violet-700 hover:bg-violet-50 rounded-xl transition-all cursor-pointer"
+            className="shrink-0 p-2 text-gray-400 hover:text-violet-700 hover:bg-violet-50 rounded-xl transition-all cursor-pointer"
             title="Update tags (add/remove)"
           >
             <Tag className="w-4 h-4" />
@@ -158,7 +186,7 @@ export default function PostActionButtons({ post, userRole = 'AUTHOR' }) {
         )}
         
         {isAdmin && (
-            <button onClick={() => setShowDeleteModal(true)} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all cursor-pointer" title="Delete Database Article">
+            <button type="button" onClick={() => setShowDeleteModal(true)} className="shrink-0 p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all cursor-pointer" title="Delete Database Article">
                 <Trash2 className="w-4 h-4" />
             </button>
         )}
@@ -176,6 +204,43 @@ export default function PostActionButtons({ post, userRole = 'AUTHOR' }) {
             <div className="bg-gray-50/50 px-8 py-6 flex items-center gap-4 justify-center border-t border-gray-100">
                <button onClick={() => setShowDeleteModal(false)} className="flex-1 py-3 text-[10px] font-black uppercase tracking-widest text-gray-400 bg-white border border-gray-100 rounded-2xl hover:bg-gray-100 cursor-pointer transition-all">Cancel</button>
                <button onClick={executeDelete} className="flex-1 py-3 text-[10px] font-black uppercase tracking-widest text-white bg-rose-600 rounded-2xl hover:bg-rose-700 cursor-pointer shadow-lg shadow-rose-600/20 transition-all">Destroy</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showIssueListModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#001d1a]/60 backdrop-blur-md px-4">
+          <div className="bg-white rounded-[24px] shadow-2xl w-full max-w-xl overflow-hidden animate-in fade-in duration-300">
+            <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+              <h3 className="text-sm font-black uppercase tracking-widest text-gray-900">Article Issues</h3>
+              <button onClick={() => setShowIssueListModal(false)} className="p-2 text-gray-400 hover:text-gray-800">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-5 space-y-3 max-h-[65vh] overflow-y-auto">
+              <p className="text-[12px] font-semibold text-gray-700">{post.title}</p>
+              {issueListLoading ? (
+                <p className="text-[12px] text-gray-500">Loading issues...</p>
+              ) : postIssues.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-gray-200 p-5 text-center text-[12px] text-gray-500">
+                  No issue history found for this article.
+                </div>
+              ) : (
+                postIssues.map((issue) => (
+                  <div key={issue.id} className="rounded-xl border border-gray-200 bg-gray-50 p-3 space-y-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-gray-500">
+                        {issue.severity || "MEDIUM"}
+                      </span>
+                      <span className={`text-[10px] font-bold uppercase ${issue.resolved || issue.isResolved ? "text-emerald-600" : "text-rose-600"}`}>
+                        {issue.resolved || issue.isResolved ? "Resolved" : "Open"}
+                      </span>
+                    </div>
+                    <p className="text-[13px] text-gray-700">{issue.description || issue.comment || "Issue details not available."}</p>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>
@@ -223,7 +288,7 @@ export default function PostActionButtons({ post, userRole = 'AUTHOR' }) {
                              />
                           </div>
 
-                          <button className="w-full py-4 bg-gray-900 text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-xl hover:bg-black transition-all active:scale-[0.98] mt-4">
+                          <button className="w-full py-4 bg-primary text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-xl hover:bg-primary-dark transition-all active:scale-[0.98] mt-4">
                               Submit Moderation Log
                           </button>
                       </form>
@@ -268,7 +333,7 @@ export default function PostActionButtons({ post, userRole = 'AUTHOR' }) {
                   type="button"
                   disabled={savingTags}
                   onClick={saveTags}
-                  className="px-6 py-3 bg-gray-900 text-white font-black text-[11px] uppercase tracking-[0.2em] rounded-2xl shadow-xl hover:bg-black transition-all disabled:opacity-60"
+                  className="px-6 py-3 bg-primary text-white font-black text-[11px] uppercase tracking-[0.2em] rounded-2xl shadow-xl hover:bg-primary-dark transition-all disabled:opacity-60"
                 >
                   {savingTags ? "Saving…" : "Save tags"}
                 </button>
