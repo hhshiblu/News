@@ -21,11 +21,15 @@ async function getMe() {
 export default async function AllNewsPage({ searchParams }) {
   const resolvedParams = await searchParams;
   const statusFilter = resolvedParams?.status || 'all';
+  const authorIdFilter = resolvedParams?.authorId;
   const user = await getMe();
 
   const queryParams = new URLSearchParams();
   if(statusFilter !== 'all') {
       queryParams.append('status', statusFilter.toUpperCase());
+  }
+  if(authorIdFilter) {
+      queryParams.append('authorId', authorIdFilter);
   }
 
   let posts = [];

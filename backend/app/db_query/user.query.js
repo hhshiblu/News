@@ -19,7 +19,7 @@ const deleteUserQuery = async (id) => {
 const getAllUsersQuery = async (filters = {}) => {
     return prisma.user.findMany({
         where: filters,
-        select: { id: true, name: true, email: true, role: true, bio: true, avatar: true, status: true, createdAt: true }
+        select: { id: true, name: true, email: true, role: true, bio: true, avatar: true, status: true, createdAt: true, posts: { select: { id: true, status: true } } }
     });
 };
 

@@ -62,6 +62,9 @@ const getAdminPosts = async (req, res, next) => {
         if (req.query.status) {
              filter.status = req.query.status;
         }
+        if (req.query.authorId) {
+             filter.authorId = req.query.authorId;
+        }
 
         // Role-based filtering: Authors only see their own posts
         if (req.user.role === 'AUTHOR') {
