@@ -6,13 +6,14 @@ const {
   updatePartner,
   deletePartner,
 } = require("../../controller/admin/partner.controller");
+const { uploadPartnerLogo } = require("../../middlewares/entityImageUpload.middleware");
 
 const router = express.Router();
 router.use(protect, authorize("ADMIN"));
 
 router.get("/", listPartnersAdmin);
-router.post("/", createPartner);
-router.patch("/:id", updatePartner);
+router.post("/", uploadPartnerLogo.single("image"), createPartner);
+router.patch("/:id", uploadPartnerLogo.single("image"), updatePartner);
 router.delete("/:id", deletePartner);
 
 module.exports = router;

@@ -1,18 +1,15 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
-  LayoutGrid,
   Folder,
   FileText,
   Users,
   ChevronDown,
   Settings,
-  PlusCircle,
   List,
   X,
-  CircleAlert,
   User,
   LogOut,
   Activity,
@@ -22,6 +19,15 @@ import {
 
 const getMenuGroups = (role) => {
   const isAdmin = role === "ADMIN";
+
+  const articleChildren = [
+    { title: "Active", url: "/dashboard/posts" },
+    { title: "Pending", url: "/dashboard/posts?status=PENDING" },
+    { title: "Published", url: "/dashboard/posts?status=PUBLISHED" },
+  ];
+  if (!isAdmin) {
+    articleChildren.push({ title: "Create New", url: "/dashboard/posts/create" });
+  }
 
   return [
     {
@@ -34,23 +40,7 @@ const getMenuGroups = (role) => {
         {
           title: "Articles",
           icon: FileText,
-          children: [
-            { title: "Draft Archive", url: "/dashboard/posts?status=PENDING" },
-            {
-              title: "Published Content",
-              url: "/dashboard/posts?status=PUBLISHED",
-            },
-            { title: "Create New", url: "/dashboard/posts/create" },
-            { title: "Manage Posts", url: "/dashboard/posts" },
-          ],
-        },
-        {
-          title: "Moderation",
-          icon: CircleAlert,
-          children: [
-            { title: "Open Issues", url: "/dashboard/issues" },
-            { title: "Resolution Log", url: "/dashboard/issues" },
-          ],
+          children: articleChildren,
         },
         {
           title: "Taxonomy",
@@ -116,15 +106,28 @@ const getMenuGroups = (role) => {
 import { logoutAction } from "@/actions/auth";
 import { useRouter } from "next/navigation";
 
+/** Match sidebar link including query (e.g. posts filters). */
+function childLinkIsActive(pathname, searchParams, childUrl) {
+  const [path, queryPart] = childUrl.split("?");
+  if (pathname !== path) return false;
+  const currentStatus = (searchParams.get("status") || "").toUpperCase();
+  if (!queryPart) {
+    if (path === "/dashboard/posts") return !currentStatus;
+    return true;
+  }
+  const wanted = (new URLSearchParams(queryPart).get("status") || "").toUpperCase();
+  return currentStatus === wanted;
+}
+
 export function AdminSidebar({ isOpen, setIsOpen, user = { role: "AUTHOR" } }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const role = user?.role || "AUTHOR";
   const menuGroups = getMenuGroups(role);
 
   const [openMenus, setOpenMenus] = useState({
     Articles: true,
-    Moderation: true,
     Taxonomy: false,
     "Ad placements": true,
     Teams: false,
@@ -207,10 +210,10 @@ export function AdminSidebar({ isOpen, setIsOpen, user = { role: "AUTHOR" } }) {
                     </button>
 
                     <div
-                      className={`mt-1 flex flex-col pl-9 space-y-1 overflow-hidden transition-all duration-300 ease-in-out ${openMenus[item.title] ? "max-h-60 opacity-100 mb-4" : "max-h-0 opacity-0"}`}
+                      className={`mt-1 flex flex-col pl-9 space-y-1 overflow-hidden transition-all duration-300 ease-in-out ${openMenus[item.title] ? "max-h-[22rem] opacity-100 mb-4" : "max-h-0 opacity-0"}`}
                     >
                       {item.children.map((child) => {
-                        const isActive = pathname === child.url;
+                        const isActive = childLinkIsActive(pathname, searchParams, child.url);
                         return (
                           <Link
                             key={child.title}

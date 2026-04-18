@@ -234,7 +234,7 @@ export default function AdsManagementPage() {
                   <button
                     type="button"
                     onClick={() => openCreate(preset)}
-                    className="shrink-0 flex items-center gap-1 px-3 py-1.5 bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-black"
+                    className="shrink-0 flex items-center gap-1 px-3 py-1.5 bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-primary-dark"
                   >
                     <Plus className="w-3.5 h-3.5" /> Add
                   </button>

@@ -62,7 +62,7 @@ export default function IssuesPage() {
                         <button 
                             key={f}
                             onClick={() => setFilter(f)}
-                            className={`px-4 py-1.5 rounded-xl text-[10px] font-black tracking-widest transition-all ${filter === f ? 'bg-gray-900 text-white shadow-md' : 'text-gray-400 hover:text-gray-600'}`}
+                            className={`px-4 py-1.5 rounded-xl text-[10px] font-black tracking-widest transition-all ${filter === f ? 'bg-primary text-white shadow-md shadow-primary/20' : 'text-gray-400 hover:text-gray-600'}`}
                         >
                             {f}
                         </button>
