@@ -1,5 +1,6 @@
 const express = require('express');
 const { createCategory, updateCategory, deleteCategory, getCategoryTree } = require('../../controller/admin/category.controller');
+const { uploadCategoryImage } = require('../../middlewares/entityImageUpload.middleware');
 const { protect, authorize } = require('../../middlewares/auth.middleware');
 
 const router = express.Router();
@@ -8,7 +9,7 @@ const router = express.Router();
 // router.use(protect, authorize('ADMIN')); // Auth bypassed for current dev tests
 
 router.get('/', getCategoryTree);
-router.post('/', createCategory);
+router.post('/', uploadCategoryImage.single('image'), createCategory);
 router.patch('/:id', updateCategory);
 router.delete('/:id', deleteCategory);
 

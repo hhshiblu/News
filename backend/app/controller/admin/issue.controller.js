@@ -5,19 +5,22 @@ const createIssue = async (req, res, next) => {
         const { postId, description, severity } = req.body;
         const adminId = req.user.id;
 
-        const issue = await prisma.issue.create({
-            data: {
-                postId,
-                adminId,
-                description,
-                severity: severity || 'MEDIUM',
-                resolved: false
-            }
-        });
+        const [issue] = await prisma.$transaction([
+            prisma.issue.create({
+                data: {
+                    postId,
+                    adminId,
+                    description,
+                    severity: severity || 'MEDIUM',
+                    resolved: false
+                }
+            }),
+            prisma.post.update({
+                where: { id: postId },
+                data: { status: 'PENDING' }
+            })
+        ]);
 
-        // Also update post status to 'BLOCKED' or similar if necessary, 
-        // but typically issues are for feedback while PENDING or after PUBLISHED.
-        
         res.status(201).json({ success: true, data: issue });
     } catch (error) {
         next(error);

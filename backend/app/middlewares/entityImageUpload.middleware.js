@@ -4,9 +4,11 @@ const fs = require("fs");
 
 const teamDir = path.join(__dirname, "../../uploads/team");
 const partnerDir = path.join(__dirname, "../../uploads/partner");
+const categoryDir = path.join(__dirname, "../../uploads/category");
 
 if (!fs.existsSync(teamDir)) fs.mkdirSync(teamDir, { recursive: true });
 if (!fs.existsSync(partnerDir)) fs.mkdirSync(partnerDir, { recursive: true });
+if (!fs.existsSync(categoryDir)) fs.mkdirSync(categoryDir, { recursive: true });
 
 const allowedExt = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif"]);
 
@@ -32,6 +34,11 @@ const partnerStorage = multer.diskStorage({
   filename: (_req, file, cb) => cb(null, safeName("partner", normalizeExt(file.originalname))),
 });
 
+const categoryStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, categoryDir),
+  filename: (_req, file, cb) => cb(null, safeName("category", normalizeExt(file.originalname))),
+});
+
 const uploadTeamImage = multer({
   storage: teamStorage,
   fileFilter: imageFilter,
@@ -44,7 +51,14 @@ const uploadPartnerLogo = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
 });
 
+const uploadCategoryImage = multer({
+  storage: categoryStorage,
+  fileFilter: imageFilter,
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
+
 module.exports = {
   uploadTeamImage,
   uploadPartnerLogo,
+  uploadCategoryImage,
 };

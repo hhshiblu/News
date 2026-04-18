@@ -21,6 +21,8 @@ export async function createIssueAction(postId, description, severity = 'MEDIUM'
         if (data.success) {
             revalidatePath("/admin/issues");
             revalidatePath("/admin/posts");
+            revalidatePath("/dashboard/posts");
+            revalidatePath("/");
         }
         return data;
     } catch (error) {

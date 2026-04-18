@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useState, useContext } from "react";
+import { SidebarContext } from "@/components/SidebarTrigger";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
@@ -103,9 +104,6 @@ const getMenuGroups = (role) => {
   ];
 };
 
-import { logoutAction } from "@/actions/auth";
-import { useRouter } from "next/navigation";
-
 /** Match sidebar link including query (e.g. posts filters). */
 function childLinkIsActive(pathname, searchParams, childUrl) {
   const [path, queryPart] = childUrl.split("?");
@@ -119,19 +117,20 @@ function childLinkIsActive(pathname, searchParams, childUrl) {
   return currentStatus === wanted;
 }
 
-export function AdminSidebar({ isOpen, setIsOpen, user = { role: "AUTHOR" } }) {
+export function AdminSidebar({ isOpen: propIsOpen, setIsOpen: propSetIsOpen, user = { role: "AUTHOR" } }) {
+  const ctx = useContext(SidebarContext);
+  const isOpen = ctx ? ctx.isOpen : propIsOpen;
+  const setIsOpen = ctx ? ctx.setIsOpen : propSetIsOpen;
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const router = useRouter();
   const role = user?.role || "AUTHOR";
   const menuGroups = getMenuGroups(role);
 
   const [openMenus, setOpenMenus] = useState({
-    Articles: true,
+    Articles: false,
     Taxonomy: false,
-    "Ad placements": true,
-    Teams: false,
-    Account: false,
+    "Ad placements": false,
+    "Team members": false,
   });
 
   const toggleMenu = (title) => {
@@ -139,7 +138,7 @@ export function AdminSidebar({ isOpen, setIsOpen, user = { role: "AUTHOR" } }) {
   };
 
   const handleLinkClick = () => {
-    if (window.innerWidth < 768 && setIsOpen) {
+    if (typeof window !== "undefined" && window.innerWidth < 768 && setIsOpen) {
       setIsOpen(false);
     }
   };
@@ -153,6 +152,7 @@ export function AdminSidebar({ isOpen, setIsOpen, user = { role: "AUTHOR" } }) {
 
   return (
     <div
+      id="dashboard-sidebar-nav"
       className={`fixed inset-y-0 left-0 z-50 w-64 min-w-[16rem] shrink-0 bg-[#8B0000] md:border-r border-white/10 min-h-screen flex flex-col text-white transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"}`}
     >
       <div className="flex items-center justify-between p-5 border-b border-white/5 shrink-0">
@@ -170,14 +170,15 @@ export function AdminSidebar({ isOpen, setIsOpen, user = { role: "AUTHOR" } }) {
           </div>
         </div>
         <button
-          onClick={() => setIsOpen && setIsOpen(false)}
+          type="button"
+          onClick={() => setIsOpen?.(false)}
           className="md:hidden p-1.5 bg-white/5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
       </div>
 
-      <nav className="flex-1 py-6 px-4 flex flex-col gap-8 overflow-y-auto custom-scrollbar">
+      <nav className="flex-1 py-6 px-4 flex flex-col gap-8 overflow-y-auto overflow-x-hidden custom-scrollbar">
         {menuGroups.map((group, groupIdx) => (
           <div key={groupIdx} className="flex flex-col gap-2">
             {group.label && (
@@ -253,33 +254,6 @@ export function AdminSidebar({ isOpen, setIsOpen, user = { role: "AUTHOR" } }) {
           </div>
         ))}
       </nav>
-
-      <div className="p-4 border-t border-white/10 bg-[#7A0000] space-y-3 shrink-0">
-        <div className="flex items-center gap-3 px-2">
-          <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/20 flex items-center justify-center text-[10px] font-black text-white overflow-hidden">
-            {user?.avatar ? (
-              <img src={user.avatar} className="w-full h-full object-cover" />
-            ) : (
-              user?.name?.charAt(0) || "U"
-            )}
-          </div>
-          <div className="flex flex-col min-w-0">
-            <span className="text-[11px] font-bold text-white truncate">
-              {user?.name || "Access User"}
-            </span>
-            <span className="text-[9px] font-black text-white/70 uppercase tracking-widest truncate">
-              {user?.email || "Pulse Editorial"}
-            </span>
-          </div>
-        </div>
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-white/90 hover:text-white hover:bg-white/10 transition-all font-black text-[10px] uppercase tracking-[0.2em] group"
-        >
-          <LogOut className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" />{" "}
-          Sign Out Session
-        </button>
-      </div>
     </div>
   );
 }

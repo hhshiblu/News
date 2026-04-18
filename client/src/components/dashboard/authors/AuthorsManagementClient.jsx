@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import AdminTablePagination, { ADMIN_PAGE_SIZE } from "@/components/dashboard/AdminTablePagination";
 import {
   Check,
   X,
@@ -16,16 +17,19 @@ import {
 import { toast } from "sonner";
 import { useRouter, usePathname } from "next/navigation";
 import { patchAdminUserStatusAction } from "@/actions/admin-data.action";
+import DashboardSelect from "@/components/ui/DashboardSelect";
 
 export default function AuthorsManagementClient({ initialAuthors = [], statusFilter = "ALL" }) {
   const [authors, setAuthors] = useState(initialAuthors);
   const [selectedAuthor, setSelectedAuthor] = useState(null);
   const [pendingStatus, setPendingStatus] = useState(statusFilter);
+  const [listPage, setListPage] = useState(1);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
     setAuthors(initialAuthors);
+    setListPage(1);
   }, [initialAuthors]);
 
   useEffect(() => {
@@ -96,6 +100,16 @@ export default function AuthorsManagementClient({ initialAuthors = [], statusFil
   const pendingCount = useMemo(() => authors.filter((a) => a.status === "PENDING").length, [authors]);
   const blockedCount = useMemo(() => authors.filter((a) => a.status === "BLOCKED").length, [authors]);
 
+  const pageAuthors = useMemo(
+    () => authors.slice((listPage - 1) * ADMIN_PAGE_SIZE, listPage * ADMIN_PAGE_SIZE),
+    [authors, listPage]
+  );
+
+  useEffect(() => {
+    const max = Math.max(1, Math.ceil(authors.length / ADMIN_PAGE_SIZE));
+    if (listPage > max) setListPage(max);
+  }, [authors.length, listPage]);
+
   return (
     <div className="space-y-6 text-gray-800">
       <div className="flex items-center justify-between gap-3 flex-wrap">
@@ -148,35 +162,36 @@ export default function AuthorsManagementClient({ initialAuthors = [], statusFil
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="px-3 sm:px-4 py-3 border-b border-gray-200 bg-gray-50/50">
-          <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Filter by status</p>
-          <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
-            <label className="flex-1 min-w-0">
+      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div className="border-b border-gray-200 bg-gray-50/50 px-2 py-3 sm:px-4">
+          <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-gray-500">Filter by status</p>
+          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end">
+            <div className="min-w-0 flex-1 sm:flex-initial sm:min-w-[11rem]">
               <span className="sr-only">Status</span>
-              <select
+              <DashboardSelect
+                aria-label="Filter authors by status"
                 value={pendingStatus}
-                onChange={(e) => setPendingStatus(e.target.value)}
-                className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-[13px] font-medium text-gray-800 outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary"
-              >
-                <option value="ALL">All matches</option>
-                <option value="ACTIVE">Active</option>
-                <option value="PENDING">Pending reviews</option>
-                <option value="BLOCKED">Blocked</option>
-              </select>
-            </label>
+                onChange={setPendingStatus}
+                options={[
+                  { value: "ALL", label: "All matches" },
+                  { value: "ACTIVE", label: "Active" },
+                  { value: "PENDING", label: "Pending reviews" },
+                  { value: "BLOCKED", label: "Blocked" },
+                ]}
+              />
+            </div>
             <button
               type="button"
               onClick={applyFilter}
-              className="shrink-0 rounded-xl bg-primary px-5 py-2.5 text-[12px] font-bold text-white shadow-sm hover:bg-primary-dark transition-colors"
+              className="shrink-0 rounded-xl bg-primary px-5 py-2.5 text-[12px] font-bold text-white shadow-sm transition-colors hover:bg-primary-dark"
             >
               Apply
             </button>
           </div>
         </div>
 
-        <div className="overflow-x-auto -mx-0">
-          <table className="w-full text-left text-sm min-w-[640px]">
+        <div className="-mx-0 overflow-x-auto">
+          <table className="w-full min-w-[640px] text-left text-sm">
             <thead className="bg-[#fcfdfd] border-b border-gray-200 text-[10px] uppercase font-semibold text-gray-500 tracking-wider">
               <tr>
                 <th className="px-3 sm:px-4 py-3">Identity</th>
@@ -186,7 +201,7 @@ export default function AuthorsManagementClient({ initialAuthors = [], statusFil
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {authors.map((author) => (
+              {pageAuthors.map((author) => (
                 <tr key={author.id} className="hover:bg-gray-50/70 transition-colors">
                   <td className="px-3 sm:px-4 py-3">
                     <div className="flex items-center gap-3">
@@ -249,7 +264,7 @@ export default function AuthorsManagementClient({ initialAuthors = [], statusFil
               ))}
               {authors.length === 0 && (
                 <tr>
-                  <td colSpan="4" className="py-8 text-center text-sm text-gray-500 font-medium">
+                  <td colSpan="4" className="py-8 text-center text-sm font-medium text-gray-500">
                     No authors found for this filter.
                   </td>
                 </tr>
@@ -257,6 +272,7 @@ export default function AuthorsManagementClient({ initialAuthors = [], statusFil
             </tbody>
           </table>
         </div>
+        <AdminTablePagination page={listPage} totalItems={authors.length} onPageChange={setListPage} />
       </div>
 
       {selectedAuthor && (
@@ -312,7 +328,7 @@ export default function AuthorsManagementClient({ initialAuthors = [], statusFil
               <button
                 type="button"
                 onClick={() => setSelectedAuthor(null)}
-                className="w-full sm:w-auto rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white hover:bg-primary-dark transition-colors"
+                className="w-full sm:w-auto rounded-xl bg-primary px-4 py-2.5 text-xs font-bold !text-white hover:bg-primary-dark transition-colors"
               >
                 Close
               </button>

@@ -2,6 +2,7 @@ import { FileText, ShieldAlert, ArrowRight, Activity, TrendingUp, CheckCircle, C
 import Link from "next/link";
 import React from "react";
 import { ViewsChart } from "@/components/DashboardCharts";
+import TrafficRangeFilter from "@/components/dashboard/TrafficRangeFilter";
 import { getMe } from "@/lib/server-auth";
 import { getAdminPostsAction } from "@/actions/admin-data.action";
 
@@ -69,10 +70,7 @@ export default async function DashboardPage() {
                         </div>
                         <h2 className="text-lg font-bold text-gray-800 tracking-tight">Traffic Performance</h2>
                     </div>
-                    <select className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-2 text-xs font-bold text-gray-500 outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all cursor-pointer">
-                        <option>Last 7 Days</option>
-                        <option>Last 30 Days</option>
-                    </select>
+                    <TrafficRangeFilter />
                 </div>
                 <ViewsChart />
             </div>

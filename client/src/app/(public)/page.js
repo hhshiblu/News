@@ -16,6 +16,7 @@ import {
   HomeTitleCardBand,
   HomeHeadlinesRiver,
 } from "@/components/sections/HomeScrollSections";
+import PartnerBrandCard from "@/components/partners/PartnerBrandCard";
 
 export const metadata = {
   title: "LabourPulse — Bangladesh's Leading Labour & Economy News",
@@ -146,26 +147,13 @@ async function HomePageContent() {
 
       <section className="max-w-[1280px] mx-auto px-4 py-8">
         <div className="border-y border-gray-100 py-6">
-          <p className="text-[10px] font-black tracking-[0.22em] uppercase text-gray-500 text-center mb-4 font-[Inter]">
+          <p className="text-[10px] font-black tracking-[0.22em] uppercase text-accent text-center mb-4 font-[Inter]">
             Trusted Partners
           </p>
-          <div className="overflow-hidden">
-            <div className="ticker-track">
-              {[...(partners || []).slice(0, 10), ...(partners || []).slice(0, 10)].map((partner, idx) => (
-                <a
-                  key={`${partner.id}-${idx}`}
-                  href={partner.websiteUrl || "#"}
-                  target={partner.websiteUrl ? "_blank" : undefined}
-                  rel={partner.websiteUrl ? "noopener noreferrer" : undefined}
-                  className="group relative rounded-lg border border-gray-100 bg-white p-3 h-20 w-[160px] mx-1.5 shrink-0 flex items-center justify-center overflow-hidden"
-                >
-                  <img src={partner.logoUrl} alt={partner.name} className="max-h-10 object-contain" />
-                  <div className="absolute inset-0 bg-black/60 text-white text-[11px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-center px-2">
-                    {partner.name}
-                  </div>
-                </a>
-              ))}
-            </div>
+          <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1 [scrollbar-width:thin]">
+            {(partners || []).slice(0, 12).map((partner) => (
+              <PartnerBrandCard key={partner.id} partner={partner} layout="row" />
+            ))}
           </div>
         </div>
       </section>

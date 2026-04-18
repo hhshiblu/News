@@ -13,8 +13,8 @@ export default function DashboardShell({ user, children }) {
   const router = useRouter();
 
   const onLogout = async () => {
-    const res = await logoutAction();
-    if (res.success) router.push("/login");
+    await logoutAction();
+    router.push("/");
   };
 
   return (

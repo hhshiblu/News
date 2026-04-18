@@ -11,6 +11,8 @@ export default function PostActionButtons({ post, userRole = 'AUTHOR' }) {
   const isAdmin = userRole === 'ADMIN';
   const [currentStatus, setCurrentStatus] = useState(post.status);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showBlockModal, setShowBlockModal] = useState(false);
+  const [blocking, setBlocking] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showIssueModal, setShowIssueModal] = useState(false);
   const [showIssueListModal, setShowIssueListModal] = useState(false);
@@ -25,6 +27,10 @@ export default function PostActionButtons({ post, userRole = 'AUTHOR' }) {
   const [issueListLoading, setIssueListLoading] = useState(false);
 
   const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+
+  useEffect(() => {
+    setCurrentStatus(post.status);
+  }, [post.status, post.id]);
 
   useEffect(() => {
     if (!showTagsModal) return;
@@ -78,17 +84,30 @@ export default function PostActionButtons({ post, userRole = 'AUTHOR' }) {
     }
   };
 
-  const handleToggleStatus = async () => {
+  const handleApprovePublish = async () => {
     const initialStatus = currentStatus;
-    const targetStatus = currentStatus === 'PUBLISHED' ? 'PENDING' : 'PUBLISHED';
-    setCurrentStatus(targetStatus);
-    
-    const res = await updatePostStatusAction(post.id, targetStatus);
+    setCurrentStatus("PUBLISHED");
+    const res = await updatePostStatusAction(post.id, "PUBLISHED");
     if (!res.success) {
       setCurrentStatus(initialStatus);
-      toast.error(res.message || "Failed changing status.");
+      toast.error(res.message || "Failed to publish.");
     } else {
-      toast.success(`Post safely changed to ${targetStatus}.`);
+      toast.success("Post published.");
+    }
+  };
+
+  const confirmBlockPost = async () => {
+    const initialStatus = currentStatus;
+    setBlocking(true);
+    setCurrentStatus("BLOCKED");
+    const res = await updatePostStatusAction(post.id, "BLOCKED");
+    setBlocking(false);
+    setShowBlockModal(false);
+    if (!res.success) {
+      setCurrentStatus(initialStatus);
+      toast.error(res.message || "Failed to block article.");
+    } else {
+      toast.success("Article blocked.");
     }
   };
 
@@ -99,6 +118,7 @@ export default function PostActionButtons({ post, userRole = 'AUTHOR' }) {
       const res = await createIssueAction(post.id, issueDescription, issueSeverity);
       if(res.success) {
           toast.success("Editorial issue registered and sent to author!");
+          setCurrentStatus("PENDING");
           setShowIssueModal(false);
           setIssueDescription("");
       } else {
@@ -148,11 +168,11 @@ export default function PostActionButtons({ post, userRole = 'AUTHOR' }) {
         {isAdmin && (
             <>
                 {currentStatus !== 'PUBLISHED' ? (
-                <button type="button" onClick={handleToggleStatus} className="shrink-0 p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all cursor-pointer" title="Approve & Publish">
+                <button type="button" onClick={handleApprovePublish} className="shrink-0 p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all cursor-pointer" title="Approve & Publish">
                     <Check className="w-4 h-4" />
                 </button>
                 ) : (
-                <button type="button" onClick={handleToggleStatus} className="shrink-0 p-2 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all cursor-pointer" title="Block / Suspend Post">
+                <button type="button" onClick={() => setShowBlockModal(true)} className="shrink-0 p-2 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded-xl transition-all cursor-pointer" title="Block / Suspend Post">
                     <Ban className="w-4 h-4" />
                 </button>
                 )}
@@ -192,18 +212,53 @@ export default function PostActionButtons({ post, userRole = 'AUTHOR' }) {
         )}
       </div>
 
+      {/* Block confirmation */}
+      {showBlockModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#001d1a]/60 backdrop-blur-md px-4">
+          <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="bg-rose-600 px-8 py-6 text-center space-y-2">
+              <div className="w-14 h-14 rounded-2xl bg-white/15 text-white flex items-center justify-center mx-auto border border-white/20">
+                <Ban className="w-7 h-7" />
+              </div>
+              <h3 className="text-lg font-black text-white tracking-tight">Block this article?</h3>
+              <p className="text-[11px] font-bold text-white/90 uppercase tracking-widest leading-relaxed">
+                It will be removed from the live site until you publish it again.
+              </p>
+            </div>
+            <div className="px-8 py-6 flex items-center gap-3 border-t border-gray-100">
+              <button
+                type="button"
+                disabled={blocking}
+                onClick={() => setShowBlockModal(false)}
+                className="flex-1 py-3 text-[10px] font-black uppercase tracking-widest text-gray-600 bg-white border border-gray-200 rounded-2xl hover:bg-gray-50 cursor-pointer transition-all disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={blocking}
+                onClick={confirmBlockPost}
+                className="flex-1 py-3 text-[10px] font-black uppercase tracking-widest !text-white bg-rose-600 rounded-2xl hover:bg-rose-700 cursor-pointer shadow-lg shadow-rose-600/25 transition-all disabled:opacity-60"
+              >
+                {blocking ? "Blocking…" : "Block"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#001d1a]/60 backdrop-blur-md px-4">
           <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-300">
-            <div className="p-8 text-center space-y-4">
-               <div className="w-16 h-16 rounded-3xl bg-rose-50 text-rose-600 flex items-center justify-center mx-auto mb-4 border border-rose-100 shadow-sm"><Trash2 className="w-8 h-8" /></div>
-               <h3 className="text-xl font-black text-gray-900 tracking-tight">Erase Content?</h3>
-               <p className="text-xs font-bold text-gray-400 uppercase tracking-widest leading-relaxed">This will permanently destroy <span className="text-rose-600 font-black">"{post.title}"</span> from the global production database.</p>
+            <div className="bg-rose-600 px-8 py-8 text-center space-y-3">
+               <div className="w-16 h-16 rounded-3xl bg-white/15 text-white flex items-center justify-center mx-auto border border-white/20 shadow-sm"><Trash2 className="w-8 h-8" /></div>
+               <h3 className="text-xl font-black text-white tracking-tight">Erase content?</h3>
+               <p className="text-[11px] font-bold text-white/90 uppercase tracking-widest leading-relaxed">This will permanently destroy <span className="text-white font-black underline decoration-white/40">"{post.title}"</span> from the database.</p>
             </div>
             <div className="bg-gray-50/50 px-8 py-6 flex items-center gap-4 justify-center border-t border-gray-100">
-               <button onClick={() => setShowDeleteModal(false)} className="flex-1 py-3 text-[10px] font-black uppercase tracking-widest text-gray-400 bg-white border border-gray-100 rounded-2xl hover:bg-gray-100 cursor-pointer transition-all">Cancel</button>
-               <button onClick={executeDelete} className="flex-1 py-3 text-[10px] font-black uppercase tracking-widest text-white bg-rose-600 rounded-2xl hover:bg-rose-700 cursor-pointer shadow-lg shadow-rose-600/20 transition-all">Destroy</button>
+               <button type="button" onClick={() => setShowDeleteModal(false)} className="flex-1 py-3 text-[10px] font-black uppercase tracking-widest text-gray-600 bg-white border border-gray-200 rounded-2xl hover:bg-gray-100 cursor-pointer transition-all">Cancel</button>
+               <button type="button" onClick={executeDelete} className="flex-1 py-3 text-[10px] font-black uppercase tracking-widest !text-white bg-rose-600 rounded-2xl hover:bg-rose-700 cursor-pointer shadow-lg shadow-rose-600/20 transition-all">Destroy</button>
             </div>
           </div>
         </div>
@@ -288,7 +343,7 @@ export default function PostActionButtons({ post, userRole = 'AUTHOR' }) {
                              />
                           </div>
 
-                          <button className="w-full py-4 bg-primary text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-xl hover:bg-primary-dark transition-all active:scale-[0.98] mt-4">
+                          <button type="submit" className="w-full py-4 bg-rose-600 !text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-xl hover:bg-rose-700 transition-all active:scale-[0.98] mt-4">
                               Submit Moderation Log
                           </button>
                       </form>

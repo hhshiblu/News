@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import DashboardSelect from "@/components/ui/DashboardSelect";
 
 const BASE = "/dashboard/posts";
 
@@ -27,27 +28,22 @@ export default function PostsStatusFilter({ statusFilter }) {
   };
 
   return (
-    <div className="px-3 sm:px-4 py-3 border-b border-gray-200 bg-gray-50/50">
-      <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-2">Filter by status</p>
-      <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
-        <label className="flex-1 min-w-0">
+    <div className="border-b border-gray-200 bg-gray-50/50 px-2 py-3 sm:px-4">
+      <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-gray-500">Filter by status</p>
+      <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end">
+        <div className="min-w-0 flex-1 sm:flex-initial sm:min-w-[11rem]">
           <span className="sr-only">Status</span>
-          <select
+          <DashboardSelect
+            aria-label="Filter articles by status"
             value={pending}
-            onChange={(e) => setPending(e.target.value.toLowerCase())}
-            className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-[13px] font-medium text-gray-800 outline-none focus:ring-2 focus:ring-primary/25 focus:border-primary"
-          >
-            {OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value.toLowerCase()}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </label>
+            onChange={(v) => setPending(String(v).toLowerCase())}
+            options={OPTIONS}
+          />
+        </div>
         <button
           type="button"
           onClick={apply}
-          className="shrink-0 rounded-xl bg-primary px-5 py-2.5 text-[12px] font-bold text-white shadow-sm hover:bg-primary-dark transition-colors"
+          className="shrink-0 rounded-xl bg-primary px-5 py-2.5 text-[12px] font-bold text-white shadow-sm transition-colors hover:bg-primary-dark"
         >
           Apply
         </button>

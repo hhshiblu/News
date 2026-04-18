@@ -3,11 +3,10 @@
 import { useState, useEffect, useRef, useLayoutEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { Search, X, ChevronDown, ChevronRight, User, ArrowRight, Loader2, Menu } from "lucide-react";
+import { Search, X, ChevronDown, ChevronRight, ArrowRight, Loader2, Menu } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { CATEGORIES } from "@/data/db";
 import { searchArticles } from "@/data/queries";
-import LoginModal from "@/components/auth/LoginModal";
 import Image from "next/image";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
@@ -19,7 +18,6 @@ export default function NavbarClient({ initialCategories = [] }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [todayLabel, setTodayLabel] = useState("");
   const router = useRouter();
   const sidebarRef = useRef(null);
@@ -195,25 +193,17 @@ export default function NavbarClient({ initialCategories = [] }) {
               <button className="hover:text-gray-800 transition-colors">বাংলা</button>
               <span className="text-gray-300">|</span>
               <button className="hover:text-gray-800 transition-colors focus:outline-none">English</button>
-              <span className="text-gray-300">|</span>
-              {loadingUser ? (
-                <div className="flex items-center gap-2">
-                  <Loader2 size={12} className="animate-spin text-primary" />
-                  <span className="opacity-50">Checking...</span>
-                </div>
-              ) : user ? (
-                <Link href="/dashboard" className="font-bold text-gray-800 hover:text-primary transition-colors flex items-center gap-1.5 focus:outline-none py-1 px-2.5 bg-gray-100 rounded-full">
-                  <div className="w-4 h-4 bg-primary text-white rounded-full flex items-center justify-center text-[8px] font-bold">
-                    {user.name.charAt(0)}
-                  </div>
-                  Hi, {user.name.split(" ")[0]}
-                </Link>
-              ) : (
-                <button onClick={() => setIsLoginOpen(true)} className="font-semibold hover:text-primary transition-colors flex items-center gap-1 focus:outline-none">
-                  <User size={12} className="text-gray-400" />
-                  Login
-                </button>
-              )}
+              {!loadingUser && user ? (
+                <>
+                  <span className="text-gray-300">|</span>
+                  <Link href="/dashboard" className="font-bold text-gray-800 hover:text-primary transition-colors flex items-center gap-1.5 focus:outline-none py-1 px-2.5 bg-gray-100 rounded-full">
+                    <div className="w-4 h-4 bg-primary text-white rounded-full flex items-center justify-center text-[8px] font-bold">
+                      {user.name.charAt(0)}
+                    </div>
+                    Hi, {user.name.split(" ")[0]}
+                  </Link>
+                </>
+              ) : null}
             </div>
           </div>
         </div>
@@ -431,7 +421,6 @@ export default function NavbarClient({ initialCategories = [] }) {
           document.body
         )}
 
-      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
     </>
   );
 }

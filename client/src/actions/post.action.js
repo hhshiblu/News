@@ -2,10 +2,12 @@
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+
 export async function updatePostStatusAction(postId, status) {
     try {
         const cookieStore = await cookies();
-        const res = await fetch(`http://localhost:5000/api/v1/admin/posts/${postId}`, {
+        const res = await fetch(`${BACKEND_URL}/admin/posts/${postId}`, {
             method: 'PATCH',
             body: JSON.stringify({ status }),
             headers: { 
@@ -28,12 +30,16 @@ export async function updatePostStatusAction(postId, status) {
 
 export async function deletePostAction(postId) {
     try {
-        const res = await fetch(`http://localhost:5000/api/v1/admin/posts/${postId}`, {
-            method: 'DELETE'
+        const cookieStore = await cookies();
+        const res = await fetch(`${BACKEND_URL}/admin/posts/${postId}`, {
+            method: 'DELETE',
+            headers: { 'Cookie': cookieStore.toString() }
         });
         
         if(res.ok) {
             revalidatePath("/admin/posts");
+            revalidatePath("/dashboard/posts");
+            revalidatePath("/");
             return { success: true };
         }
         return { success: false, message: "Database rejected purge process." };

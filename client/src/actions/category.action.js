@@ -1,41 +1,51 @@
 "use server";
+
+import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1").replace(/\/$/, "");
+
+/** Server-only: category tree for dashboard (pass to client as props). */
+export async function listAdminCategoriesTreeAction() {
+  const cookieStore = await cookies();
+  try {
+    const res = await fetch(`${API_BASE}/admin/categories`, {
+      headers: { Cookie: cookieStore.toString() },
+      cache: "no-store",
+    });
+    if (!res.ok) return [];
+    const data = await res.json().catch(() => ({}));
+    return data.data || [];
+  } catch {
+    return [];
+  }
+}
+
 export async function createCategoryAction(formData) {
-    const name = formData.get("name");
-    const rawFormData = {
-      name,
-      slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''),
-      parentId: formData.get("parentId") || null,
-      imageUrl: formData.get("imageUrl") || null,
-    };
-    
-    try {
-        const res = await fetch('http://localhost:5000/api/v1/admin/categories', {
-           method: 'POST', 
-           body: JSON.stringify(rawFormData), 
-           headers: { 'Content-Type': 'application/json' }
-        });
-        
-        const data = await res.json();
-        
-        if (res.ok && data.success) {
-            revalidatePath("/admin/categories");
-            return { success: true, message: "Category created dynamically!" };
-        } else {
-            return { success: false, message: data.message || "Database validation failed" };
-        }
-    } catch (error) {
-        return { success: false, message: "Network connection refused." };
+  const cookieStore = await cookies();
+  try {
+    const res = await fetch(`${API_BASE}/admin/categories`, {
+      method: "POST",
+      body: formData,
+      headers: { Cookie: cookieStore.toString() },
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.success) {
+      revalidatePath("/dashboard/categories", "page");
+      return { success: true, message: "Category created" };
     }
+    return { success: false, message: data.message || "Failed to create category" };
+  } catch (error) {
+    return { success: false, message: error.message || "Network error" };
+  }
 }
 
 export async function updatePostStatusAction(postId, status) {
-    try {
-        console.log("Updating post", postId, "to", status);
-        revalidatePath("/admin/posts");
-        return { success: true };
-    } catch (error) {
-        return { success: false, message: error.message };
-    }
+  try {
+    console.log("Updating post", postId, "to", status);
+    revalidatePath("/admin/posts");
+    return { success: true };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
 }

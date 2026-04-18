@@ -77,6 +77,13 @@ const updatePostService = async (id, postData, userId, userRole) => {
         };
     }
 
+    const definedKeys = Object.keys(postData).filter((k) => postData[k] !== undefined);
+    const isModerationStatusOnly =
+        definedKeys.length === 1 && definedKeys[0] === 'status';
+    if (!isModerationStatusOnly) {
+        postData.status = 'PENDING';
+    }
+
     return await postQueries.updatePostQuery(id, postData);
 };
 

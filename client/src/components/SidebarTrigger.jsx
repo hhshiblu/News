@@ -1,8 +1,8 @@
 "use client";
-import React, { useState, createContext, useContext } from 'react';
-import { Menu, X } from 'lucide-react';
+import React, { useState, createContext, useContext } from "react";
+import { Menu, X } from "lucide-react";
 
-const SidebarContext = createContext();
+export const SidebarContext = createContext(null);
 
 export function SidebarProvider({ children, sidebar }) {
     const [isOpen, setIsOpen] = useState(false);
@@ -12,9 +12,10 @@ export function SidebarProvider({ children, sidebar }) {
             <div className="flex h-screen bg-white overflow-hidden font-sans relative w-full">
                 {/* Mobile Overlay */}
                 {isOpen && (
-                    <div 
-                        onClick={() => setIsOpen(false)} 
-                        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity md:hidden cursor-pointer" 
+                    <div
+                        onClick={() => setIsOpen(false)}
+                        aria-hidden
+                        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity md:hidden cursor-pointer"
                     />
                 )}
                 
@@ -30,13 +31,16 @@ export function SidebarProvider({ children, sidebar }) {
 }
 
 export default function SidebarTrigger() {
-    const { setIsOpen } = useContext(SidebarContext);
+    const { isOpen, setIsOpen } = useContext(SidebarContext);
     return (
         <button
-            onClick={() => setIsOpen(true)}
+            type="button"
+            onClick={() => setIsOpen((v) => !v)}
+            aria-expanded={!!isOpen}
+            aria-controls="dashboard-sidebar-nav"
             className="md:hidden p-2.5 bg-white/10 text-white hover:bg-white/20 rounded-xl transition-all cursor-pointer active:scale-95 border border-white/20"
         >
-            <Menu className="w-5 h-5" />
+            {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
     );
 }
