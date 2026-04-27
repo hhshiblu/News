@@ -13,7 +13,7 @@ const OPTIONS = [
   { value: "BLOCKED", label: "Blocked" },
 ];
 
-export default function PostsStatusFilter({ statusFilter }) {
+export default function PostsStatusFilter({ statusFilter, authorId }) {
   const router = useRouter();
   const current = (statusFilter || "all").toString().toLowerCase();
   const [pending, setPending] = useState(current);
@@ -23,15 +23,18 @@ export default function PostsStatusFilter({ statusFilter }) {
   }, [current]);
 
   const apply = () => {
-    if (pending === "all") router.push(BASE);
-    else router.push(`${BASE}?status=${encodeURIComponent(pending.toUpperCase())}`);
+    const q = new URLSearchParams();
+    if (pending !== "all") q.set("status", pending.toUpperCase());
+    if (authorId) q.set("authorId", String(authorId));
+    const qs = q.toString();
+    router.push(qs ? `${BASE}?${qs}` : BASE);
   };
 
   return (
     <div className="border-b border-gray-200 bg-gray-50/50 px-2 py-3 sm:px-4">
       <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-gray-500">Filter by status</p>
       <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-end">
-        <div className="min-w-0 flex-1 sm:flex-initial sm:min-w-[11rem]">
+        <div className="min-w-0 flex-1 sm:flex-initial sm:min-w-44">
           <span className="sr-only">Status</span>
           <DashboardSelect
             aria-label="Filter articles by status"

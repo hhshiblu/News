@@ -3,7 +3,6 @@ import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Facebook, Twitter, Youtube, Instagram, Mail, Phone, MapPin } from "lucide-react";
-import { CATEGORIES } from "@/data/db";
 
 // Using SVG icons directly since lucide-react v1.x doesn't have social icons
 const SocialIcons = {
@@ -58,8 +57,14 @@ const footerContact = {
   email: "editor@labourpulse.com"
 };
 
-export default function Footer() {
-  const navigationCategories = CATEGORIES;
+function footerCategoryHref(category) {
+  if (category.children?.length) {
+    return `/${category.slug}/${category.children[0].slug}`;
+  }
+  return `/${category.slug}`;
+}
+
+export default function Footer({ navigationCategories = [] }) {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -121,21 +126,22 @@ export default function Footer() {
           <div className="lg:col-span-3">
             <h3 className="text-[14px] font-bold uppercase tracking-widest mb-6 opacity-60">Sections</h3>
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
-              {navigationCategories.map((category) => {
-                const firstChild = category.slug === "politics" ? "national" : 
-                                  category.slug === "economy" ? "finance" :
-                                  category.slug === "labour" ? "wages" :
-                                  category.slug === "international" ? "asia" : null;
-                                  
-                const href = firstChild ? `/${category.slug}/${firstChild}` : `/${category.slug}/general`;
-                return (
+              {navigationCategories.length === 0 ? (
+                <li className="col-span-full text-[13px] text-gray-500 leading-relaxed">
+                  Section links appear here after categories are added in the dashboard.
+                </li>
+              ) : (
+                navigationCategories.map((category) => (
                   <li key={category.slug}>
-                    <Link href={href} className="text-[14px] font-semibold text-gray-300 hover:text-primary transition-colors hover-translate">
+                    <Link
+                      href={footerCategoryHref(category)}
+                      className="text-[14px] font-semibold text-gray-300 hover:text-primary transition-colors hover-translate"
+                    >
                       {category.label}
                     </Link>
                   </li>
-                );
-              })}
+                ))
+              )}
             </ul>
           </div>
 

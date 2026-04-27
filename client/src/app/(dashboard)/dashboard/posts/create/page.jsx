@@ -2,13 +2,17 @@
 
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { Type, Video, Trash2, Upload, Tag, Quote, Activity, Shield, X, ChevronDown, MousePointer2, FileText, Image as ImageIcon } from "lucide-react";
+import { Type, Video, Trash2, Upload, Tag, Quote, Activity, Shield, X, ChevronDown, MousePointer2, FileText, SquarePen, Image as ImageIcon } from "lucide-react";
 import "react-quill-new/dist/quill.snow.css";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 // Drop-in React 19 replacement component 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false, loading: () => <p className="text-xs text-gray-500 font-medium">Loading Editor...</p> });
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+const API_ORIGIN = API_BASE.replace(/\/api\/v1\/?$/, "");
+const makeBlockId = () =>
+  typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
 
 const normalizeEditorHtml = (value) => {
   if (typeof value !== "string") return value;
@@ -48,17 +52,17 @@ export default function CreatePostPage() {
   };
 
   useEffect(() => {
-     fetch("http://localhost:5000/api/v1/public/categories")
+     fetch(`${API_BASE}/public/categories`)
        .then(res => res.json())
        .then(data => { if(data.success) setCategories(data.data); });
 
-     fetch("http://localhost:5000/api/v1/public/tags")
+     fetch(`${API_BASE}/admin/tags`, { credentials: "include" })
        .then(res => res.json())
        .then(data => { if(data.success) setTagsList(data.data); });
   }, []);
 
   const [blocks, setBlocks] = useState([
-    { id: Date.now(), type: "text", content: "" }
+    { id: makeBlockId(), type: "text", content: "" }
   ]);
 
   const toggleTag = (tagId) => {
@@ -66,7 +70,7 @@ export default function CreatePostPage() {
   };
 
   const addBlock = (type) => {
-    setBlocks([...blocks, { id: Date.now(), type, content: "", file: null, metaInfo: "" }]);
+    setBlocks((prev) => [...prev, { id: makeBlockId(), type, content: "", file: null, metaInfo: "" }]);
   };
 
   const updateBlockContent = (id, newContent) => {
@@ -87,12 +91,12 @@ export default function CreatePostPage() {
     const file = e.target.files[0];
     if (file) {
       const url = URL.createObjectURL(file); 
-      setBlocks(blocks.map((b) => (b.id === id ? { ...b, content: url, file } : b)));
+      setBlocks((prev) => prev.map((b) => (b.id === id ? { ...b, content: url, file } : b)));
     }
   };
 
   const removeBlock = (id) => {
-    setBlocks(blocks.filter((b) => b.id !== id));
+    setBlocks((prev) => prev.filter((b) => b.id !== id));
   };
 
   const handleSubmit = async (e) => {
@@ -109,14 +113,14 @@ export default function CreatePostPage() {
         if (featuredImageFile) {
             const formData = new FormData();
             formData.append('media', featuredImageFile);
-            const uploadRes = await fetch("http://localhost:5000/api/v1/admin/upload", { 
+            const uploadRes = await fetch(`${API_BASE}/admin/upload`, { 
                 method: 'POST', 
                 body: formData,
                 credentials: 'include'
             });
             const uploadData = await uploadRes.json();
             if (uploadData.success && uploadData.url) {
-                uploadedFeaturedImage = 'http://localhost:5000' + uploadData.url;
+                uploadedFeaturedImage = API_ORIGIN + uploadData.url;
             }
         }
 
@@ -125,14 +129,14 @@ export default function CreatePostPage() {
             if ((b.type === 'image' || b.type === 'video') && b.file) {
                 const formData = new FormData();
                 formData.append('media', b.file);
-                const uploadRes = await fetch("http://localhost:5000/api/v1/admin/upload", { 
+                const uploadRes = await fetch(`${API_BASE}/admin/upload`, { 
                     method: 'POST', 
                     body: formData,
                     credentials: 'include'
                 });
                 const uploadData = await uploadRes.json();
                 if (uploadData.success && uploadData.url) {
-                    parsedBlocks.push({ type: b.type, content: 'http://localhost:5000' + uploadData.url, metaInfo: b.metaInfo });
+                    parsedBlocks.push({ type: b.type, content: API_ORIGIN + uploadData.url, metaInfo: b.metaInfo });
                 }
             } else {
                 parsedBlocks.push({
@@ -154,18 +158,19 @@ export default function CreatePostPage() {
           status: 'PENDING'
         };
         
-        const res = await fetch("http://localhost:5000/api/v1/admin/posts", { 
+        const res = await fetch(`${API_BASE}/admin/posts`, { 
             method: 'POST', 
             body: JSON.stringify(payload), 
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include'
         });
+        const result = await res.json().catch(() => ({}));
 
         if(res.ok) {
             toast.success("Article submitted for moderation!");
             router.push("/dashboard/posts");
         } else {
-            toast.error("Failed to save article.");
+            toast.error(result?.message || "Failed to save article.");
         }
     } catch(e) {
         toast.error("An error occurred during submission.");
@@ -216,7 +221,7 @@ export default function CreatePostPage() {
                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Sub-headline</label>
                    <textarea 
                      value={subtitle} onChange={e => setSubtitle(e.target.value)}
-                     className="w-full border-none p-0 text-base font-bold focus:ring-0 placeholder:text-gray-200 bg-transparent text-gray-600 tracking-tight min-h-[40px] resize-none" 
+                     className="w-full border-none p-0 text-base font-bold focus:ring-0 placeholder:text-gray-200 bg-transparent text-gray-600 tracking-tight min-h-[96px] resize-y" 
                      placeholder="Add secondary context or a dekko..." 
                    />
                 </div>
@@ -315,7 +320,7 @@ export default function CreatePostPage() {
                                     value={block.content}
                                     onChange={(v) => updateBlockContent(block.id, v)}
                                     modules={modules}
-                                    className="bg-white rounded-xl overflow-hidden border border-gray-100 "
+                                    className="bg-white rounded-xl overflow-hidden border border-gray-100 [&_.ql-editor]:min-h-[220px] [&_.ql-editor]:text-[15px] [&_.ql-editor]:leading-7"
                                 />
                             )}
 
@@ -337,7 +342,7 @@ export default function CreatePostPage() {
                                         placeholder="Caption for this image..." 
                                         className="w-full bg-white border border-gray-100 rounded-xl px-4 py-2 text-xs font-medium outline-none focus:ring-1 focus:ring-emerald-500" 
                                         value={block.metaInfo} 
-                                        onChange={e => setBlocks(blocks.map(b => b.id === block.id ? {...b, metaInfo: e.target.value} : b))}
+                                        onChange={e => setBlocks((prev) => prev.map((b) => b.id === block.id ? {...b, metaInfo: e.target.value} : b))}
                                     />
                                 </div>
                             )}
@@ -355,7 +360,7 @@ export default function CreatePostPage() {
                                         placeholder="Attribution (e.g. Name, Position)"
                                         className="w-full text-[10px] font-black text-gray-400 uppercase tracking-widest border-none p-0 outline-none bg-transparent mt-2"
                                         value={block.metaInfo}
-                                        onChange={e => setBlocks(blocks.map(b => b.id === block.id ? {...b, metaInfo: e.target.value} : b))}
+                                        onChange={e => setBlocks((prev) => prev.map((b) => b.id === block.id ? {...b, metaInfo: e.target.value} : b))}
                                     />
                                 </div>
                             )}
@@ -418,9 +423,7 @@ export default function CreatePostPage() {
                             className="w-full bg-gray-50/50 border border-gray-100 rounded-2xl px-5 py-4 text-xs font-bold text-gray-700 outline-none focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500/30 transition-all cursor-pointer appearance-none"
                         >
                             <option value="">{tagsList.length === 0 ? 'Synchronizing tags...' : 'Search tags from database...'}</option>
-                            {tagsList
-                              .filter((tag) => !["breaking-news", "breaking"].includes(tag.slug))
-                              .map((tag) => (
+                            {tagsList.map((tag) => (
                                 <option key={tag.id} value={tag.id}>
                                   {tag.name}
                                 </option>

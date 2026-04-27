@@ -11,17 +11,13 @@ import HorizontalCard from "@/components/news/HorizontalCard";
 import MediumCard from "@/components/news/MediumCard";
 import SmallCard from "@/components/news/SmallCard";
 import BigCard from "@/components/news/BigCard";
+import MosaicNewsGrid from "@/components/news/MosaicNewsGrid";
 import Pagination from "@/components/ui/Pagination";
-import { CategoryTagRails } from "@/components/category/CategoryDeskRails";
 import { fetchPublicPosts } from "@/lib/api";
-import { buildTagLanes } from "@/lib/postLanes";
 import { getPublicCategoryBySlugAction } from "@/actions/public-extra.action";
 
 const CATEGORY_PAGE_SIZE = 30;
 const ARCHIVE_PAGE_SIZE = 12;
-/** Larger sample so “Topic pulse” can surface top 4 tags with 5 stories each. */
-const TAG_LANE_SAMPLE = 100;
-
 const normalizePost = (post) => ({
   ...post,
   image: post.featuredImage || "/placeholder.jpg",
@@ -30,6 +26,22 @@ const normalizePost = (post) => ({
   categorySlug: post.category?.slug,
   timestamp: post.publishedAt ? new Date(post.publishedAt).toLocaleDateString() : "Recently"
 });
+
+const getStoryKey = (story) => String(story?.id || story?.slug || "");
+
+function pickUnique(posts, usedSet, { start = 0, count = Infinity, predicate } = {}) {
+  const bucket = [];
+  for (let i = start; i < posts.length; i += 1) {
+    const post = posts[i];
+    if (predicate && !predicate(post)) continue;
+    const key = getStoryKey(post);
+    if (!key || usedSet.has(key)) continue;
+    usedSet.add(key);
+    bucket.push(post);
+    if (bucket.length >= count) break;
+  }
+  return bucket;
+}
 
 export async function generateMetadata({ params, searchParams }) {
   const { categorySlug } = await params;
@@ -67,16 +79,6 @@ async function ParentCategoryPageContent({ params, searchParams }) {
   }
 
   const allPosts = rawPosts.map(normalizePost);
-  let tagLanes = [];
-  if (page === 1) {
-    const laneFeed = await fetchPublicPosts({
-      parentCategorySlug: categorySlug,
-      page: 1,
-      limit: TAG_LANE_SAMPLE,
-    });
-    tagLanes = buildTagLanes(laneFeed.posts || [], 4, 5);
-  }
-
   let archivePosts = [];
   let archiveTotalPages = 1;
   if (page === 1) {
@@ -140,11 +142,16 @@ async function ParentCategoryPageContent({ params, searchParams }) {
                   · Page {page}
                 </span>
               </h1>
-              <div className="space-y-4 md:space-y-5">
-                {allPosts.map((story) => (
-                  <HorizontalCard key={story.id} story={story} compact />
-                ))}
+              <div className="mb-6">
+                <MosaicNewsGrid posts={allPosts} maxItems={7} />
               </div>
+              {allPosts.length > 7 && (
+                <div className="space-y-4 md:space-y-5 mb-6">
+                  {allPosts.slice(7).map((story) => (
+                    <HorizontalCard key={`list-${story.id}`} story={story} compact />
+                  ))}
+                </div>
+              )}
               <Pagination basePath={`/${categorySlug}`} currentPage={page} totalPages={totalPages} />
             </main>
             <aside className="lg:w-[300px] xl:w-[300px] shrink-0">
@@ -159,12 +166,18 @@ async function ParentCategoryPageContent({ params, searchParams }) {
   }
   const subcategories = categoryData.children || [];
 
-  // Data Slices for Standard Density Layout
-  const leadStory = allPosts[0];
-  const sideHeadlines = allPosts.slice(1, 5);
-  const topRegistry = allPosts.slice(5, 11);
-  const detailedSpotlight = allPosts.find(p => p.isOpinion) || allPosts[11];
-  const editorialFeed = allPosts.slice(12);
+  // Unique distribution across blocks: one story appears once per page.
+  const usedStories = new Set();
+  const leadStory = pickUnique(allPosts, usedStories, { count: 1 })[0];
+  const sideHeadlines = pickUnique(allPosts, usedStories, { start: 1, count: 4 });
+  const topRegistry = pickUnique(allPosts, usedStories, { start: 5, count: 6 });
+  const detailedSpotlight =
+    pickUnique(allPosts, usedStories, { predicate: (p) => !!p?.isOpinion, count: 1 })[0] ||
+    pickUnique(allPosts, usedStories, { start: 0, count: 1 })[0] ||
+    null;
+  const editorialFeed = pickUnique(allPosts, usedStories);
+  const layoutTone = categorySlug.length % 2 === 0 ? "emerald" : "primary";
+  const accentBarClass = layoutTone === "emerald" ? "bg-emerald-600" : "bg-primary";
 
   return (
     <div className="bg-[#fcfcfc]">
@@ -177,7 +190,7 @@ async function ParentCategoryPageContent({ params, searchParams }) {
             
             <div className="lg:w-2/3">
               <div className="flex items-center gap-2 mb-2">
-                 <div className="px-2 py-0.5 bg-gray-900 text-white text-[9px] font-black uppercase tracking-widest rounded">Hub</div>
+                 <div className={`px-2 py-0.5 text-white text-[9px] font-black uppercase tracking-widest rounded ${layoutTone === "emerald" ? "bg-emerald-700" : "bg-gray-900"}`}>Hub</div>
                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{label}</span>
               </div>
               <h1 className="text-xl md:text-3xl font-black text-gray-950 font-[Playfair_Display] leading-tight tracking-tight mb-3">
@@ -207,7 +220,7 @@ async function ParentCategoryPageContent({ params, searchParams }) {
               <div className="flex flex-col gap-4 flex-1">
                 {sideHeadlines.map(story => (
                   <Link key={story.id} href={`/news/${story.slug}`} className="group flex gap-2 items-start">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 shrink-0 mt-1.5 ring-2 ring-emerald-600/15" aria-hidden />
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 mt-1.5 ring-2 ${layoutTone === "emerald" ? "bg-emerald-600 ring-emerald-600/15" : "bg-primary ring-primary/20"}`} aria-hidden />
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-1.5 text-[8px] font-bold text-primary uppercase tracking-wider mb-0.5">
                          <span>{story.category}</span>
@@ -246,14 +259,6 @@ async function ParentCategoryPageContent({ params, searchParams }) {
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-5">
           
           <main className="flex-1 min-w-0">
-            {tagLanes.length > 0 && (
-              <CategoryTagRails
-                lanes={tagLanes}
-                heading="Topic pulse in this desk"
-                variant="compact"
-              />
-            )}
-
             <div className="mb-6 flex justify-center">
               <AdSlot slotKey="category_hub_leaderboard" />
             </div>
@@ -295,7 +300,7 @@ async function ParentCategoryPageContent({ params, searchParams }) {
             {/* 3. EDITORIAL FEED (Standard News Deck) */}
             <div className="mb-8">
                <div className="mb-3 flex flex-col gap-1">
-                  <div className="h-1 w-12 bg-primary"></div>
+                  <div className={`h-1 w-12 ${accentBarClass}`}></div>
                   <h2 className="text-base md:text-lg font-black text-gray-950 font-[Playfair_Display]">Editorial Feed</h2>
                </div>
                <div className="space-y-4 md:space-y-5">
@@ -328,7 +333,7 @@ async function ParentCategoryPageContent({ params, searchParams }) {
                     <li key={story.id}>
                       <Link
                         href={`/news/${story.slug}`}
-                        className="flex gap-3 sm:gap-4 items-start px-4 py-3.5 hover:bg-primary/[0.04] transition-colors group"
+                        className="flex gap-3 sm:gap-4 items-start px-4 py-3.5 hover:bg-primary/4 transition-colors group"
                       >
                         <span className="w-2 h-2 rounded-full bg-primary shrink-0 mt-1.5 ring-2 ring-primary/20" aria-hidden />
                         <div className="min-w-0 flex-1">

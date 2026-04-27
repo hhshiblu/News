@@ -1,24 +1,20 @@
 "use client";
-import React, { useEffect, useState } from 'react';
-import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import React, { useEffect, useState } from "react";
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 
-const data = [
-  { name: 'Mon', views: 400 },
-  { name: 'Tue', views: 300 },
-  { name: 'Wed', views: 800 },
-  { name: 'Thu', views: 600 },
-  { name: 'Fri', views: 900 },
-  { name: 'Sat', views: 1100 },
-  { name: 'Sun', views: 1500 },
+const CHART_H = 220;
+
+const defaultData = [
+  { name: "—", clicks: 0 },
 ];
 
-const CHART_H = 300;
-
-export function ViewsChart() {
+export function ViewsChart({ data, valueKey = "clicks" }) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const rows = Array.isArray(data) && data.length > 0 ? data : defaultData;
 
   if (!mounted) {
     return <div className="w-full min-w-0" style={{ height: CHART_H }} aria-hidden />;
@@ -27,38 +23,32 @@ export function ViewsChart() {
   return (
     <div className="w-full min-w-0" style={{ height: CHART_H }}>
       <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-        <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-          <defs>
-            <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#10b981" stopOpacity={0.1}/>
-              <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-            </linearGradient>
-          </defs>
+        <BarChart data={rows} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-          <XAxis 
-            dataKey="name" 
-            axisLine={false} 
-            tickLine={false} 
-            tick={{ fontSize: 12, fill: '#94a3b8', fontWeight: 600 }}
-            dy={10}
+          <XAxis
+            dataKey="name"
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 10, fill: "#94a3b8", fontWeight: 600 }}
+            interval={0}
+            height={48}
           />
-          <YAxis 
-            axisLine={false} 
-            tickLine={false} 
-            tick={{ fontSize: 12, fill: '#94a3b8', fontWeight: 600 }}
+          <YAxis
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 10, fill: "#94a3b8", fontWeight: 600 }}
+            allowDecimals={false}
           />
-          <Tooltip 
-            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+          <Tooltip
+            contentStyle={{
+              borderRadius: "10px",
+              border: "none",
+              boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
+              fontSize: "12px",
+            }}
           />
-          <Area 
-            type="monotone" 
-            dataKey="views" 
-            stroke="#10b981" 
-            strokeWidth={3}
-            fillOpacity={1} 
-            fill="url(#colorViews)" 
-          />
-        </AreaChart>
+          <Bar dataKey={valueKey} fill="#c41e3a" radius={[6, 6, 0, 0]} maxBarSize={36} />
+        </BarChart>
       </ResponsiveContainer>
     </div>
   );

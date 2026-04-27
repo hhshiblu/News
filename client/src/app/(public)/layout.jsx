@@ -3,6 +3,8 @@ import BreakingNewsTicker from "@/components/layout/BreakingNewsTicker";
 import Footer from "@/components/layout/Footer";
 import { Toaster } from "sonner";
 import HomeTopAd from "@/components/layout/HomeTopAd";
+import { getCategories } from "@/actions/public";
+import { mapPublicNavCategories } from "@/lib/mapPublicNavCategories";
 
 export const metadata = {
   title: {
@@ -13,11 +15,14 @@ export const metadata = {
     "Latest labour, economy, politics, and international news with in-depth reporting.",
 };
 
-export default function PublicLayout({ children }) {
+export default async function PublicLayout({ children }) {
+  const categoriesRes = await getCategories();
+  const navCategories = mapPublicNavCategories(categoriesRes?.data);
+
   return (
     <>
       <HomeTopAd />
-      <Navbar />
+      <Navbar navCategories={navCategories} />
 
       {/* Breaking News Ticker */}
       <BreakingNewsTicker />
@@ -26,7 +31,7 @@ export default function PublicLayout({ children }) {
       <main className="w-full min-h-[calc(100dvh-18rem)]">{children}</main>
 
       {/* Footer */}
-      <Footer />
+      <Footer navigationCategories={navCategories} />
 
       <Toaster position="top-right" richColors closeButton />
     </>

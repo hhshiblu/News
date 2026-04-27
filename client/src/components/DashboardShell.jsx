@@ -71,11 +71,12 @@ export default function DashboardShell({ user, children }) {
               <button
                 onClick={() => {
                   setOpenProfile(false);
-                  router.push("/dashboard/settings");
+                  router.push(user?.role === "ADMIN" ? "/dashboard/settings" : "/dashboard/account");
                 }}
                 className="w-full px-3 py-2 text-left text-[11px] font-semibold text-gray-700 hover:bg-gray-50 flex items-center gap-2"
               >
-                <Settings className="w-3.5 h-3.5" /> Settings
+                <Settings className="w-3.5 h-3.5" />{" "}
+                {user?.role === "ADMIN" ? "Settings" : "My account"}
               </button>
               <button
                 onClick={onLogout}

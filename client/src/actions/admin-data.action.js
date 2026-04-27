@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
@@ -108,5 +109,61 @@ export async function patchAdminUserStatusAction(authorId, newStatus) {
     return { success: res.ok, message: data?.message };
   } catch (error) {
     return { success: false, message: error.message };
+  }
+}
+
+export async function patchMyProfileAction(payload) {
+  try {
+    const res = await authFetch("/admin/users/me", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) revalidatePath("/dashboard/account");
+    return { success: res.ok, data: data.data, message: data?.message };
+  } catch (e) {
+    return { success: false, message: e.message };
+  }
+}
+
+export async function createAdminUserAction(body) {
+  try {
+    const res = await authFetch("/admin/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) revalidatePath("/dashboard/authors");
+    return { success: res.ok, data: data.data, message: data?.message };
+  } catch (e) {
+    return { success: false, message: e.message };
+  }
+}
+
+export async function getSiteConfigAction() {
+  try {
+    const res = await authFetch("/admin/site-config");
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return null;
+    return data.data || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function patchSiteConfigAction(updates) {
+  try {
+    const res = await authFetch("/admin/site-config", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updates),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) revalidatePath("/dashboard/settings");
+    return { success: res.ok, data: data.data, message: data?.message };
+  } catch (e) {
+    return { success: false, message: e.message };
   }
 }

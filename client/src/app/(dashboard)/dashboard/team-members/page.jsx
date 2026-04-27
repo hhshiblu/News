@@ -9,6 +9,7 @@ import {
   listTeamMembersAction,
   updateTeamMemberAction,
 } from "@/actions/team-member.action";
+import { listDepartmentsAction } from "@/actions/department.action";
 import FormField from "@/components/ui/FormField";
 import ImageUploadPreview from "@/components/ui/ImageUploadPreview";
 import AdminTablePagination, { ADMIN_PAGE_SIZE } from "@/components/dashboard/AdminTablePagination";
@@ -23,7 +24,7 @@ const INITIAL_FORM = {
   description: "",
   email: "",
   phone: "",
-  department: "",
+  departmentId: "",
   experienceYears: 0,
   skills: "",
   priority: 0,
@@ -39,13 +40,22 @@ export default function TeamMembersPage() {
   const [imageFile, setImageFile] = useState(null);
   const [existingPhotoUrl, setExistingPhotoUrl] = useState(null);
   const [listPage, setListPage] = useState(1);
+  const [departments, setDepartments] = useState([]);
 
   const fetchItems = async () => {
     const res = await listTeamMembersAction();
     setItems(res.data || []);
   };
 
-  useEffect(() => { fetchItems(); }, []);
+  const fetchDepartments = async () => {
+    const res = await listDepartmentsAction();
+    setDepartments(res.data || []);
+  };
+
+  useEffect(() => {
+    fetchItems();
+    fetchDepartments();
+  }, []);
 
   const pageItems = useMemo(
     () => items.slice((listPage - 1) * ADMIN_PAGE_SIZE, listPage * ADMIN_PAGE_SIZE),
@@ -67,7 +77,7 @@ export default function TeamMembersPage() {
     fd.append("description", form.description || "");
     fd.append("email", form.email || "");
     fd.append("phone", form.phone || "");
-    fd.append("department", form.department || "");
+    fd.append("departmentId", form.departmentId || "");
     fd.append("experienceYears", String(form.experienceYears || 0));
     fd.append("skills", form.skills || "");
     fd.append("priority", String(form.priority || 0));
@@ -130,8 +140,20 @@ export default function TeamMembersPage() {
             <FormField label="Position / role" htmlFor="tm-role">
               <input id="tm-role" className={inputCls} placeholder="e.g. Senior reporter" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} />
             </FormField>
-            <FormField label="Department" htmlFor="tm-dept">
-              <input id="tm-dept" className={inputCls} placeholder="e.g. Investigative desk" value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} />
+            <FormField label="Department" htmlFor="tm-dept" hint="From Departments — optional">
+              <select
+                id="tm-dept"
+                className={inputCls}
+                value={form.departmentId}
+                onChange={(e) => setForm({ ...form, departmentId: e.target.value })}
+              >
+                <option value="">None</option>
+                {departments.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
             </FormField>
             <FormField label="Email" htmlFor="tm-email" hint="Optional — for internal contact only">
               <input id="tm-email" type="email" className={inputCls} placeholder="name@example.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
@@ -197,7 +219,7 @@ export default function TeamMembersPage() {
                         <img src={it.photoUrl} alt={it.name} className="h-10 w-10 rounded-full object-cover" />
                         <div>
                           <p className="font-bold text-gray-900">{it.name}</p>
-                          <p className="text-[11px] text-gray-500">{it.department || "Team"}</p>
+                          <p className="text-[11px] text-gray-500">{it.department?.name || "—"}</p>
                         </div>
                       </div>
                     </td>
@@ -230,7 +252,7 @@ export default function TeamMembersPage() {
                               description: it.description || "",
                               email: it.email || "",
                               phone: it.phone || "",
-                              department: it.department || "",
+                              departmentId: it.departmentId || it.department?.id || "",
                               experienceYears: it.experienceYears || 0,
                               skills: it.skills || "",
                               priority: it.priority || 0,

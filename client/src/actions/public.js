@@ -56,9 +56,12 @@ export async function getPostDetail(slug) {
 export async function getCategories() {
     try {
         const res = await fetch(`${BACKEND_URL}/public/categories`, {
-            next: { revalidate: 3600 } // Revalidate every hour
+            cache: "no-store"
         });
-        if (!res.ok) throw new Error("Failed to fetch categories");
+        if (!res.ok) {
+            console.warn("Categories Fetch Warning:", res.status, res.statusText);
+            return { success: false, data: [] };
+        }
         return await res.json();
     } catch (error) {
         console.error("Categories Fetch Error:", error);

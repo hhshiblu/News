@@ -28,7 +28,7 @@ export default function Sidebar() {
             fetchPublicPosts({ tagSlug: "breaking-news", limit: 10 }),
             fetchPublicPosts({ tagSlug: "breaking", limit: 10 }),
             fetchPublicPosts({ tagSlug: "trending", limit: 10 }),
-            fetchPublicPosts({ limit: 12 }),
+            fetchPublicPosts({ limit: 6 }),
           ]);
 
         const seen = new Set();
@@ -147,7 +147,7 @@ export default function Sidebar() {
           </Link>
         </div>
         <div className="space-y-2.5">
-          {latest.map((item) => (
+          {latest.slice(0, 6).map((item) => (
             <Link
               key={item.id}
               href={`/news/${item.slug}`}

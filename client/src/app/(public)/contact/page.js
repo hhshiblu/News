@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Mail, Phone, MapPin, Send, MessageSquare, Briefcase, Info, Camera, X, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 
 export default function ContactPage() {
   const [showNewsModal, setShowNewsModal] = useState(false);
@@ -38,17 +39,18 @@ export default function ContactPage() {
 
      setSubmittingNews(true);
      try {
-         const res = await fetch("http://localhost:5000/api/v1/public/submissions", {
+         const res = await fetch(`${API_BASE}/public/submissions`, {
              method: "POST",
              body: formData
          });
+         const data = await res.json().catch(() => ({}));
          if(res.ok) {
              toast.success("News tip successfully dispatched to our editors!");
              setShowNewsModal(false);
              setNewsData({ name: "", email: "", title: "", content: "" });
              setNewsImages([]);
          } else {
-             toast.error("Failed to submit news tip.");
+             toast.error(data?.message || "Failed to submit news tip.");
          }
      } catch(err) {
          toast.error("Network error.");
@@ -140,7 +142,7 @@ export default function ContactPage() {
                 <h3 className="text-xl font-bold text-gray-900 font-[Playfair_Display]">Our Headquarters</h3>
                 <div className="space-y-4">
                   <div className="flex gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center shrink-0">
                       <MapPin size={22} className="text-gray-600" />
                     </div>
                     <div>
@@ -153,7 +155,7 @@ export default function ContactPage() {
                     </div>
                   </div>
                   <div className="flex gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center shrink-0">
                       <Phone size={22} className="text-gray-600" />
                     </div>
                     <div>
@@ -162,7 +164,7 @@ export default function ContactPage() {
                     </div>
                   </div>
                   <div className="flex gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 rounded-2xl bg-gray-100 flex items-center justify-center shrink-0">
                       <Mail size={22} className="text-gray-600" />
                     </div>
                     <div>

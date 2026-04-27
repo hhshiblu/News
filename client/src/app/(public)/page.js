@@ -1,22 +1,14 @@
 import { getNewsFeed, getCategories } from "@/actions/public";
-import { getPublicPartnersAction } from "@/actions/public-extra.action";
 import { Suspense } from "react";
 
 import PulseHero from "@/components/sections/PulseHero";
 import BreakingRow from "@/components/sections/BreakingRow";
-import IndustryGrid from "@/components/sections/IndustryGrid";
-import TrendingBlock from "@/components/sections/TrendingBlock";
-import PhotoLounge from "@/components/sections/PhotoLounge";
+import CategoryGridDirectory from "@/components/sections/CategoryGridDirectory";
+import DualCategoryGrid from "@/components/sections/DualCategoryGrid";
 import MustReadSection from "@/components/sections/MustReadSection";
-import CategoryTitlesStrip from "@/components/sections/CategoryTitlesStrip";
 import EditorialStrip from "@/components/sections/EditorialStrip";
 import NewsletterSection from "@/components/sections/NewsletterSection";
-import {
-  HomeMagazineDesks,
-  HomeTitleCardBand,
-  HomeHeadlinesRiver,
-} from "@/components/sections/HomeScrollSections";
-import PartnerBrandCard from "@/components/partners/PartnerBrandCard";
+import InfiniteNewsFeed from "@/components/sections/InfiniteNewsFeed";
 
 export const metadata = {
   title: "LabourPulse — Bangladesh's Leading Labour & Economy News",
@@ -24,140 +16,165 @@ export const metadata = {
     "Comprehensive coverage of labour rights, industrial relations, and economic shifts in Bangladesh and beyond.",
 };
 
-const MAIN_DESK_POSTS = 14;
-const EXTRA_DESK_POSTS = 8;
+// ─── helpers ────────────────────────────────────────────────────────────────
+
+function getPostKey(post) {
+  if (!post) return null;
+  if (post.id !== undefined && post.id !== null) return String(post.id);
+  if (post.slug) return String(post.slug);
+  return null;
+}
+
+function take(source = [], n, seen) {
+  const result = [];
+  for (const p of source) {
+    if (result.length >= n) break;
+    const key = getPostKey(p);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    result.push(p);
+  }
+  return result;
+}
+
+// ─── main page ───────────────────────────────────────────────────────────────
 
 async function HomePageContent() {
-  const partners = await getPublicPartnersAction();
   const catRes = await getCategories();
   const allCats = catRes.data || [];
-  const getCat = (slug) =>
-    allCats.find((c) => c.slug === slug) || {
-      id: slug,
-      name: slug.charAt(0).toUpperCase() + slug.slice(1),
-      slug,
-    };
 
+  // Fetch primary global feeds
   const [
-    featuredRes,
-    latestRes,
-    breakingRes,
-    trendingRes,
-    politicsRes,
-    economyRes,
-    labourRes,
-    intlRes,
-    healthRes,
-    businessRes,
-    techRes,
-    opinionRes,
-    photoRes,
+    featuredRes, latestRes, breakingRes, opinionRes,
   ] = await Promise.all([
-    getNewsFeed({ featured: true, limit: 6 }),
-    getNewsFeed({ limit: 36 }),
-    getNewsFeed({ limit: 8 }),
-    getNewsFeed({ limit: 12 }),
-    getNewsFeed({ categoryId: getCat("politics").id, limit: MAIN_DESK_POSTS }),
-    getNewsFeed({ categoryId: getCat("economy").id, limit: MAIN_DESK_POSTS }),
-    getNewsFeed({ categoryId: getCat("labour").id, limit: MAIN_DESK_POSTS }),
-    getNewsFeed({ categoryId: getCat("international").id, limit: MAIN_DESK_POSTS }),
-    getNewsFeed({ categoryId: getCat("health").id, limit: EXTRA_DESK_POSTS }),
-    getNewsFeed({ categoryId: getCat("business").id, limit: EXTRA_DESK_POSTS }),
-    getNewsFeed({ categoryId: getCat("technology").id, limit: EXTRA_DESK_POSTS }),
-    getNewsFeed({ isOpinion: true, limit: 5 }),
-    getNewsFeed({ isPhotoStory: true, limit: 5 }),
+    getNewsFeed({ featured: true, limit: 8 }),
+    getNewsFeed({ limit: 40 }),
+    getNewsFeed({ limit: 6 }),
+    getNewsFeed({ isOpinion: true, limit: 4 }),
   ]);
 
-  const politics = politicsRes.posts || [];
-  const economy = economyRes.posts || [];
-  const labour = labourRes.posts || [];
-  const intl = intlRes.posts || [];
-  const health = healthRes.posts || [];
-  const business = businessRes.posts || [];
-  const tech = techRes.posts || [];
+  // Fetch feeds for ALL categories
+  const catFeeds = await Promise.all(
+    allCats.map(async (cat) => {
+      let feed = await getNewsFeed({ parentCategorySlug: cat.slug, limit: 15 });
+      if (!feed?.posts?.length && cat.id && String(cat.id).length > 20) {
+        feed = await getNewsFeed({ categoryId: cat.id, limit: 15 });
+      }
+      return feed || { posts: [] };
+    })
+  );
 
-  const industryCategories = [
-    getCat("politics"),
-    getCat("economy"),
-    getCat("labour"),
-    getCat("international"),
-  ];
-  const industryData = {
-    politics: politics.slice(0, 6),
-    economy: economy.slice(0, 6),
-    labour: labour.slice(0, 6),
-    international: intl.slice(0, 6),
-  };
+  const featuredAll = featuredRes.posts || [];
+  const latestAll   = latestRes.posts   || [];
+  const breakingAll = breakingRes.posts || [];
+  const opinionAll  = opinionRes.posts  || [];
 
-  const latest = latestRes.posts || [];
+  const seen = new Set();
+  const leftovers = [];
+
+  // SECTION 1 — Hero
+  const heroLead   = take(featuredAll, 1, seen);
+  const heroSubs   = take(featuredAll, 2, seen);
+  const heroSide   = take(featuredAll, 2, seen);
+  const heroPosts  = [...heroLead, ...heroSubs, ...heroSide]; // 5 featured
+  if (heroPosts.length < 5) heroPosts.push(...take(latestAll, 5 - heroPosts.length, seen));
+  
+  const heroLatest = take(latestAll, 3, seen);
+  if (heroLatest.length < 3) heroLatest.push(...take(latestAll, 3 - heroLatest.length, seen));
+
+  // SECTION 2 — Breaking strip
+  const breakingPosts = take(breakingAll, 5, seen);
+  if (breakingPosts.length < 5) breakingPosts.push(...take(latestAll, 5 - breakingPosts.length, seen));
+
+  // Category Desks Data
+  const allCategoryDesks = allCats.map((cat, i) => {
+    const feed = catFeeds[i];
+    
+    // RELAXED DEDUPLICATION: Always show top 6 posts for the category, even if they appeared in Hero
+    const rawPosts = feed.posts || [];
+    const posts = rawPosts.slice(0, 5);
+    
+    // Add these exact 6 to the seen set so they don't appear in the infinite feed below
+    posts.forEach(p => {
+      const key = getPostKey(p);
+      if (key) seen.add(key);
+    });
+
+    // Add unused posts to leftovers for the infinite feed
+    rawPosts.forEach(post => {
+      const key = getPostKey(post);
+      if (key && !seen.has(key)) leftovers.push(post);
+    });
+    
+    return { category: cat, posts };
+  }).filter(desk => desk.posts.length >= 5); // Only keep if they have at least 5 posts
+
+  // Get only the top 2 categories for the special layouts
+  const top2Desks = allCategoryDesks.slice(0, 2);
+  const desk1 = top2Desks[0] || null;
+  const desk2 = top2Desks[1] || null;
+
+  // SECTION 6 — Opinion / Must Read
+  const opinionPosts = (() => {
+    const op = take(opinionAll, 3, seen);
+    if (op.length < 3) op.push(...take(latestAll, 3 - op.length, seen));
+    return op;
+  })();
+
+  // SECTION 10 — Dark Editorial Strip
+  const editorialPosts = take(latestAll, 5, seen);
+
+  // Add all remaining latest to leftovers
+  latestAll.forEach(post => {
+    const key = getPostKey(post);
+    if (key && !seen.has(key)) leftovers.push(post);
+  });
+
+  // Deduplicate leftovers
+  const uniqueLeftovers = [];
+  const leftoverSeen = new Set(seen);
+  leftovers.forEach(post => {
+    const key = getPostKey(post);
+    if (key && !leftoverSeen.has(key)) {
+      leftoverSeen.add(key);
+      uniqueLeftovers.push(post);
+    }
+  });
+
+  const seenIdsArray = Array.from(leftoverSeen);
+  const infiniteInitial = uniqueLeftovers.slice(0, 12);
+  const infiniteOffset = 40; 
 
   return (
     <div className="bg-white min-h-screen">
+
+      {/* ─── SECTION 1: HERO ─────────────────────────────────────── */}
       <div className="max-w-[1280px] mx-auto px-4 pt-6 pb-0">
-        <PulseHero featuredPosts={featuredRes.posts || []} latestPosts={latest} />
+        <PulseHero featuredPosts={heroPosts} latestPosts={heroLatest} />
       </div>
 
-      <BreakingRow posts={breakingRes.posts || []} />
+      {/* ─── SECTION 2: BREAKING STRIP ───────────────────────────── */}
+      <BreakingRow posts={breakingPosts} />
 
-      <HomeMagazineDesks
-        layoutOffset={0}
-        desks={[
-          { category: getCat("politics"), posts: politics.slice(6, 11) },
-          { category: getCat("economy"), posts: economy.slice(6, 11) },
-          { category: getCat("labour"), posts: labour.slice(6, 11) },
-          { category: getCat("international"), posts: intl.slice(6, 11) },
-        ]}
+      {/* ─── SECTION 3: TOP 2 CATEGORIES (Dual Grid Design) ─────────── */}
+      {(desk1 || desk2) && (
+        <DualCategoryGrid desk1={desk1} desk2={desk2} />
+      )}
+
+      {/* ─── SECTION 6: OPINION / MUST READ (dark) ───────────────── */}
+      <MustReadSection posts={opinionPosts} />
+
+      {/* ─── SECTION 10: DARK EDITORIAL STRIP ────────────────────── */}
+      <EditorialStrip posts={editorialPosts} />
+
+      {/* ─── SECTION 11: INFINITE SCROLL FEED ────────────────────── */}
+      <InfiniteNewsFeed
+        initialPosts={infiniteInitial}
+        initialOffset={infiniteOffset}
+        seenIdsArray={seenIdsArray}
       />
 
-      <HomeTitleCardBand
-        items={[
-          { category: getCat("politics"), posts: politics.slice(11, 14) },
-          { category: getCat("economy"), posts: economy.slice(11, 14) },
-          { category: getCat("labour"), posts: labour.slice(11, 14) },
-          { category: getCat("international"), posts: intl.slice(11, 14) },
-        ]}
-      />
-
-      <div className="max-w-[1280px] mx-auto px-4 py-10">
-        <IndustryGrid categories={industryCategories} postsByCategory={industryData} />
-      </div>
-
-      <TrendingBlock posts={trendingRes.posts || []} sidePosts={latest} />
-
-      <PhotoLounge photoPosts={photoRes.posts || []} />
-
-      <HomeMagazineDesks
-        layoutOffset={1}
-        desks={[
-          { category: getCat("health"), posts: health.slice(0, 5) },
-          { category: getCat("business"), posts: business.slice(0, 5) },
-          { category: getCat("technology"), posts: tech.slice(0, 5) },
-        ]}
-      />
-
-      <HomeHeadlinesRiver posts={latest.slice(14, 34)} title="Still reporting" />
-
-      <div className="max-w-[1280px] mx-auto px-4 py-10">
-        <MustReadSection posts={opinionRes.posts || latest || []} />
-      </div>
-
-      <CategoryTitlesStrip categorySlugs={["politics", "economy", "labour"]} />
-
-      <EditorialStrip posts={latest.slice(24, 27)} />
-
-      <section className="max-w-[1280px] mx-auto px-4 py-8">
-        <div className="border-y border-gray-100 py-6">
-          <p className="text-[10px] font-black tracking-[0.22em] uppercase text-accent text-center mb-4 font-[Inter]">
-            Trusted Partners
-          </p>
-          <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1 [scrollbar-width:thin]">
-            {(partners || []).slice(0, 12).map((partner) => (
-              <PartnerBrandCard key={partner.id} partner={partner} layout="row" />
-            ))}
-          </div>
-        </div>
-      </section>
-
+      {/* ─── SECTION 12: NEWSLETTER ───────────────────────────────── */}
       <NewsletterSection />
     </div>
   );
@@ -168,22 +185,14 @@ function HomePageSkeleton() {
     <div className="bg-white w-full">
       <div className="max-w-[1280px] mx-auto px-4 pt-6 pb-16 animate-pulse">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
-          <div className="lg:col-span-2 h-80 bg-gray-100 rounded-2xl" />
-          <div className="h-80 bg-gray-100 rounded-2xl" />
+          <div className="lg:col-span-2 h-80 bg-gray-100 rounded-sm" />
+          <div className="h-80 bg-gray-100 rounded-sm" />
         </div>
-        <div className="h-14 bg-gray-100 rounded-xl mb-10" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-48 bg-gray-100 rounded-2xl" />
-          ))}
+        <div className="h-14 bg-gray-100 rounded-sm mb-10" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+          <div className="h-64 bg-gray-100 rounded-sm" />
+          <div className="h-64 bg-gray-100 rounded-sm" />
         </div>
-        <div className="h-64 bg-gray-100 rounded-2xl mb-10" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10">
-          <div className="h-44 bg-gray-100 rounded-xl" />
-          <div className="h-44 bg-gray-100 rounded-xl" />
-          <div className="h-44 bg-gray-100 rounded-xl" />
-        </div>
-        <div className="h-72 bg-gray-100 rounded-2xl" />
       </div>
     </div>
   );

@@ -1,18 +1,23 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Award, ShieldCheck, CheckCircle2, MessageSquare, AlertCircle, FileText, Scale, Fingerprint } from "lucide-react";
+import { getNewsFeed } from "@/actions/public";
 
 export const metadata = {
   title: "Editorial Policy — LabourPulse Standards",
   description: "Transparency in our journalistic standards, fact-checking, and correction policy.",
 };
 
-export default function EditorialPolicyPage() {
+export default async function EditorialPolicyPage() {
   const pillars = [
     { title: "Accuracy", icon: CheckCircle2, desc: "We prioritize truth above all else, ensuring every fact is multi-sourced and verified." },
     { title: "Independence", icon: ShieldCheck, desc: "Our newsroom is strictly separated from commercial, political, or advertiser interests." },
     { title: "Fairness", icon: Scale, desc: "We provide diverse perspectives and right of reply to those mentioned in our reporting." },
     { title: "Privacy", icon: Fingerprint, desc: "Rigorous protection for anonymous whistleblowers and industrial informants." },
   ];
+
+  const opinionRes = await getNewsFeed({ isOpinion: true, limit: 8 });
+  const opinionPosts = opinionRes?.posts || [];
 
   return (
     <main className="bg-white min-h-screen">
@@ -142,6 +147,36 @@ export default function EditorialPolicyPage() {
            <Link href="/team" className="px-10 py-4 border-2 border-gray-900 text-gray-900 font-black rounded-2xl hover:bg-gray-900 hover:text-white transition-all uppercase tracking-widest text-xs">
              Learn about our Team
            </Link>
+        </div>
+      </section>
+
+      <section className="border-t border-gray-100 bg-gray-50/40 py-20">
+        <div className="max-w-[1280px] mx-auto px-4">
+          <div className="mb-8 flex items-center justify-between gap-3">
+            <h2 className="text-2xl font-bold text-gray-900 font-[Playfair_Display]">Latest Opinions</h2>
+            <Link href="/opinion" className="text-xs font-black uppercase tracking-widest text-primary hover:text-primary-dark">
+              View all
+            </Link>
+          </div>
+          {opinionPosts.length === 0 ? (
+            <p className="text-sm text-gray-500">No opinion articles yet.</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {opinionPosts.map((p) => (
+                <Link key={p.id} href={`/news/${p.slug}`} className="group overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-all">
+                  <div className="relative aspect-16/10 bg-gray-100">
+                    {p.featuredImage ? (
+                      <Image src={p.featuredImage} alt={p.title} fill unoptimized className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                    ) : null}
+                  </div>
+                  <div className="p-4">
+                    <p className="text-[10px] uppercase tracking-widest text-primary font-bold mb-1">Opinion</p>
+                    <h3 className="text-sm font-bold text-gray-900 leading-snug line-clamp-3">{p.title}</h3>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </main>

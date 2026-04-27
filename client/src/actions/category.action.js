@@ -40,6 +40,25 @@ export async function createCategoryAction(formData) {
   }
 }
 
+export async function deleteCategoryAction(categoryId) {
+  const cookieStore = await cookies();
+  try {
+    const res = await fetch(`${API_BASE}/admin/categories/${categoryId}`, {
+      method: "DELETE",
+      headers: { Cookie: cookieStore.toString() },
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data.success) {
+      revalidatePath("/dashboard/categories", "page");
+      revalidatePath("/", "layout");
+      return { success: true, message: "Category deleted" };
+    }
+    return { success: false, message: data.message || "Failed to delete category" };
+  } catch (error) {
+    return { success: false, message: error.message || "Network error" };
+  }
+}
+
 export async function updatePostStatusAction(postId, status) {
   try {
     console.log("Updating post", postId, "to", status);

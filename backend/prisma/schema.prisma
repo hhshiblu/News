@@ -9,7 +9,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -42,12 +42,22 @@ model User {
   status    UserStatus @default(PENDING)
   bio       String?
   avatar    String?
-  position  String?    // e.g. "Senior Labour Correspondent"
-  socials   Json?      // Store socials as { twitter, linkedin, website, email }
+  position  String? // e.g. "Senior Labour Correspondent"
+  socials   Json? // Store socials as { twitter, linkedin, website, email }
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   posts     Post[]
   issues    Issue[]    @relation("AdminIssues")
+}
+
+/// Single-row site metadata (id = "singleton")
+model SiteConfig {
+  id            String   @id @default("singleton")
+  siteTitle     String   @default("LabourPulse")
+  tagline       String?
+  contactEmail  String?
+  footerNote    String?  @db.Text
+  updatedAt     DateTime @updatedAt
 }
 
 model Category {
@@ -56,7 +66,7 @@ model Category {
   slug      String     @unique
   imageUrl  String?
   parentId  String?
-  color     String?    // From db.js (e.g. orange-600)
+  color     String? // From db.js (e.g. orange-600)
   parent    Category?  @relation("CategoryParent", fields: [parentId], references: [id])
   children  Category[] @relation("CategoryParent")
   posts     Post[]
@@ -67,38 +77,38 @@ model Category {
 }
 
 model Post {
-  id            String     @id @default(uuid())
-  title         String
-  subtitle      String?
-  slug          String     @unique
-  content       Json       // For dynamic blocks (Text, Image, PullQuote, etc.)
-  excerpt       String?
-  featuredImage String?
-  heroCaption   String?
-  featured      Boolean    @default(false)
+  id                    String     @id @default(uuid())
+  title                 String
+  subtitle              String?
+  slug                  String     @unique
+  content               Json // For dynamic blocks (Text, Image, PullQuote, etc.)
+  excerpt               String?
+  featuredImage         String?
+  heroCaption           String?
+  featured              Boolean    @default(false)
   // Among featured=true posts: higher sorts first on homepage hero (PulseHero).
-  homeSpotlightPriority Int @default(0)
+  homeSpotlightPriority Int        @default(0)
   // Category / subcategory / author listings: higher sorts first (then publishedAt).
-  feedPriority  Int        @default(0)
-  isOpinion     Boolean    @default(false)
-  isVideo       Boolean    @default(false)
-  videoDuration String?
-  countryTag    String?
-  subcategory   String?
-  keyFacts      Json?      // Array of { icon, label, value }
-  pullQuote     Json?      // { text, attribution }
-  isPhotoStory  Boolean    @default(false)
-  authorId      String
-  author        User       @relation(fields: [authorId], references: [id])
-  categoryId    String
-  category      Category   @relation(fields: [categoryId], references: [id])
-  status        PostStatus @default(DRAFT)
-  viewCount     Int        @default(0)
-  tags          PostTag[]
-  issues        Issue[]
-  publishedAt   DateTime?  @default(now())
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  feedPriority          Int        @default(0)
+  isOpinion             Boolean    @default(false)
+  isVideo               Boolean    @default(false)
+  videoDuration         String?
+  countryTag            String?
+  subcategory           String?
+  keyFacts              Json? // Array of { icon, label, value }
+  pullQuote             Json? // { text, attribution }
+  isPhotoStory          Boolean    @default(false)
+  authorId              String
+  author                User       @relation(fields: [authorId], references: [id])
+  categoryId            String
+  category              Category   @relation(fields: [categoryId], references: [id])
+  status                PostStatus @default(DRAFT)
+  viewCount             Int        @default(0)
+  tags                  PostTag[]
+  issues                Issue[]
+  publishedAt           DateTime?  @default(now())
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
 
   @@index([slug])
 }
@@ -122,15 +132,15 @@ model PostTag {
 }
 
 model Issue {
-  id          String   @id @default(uuid())
-  postId      String
-  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
-  adminId     String
-  admin       User     @relation("AdminIssues", fields: [adminId], references: [id])
-  comment     String
-  isResolved  Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(uuid())
+  postId     String
+  post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  adminId    String
+  admin      User     @relation("AdminIssues", fields: [adminId], references: [id])
+  comment    String
+  isResolved Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 model NewsletterSubscriber {
@@ -168,7 +178,7 @@ model PublicSubmission {
   senderEmail String?
   title       String?
   content     String
-  images      Json?      // JSON array of image URLs
+  images      Json? // JSON array of image URLs
   status      String   @default("PENDING") // PENDING, REVIEWED
   createdAt   DateTime @default(now())
 }
@@ -191,6 +201,14 @@ model Partner {
   @@index([active, priority])
 }
 
+model Department {
+  id        String       @id @default(uuid())
+  name      String
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  members   TeamMember[]
+}
+
 model TeamMember {
   id              String   @id @default(uuid())
   name            String
@@ -199,7 +217,8 @@ model TeamMember {
   description     String?
   email           String?
   phone           String?
-  department      String?
+  departmentId    String?
+  department      Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
   location        String?
   experienceYears Int?
   skills          String?
@@ -209,4 +228,5 @@ model TeamMember {
   updatedAt       DateTime @updatedAt
 
   @@index([active, priority])
+  @@index([departmentId])
 }

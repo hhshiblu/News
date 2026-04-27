@@ -2,6 +2,18 @@ const postQueries = require('../db_query/post.query');
 const prisma = require('../db_query/prisma');
 
 const BREAKING_SLUGS = ['breaking-news', 'breaking'];
+const MAX_SUBTITLE_LENGTH = 180;
+
+function validateSubtitleLength(postData = {}) {
+    if (typeof postData.subtitle !== 'string') return;
+    const subtitle = postData.subtitle.trim();
+    if (subtitle.length > MAX_SUBTITLE_LENGTH) {
+        const err = new Error(`Subtitle is too long. Maximum ${MAX_SUBTITLE_LENGTH} characters allowed.`);
+        err.statusCode = 400;
+        throw err;
+    }
+    postData.subtitle = subtitle;
+}
 
 async function getBreakingTagIdSet() {
     const tags = await prisma.tag.findMany({
@@ -12,6 +24,7 @@ async function getBreakingTagIdSet() {
 }
 
 const createPostService = async (postData) => {
+    validateSubtitleLength(postData);
     // Generate URL Slug natively mapping structural schemas accurately handling UUID fallbacks globally.
     let baseSlug = postData.title ? postData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') : "untitled-post";
     postData.slug = `${baseSlug}-${Date.now().toString().slice(-4)}`;
@@ -37,6 +50,7 @@ const createPostService = async (postData) => {
 };
 
 const updatePostService = async (id, postData, userId, userRole) => {
+    validateSubtitleLength(postData);
     // 1. Ownership Validation for AUTHORS
     if (userRole === 'AUTHOR') {
         const existingPost = await postQueries.getPostByIdQuery(id);
@@ -134,7 +148,7 @@ const getPaginatedPostsService = async (queryFilters, page = 1, limit = 10, offs
 
 const getPostBySlugService = async (slug) => {
     const post = await postQueries.getPostBySlugQuery(slug);
-    if (!post) throw new Error("Post Not Found");
+    if (!post || post.status !== 'PUBLISHED') throw new Error("Post Not Found");
     return post;
 };
 

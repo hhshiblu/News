@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { ChevronRight, Clock } from "lucide-react";
 import { getCategories, getNewsFeed } from "@/actions/public";
 
@@ -16,15 +15,15 @@ function fmt(s) {
   }
 }
 
-const ACCENTS = ["#C0392B", "#1A3A6D", "#1A6D4C"];
+const ACCENTS = ["#C0392B", "#1A3A6D", "#1A6D4C", "#6B4C9A"];
 
 async function fetchDeskPosts(cat) {
   if (!cat?.slug) return [];
-  const byParent = await getNewsFeed({ parentCategorySlug: cat.slug, limit: 7 });
-  if (byParent.posts?.length) return byParent.posts;
+  const byParent = await getNewsFeed({ parentCategorySlug: cat.slug, limit: 5 });
+  if (byParent.posts?.length) return byParent.posts.slice(0, 5);
   if (cat.id && String(cat.id).length > 20) {
-    const byId = await getNewsFeed({ categoryId: cat.id, limit: 7 });
-    return byId.posts || [];
+    const byId = await getNewsFeed({ categoryId: cat.id, limit: 5 });
+    return (byId.posts || []).slice(0, 5);
   }
   return [];
 }
@@ -103,35 +102,38 @@ function TitleColumn({ category, posts = [], accent = "#C0392B" }) {
 
 function CategoryPhotoCard({ category, post }) {
   const href = `/${category.slug}`;
-  const src = post?.featuredImage || post?.image;
+  const rawSrc = post?.featuredImage || post?.image || category?.imageUrl || "";
+  const src = rawSrc
+    ? rawSrc.startsWith("http://") || rawSrc.startsWith("https://") || rawSrc.startsWith("/")
+      ? rawSrc
+      : `/${rawSrc}`
+    : "";
 
   return (
     <Link
       href={href}
-      className="group relative block rounded-xl overflow-hidden border border-gray-200 bg-gray-900 aspect-[4/3] shadow-sm hover:shadow-md hover:border-primary/30 transition-all"
+      className="group relative block overflow-hidden rounded-2xl border border-gray-200 bg-gray-950 aspect-5/4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-lg hover:border-primary/30"
     >
       {src ? (
-        <Image
+        <img
           src={src}
           alt=""
-          fill
-          unoptimized
-          className="object-cover group-hover:scale-105 transition-transform duration-500"
-          sizes="(max-width:640px) 50vw, (max-width:1024px) 33vw, 16vw"
+          loading="lazy"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
       ) : (
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-950 flex items-center justify-center p-4">
-          <span className="text-[11px] font-black uppercase tracking-widest text-white/60 font-[Inter] text-center">
-            {category.name}
+        <div className="absolute inset-0 bg-linear-to-br from-slate-900 via-gray-900 to-slate-800 flex items-center justify-center p-4">
+          <span className="text-[10px] font-black uppercase tracking-[0.18em] text-white/70 font-[Inter] text-center line-clamp-2">
+            {category.name} section
           </span>
         </div>
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent pointer-events-none" />
-      <div className="absolute bottom-0 left-0 right-0 p-3 md:p-4">
-        <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/90 font-[Inter] mb-1">
+      <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/35 to-black/5 pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-0 p-2.5 md:p-3.5">
+        <p className="mb-1 inline-flex max-w-full rounded-md bg-black/30 px-1.5 py-0.5 text-[8.5px] font-black uppercase tracking-[0.18em] text-white/95 font-[Inter] backdrop-blur-sm line-clamp-1">
           {category.name}
         </p>
-        <p className="text-[12px] md:text-[13px] font-bold text-white font-[Inter] leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+        <p className="text-[12px] font-bold text-white font-[Inter] leading-snug line-clamp-2 transition-colors group-hover:text-primary-light">
           {post?.title || `Open the ${category.name} desk →`}
         </p>
       </div>
@@ -140,26 +142,23 @@ function CategoryPhotoCard({ category, post }) {
 }
 
 /**
- * By Section — top 3 desks (title lists) + photo cards for those 3 plus one story each from other parent categories.
+ * By Section — first N parent categories from the API (default 4): title lists + photo snapshot row.
  */
-export default async function CategoryTitlesStrip({ categorySlugs = [] }) {
-  if (!categorySlugs.length) return null;
+export default async function CategoryTitlesStrip({ sectionCount = 4, categoriesData = null }) {
+  const allCats = Array.isArray(categoriesData)
+    ? categoriesData
+    : (await getCategories()).data || [];
 
-  const catRes = await getCategories();
-  const allCats = catRes.data || [];
-  const getCat = (slug) =>
-    allCats.find((c) => c.slug === slug) || {
-      id: slug,
-      name: slug.charAt(0).toUpperCase() + slug.slice(1),
-      slug,
-    };
+  const categories = allCats
+    .filter((c) => c?.slug && !c.parentId)
+    .sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0))
+    .slice(0, Math.min(sectionCount, 4));
 
-  const topSlugs = categorySlugs.slice(0, 3);
-  const categories = topSlugs.map(getCat);
+  if (!categories.length) return null;
 
   const feedResults = await Promise.all(categories.map((cat) => fetchDeskPosts(cat)));
 
-  const topSlugSet = new Set(topSlugs);
+  const topSlugSet = new Set(categories.map((c) => c.slug));
   const otherParents = allCats
     .filter((c) => c?.slug && !topSlugSet.has(c.slug) && !c.parentId)
     .slice(0, 8);
@@ -189,16 +188,9 @@ export default async function CategoryTitlesStrip({ categorySlugs = [] }) {
           <div className="flex-1 h-px bg-gray-100" />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 divide-y md:divide-y-0 md:divide-x divide-gray-200">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-6 xl:gap-8">
           {categories.map((cat, idx) => (
-            <div
-              key={cat.slug}
-              className={[
-                idx === 0 ? "md:pr-8 pb-8 md:pb-0" : "",
-                idx === 1 ? "md:px-8 py-8 md:py-0" : "",
-                idx === 2 ? "md:pl-8 pt-8 md:pt-0" : "",
-              ].join(" ")}
-            >
+            <div key={cat.slug} className="min-w-0">
               <TitleColumn
                 category={cat}
                 posts={feedResults[idx] || []}
@@ -214,7 +206,7 @@ export default async function CategoryTitlesStrip({ categorySlugs = [] }) {
               Desk snapshot · tap a card to open that section
             </h3>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 md:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 md:gap-4">
             {mainPhotos.map(({ category, post }) => (
               <CategoryPhotoCard key={category.slug} category={category} post={post} />
             ))}

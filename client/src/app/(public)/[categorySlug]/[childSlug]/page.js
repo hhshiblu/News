@@ -5,13 +5,12 @@ import { Suspense } from "react";
 import CategoryHero from "@/components/category/CategoryHero";
 import CategoryGrid from "@/components/category/CategoryGrid";
 import BigCard from "@/components/news/BigCard";
+import MosaicNewsGrid from "@/components/news/MosaicNewsGrid";
 import HorizontalCard from "@/components/news/HorizontalCard";
 import Sidebar from "@/components/layout/Sidebar";
 import AdSlot from "@/components/ads/AdSlot";
 import Pagination from "@/components/ui/Pagination";
-import { CategoryTagRails } from "@/components/category/CategoryDeskRails";
 import { fetchPublicPosts } from "@/lib/api";
-import { buildTagLanes } from "@/lib/postLanes";
 import { getPublicCategoryBySlugAction } from "@/actions/public-extra.action";
 
 const CHILD_CATEGORY_PAGE_SIZE = 30;
@@ -25,6 +24,21 @@ const normalizePost = (post) => ({
   categorySlug: post.category?.slug,
   timestamp: post.publishedAt ? new Date(post.publishedAt).toLocaleDateString() : "Recently"
 });
+
+const getStoryKey = (story) => String(story?.id || story?.slug || "");
+
+function pickUnique(posts, usedSet, { start = 0, count = Infinity } = {}) {
+  const bucket = [];
+  for (let i = start; i < posts.length; i += 1) {
+    const post = posts[i];
+    const key = getStoryKey(post);
+    if (!key || usedSet.has(key)) continue;
+    usedSet.add(key);
+    bucket.push(post);
+    if (bucket.length >= count) break;
+  }
+  return bucket;
+}
 
 export async function generateMetadata({ params, searchParams }) {
   const { categorySlug, childSlug } = await params;
@@ -73,7 +87,6 @@ async function SubcategoryPageContent({ params, searchParams }) {
   }
 
   const displayArticles = rawPosts.map(normalizePost);
-  const tagLanes = page === 1 ? buildTagLanes(rawPosts, 4, 5) : [];
   const label = categoryData?.name || childSlug;
   const parentLabel = parentData?.name || categorySlug;
   const listBasePath = `/${categorySlug}/${childSlug}`;
@@ -137,11 +150,16 @@ async function SubcategoryPageContent({ params, searchParams }) {
                   · Page {page}
                 </span>
               </h1>
-              <div className="space-y-6 md:space-y-8">
-                {displayArticles.map((story) => (
-                  <HorizontalCard key={story.id} story={story} />
-                ))}
+              <div className="mb-6">
+                <MosaicNewsGrid posts={displayArticles} maxItems={7} />
               </div>
+              {displayArticles.length > 7 && (
+                <div className="space-y-6 md:space-y-8 mb-6">
+                  {displayArticles.slice(7).map((story) => (
+                    <HorizontalCard key={`list-${story.id}`} story={story} />
+                  ))}
+                </div>
+              )}
               <Pagination basePath={listBasePath} currentPage={page} totalPages={totalPages} />
             </main>
             <aside className="lg:w-[300px] xl:w-[300px] shrink-0">
@@ -155,37 +173,41 @@ async function SubcategoryPageContent({ params, searchParams }) {
     );
   }
 
-  // Optimized Content Slicing to show ALL latest coverage without duplication
-  const hero = displayArticles[0];
-  const spotlight = displayArticles.slice(1, 3);
-  const featuredInDepth = displayArticles[3];
-  const gridCoverage = displayArticles.slice(4); // Show EVERYTHING from index 4 onwards
+  // Unique story distribution across hero/spotlight/feed.
+  const usedStories = new Set();
+  const hero = pickUnique(displayArticles, usedStories, { count: 1 })[0];
+  const spotlight = pickUnique(displayArticles, usedStories, { start: 1, count: 2 });
+  const featuredInDepth = pickUnique(displayArticles, usedStories, { start: 3, count: 1 })[0];
+  const gridCoverage = pickUnique(displayArticles, usedStories);
+  const layoutTone = childSlug.length % 2 === 0 ? "emerald" : "primary";
+  const accentClass = layoutTone === "emerald" ? "text-emerald-600" : "text-primary";
+  const accentBarClass = layoutTone === "emerald" ? "bg-emerald-600" : "bg-primary";
 
   return (
     <div className="bg-[#fcfcfc]">
-      {/* Modern Breadcrumb & Subcategory Title */}
-      <div className="bg-white border-b border-gray-100">
-        <div className="max-w-[1280px] mx-auto px-4 py-4 md:py-5">
+      <div className="bg-linear-to-br from-gray-950 via-gray-900 to-gray-950 border-b border-gray-800">
+        <div className="max-w-[1280px] mx-auto px-4 py-5 md:py-7">
           <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.15em] text-gray-400 mb-3">
             <Link href="/" className="hover:text-primary transition-colors">Home</Link>
             <ChevronRight size={10} className="text-gray-300" />
             <Link href={`/${categorySlug}`} className="hover:text-primary transition-colors">{parentLabel}</Link>
             <ChevronRight size={10} className="text-gray-300" />
-            <span className="text-gray-900">{label}</span>
+            <span className="text-white">{label}</span>
           </div>
           
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div className="max-w-2xl">
-              <h1 className="text-2xl md:text-4xl font-black text-gray-950 font-[Playfair_Display] leading-tight mb-3">
-                {label}<span className="text-primary italic">.</span>
+              <p className={`text-[10px] font-black uppercase tracking-[0.26em] mb-2 ${accentClass}`}>Desk layout</p>
+              <h1 className="text-2xl md:text-4xl font-black text-white font-[Playfair_Display] leading-tight mb-3">
+                {label}<span className={`${accentClass} italic`}>.</span>
               </h1>
-              <p className="text-[13px] text-gray-600 font-medium leading-relaxed font-[Inter] border-l-2 border-primary/25 pl-4">
+              <p className="text-[13px] text-gray-300 font-medium leading-relaxed font-[Inter] border-l-2 border-white/25 pl-4">
                 Reporting on {label.toLowerCase()} from our {parentLabel.toLowerCase()} desk.
               </p>
             </div>
             
             <div className="flex items-center gap-2">
-               <button type="button" className="px-4 py-2 bg-gray-950 text-white text-[10px] font-black tracking-widest uppercase rounded-lg hover:bg-primary transition-all">
+               <button type="button" className="px-4 py-2 bg-white/10 border border-white/20 text-white text-[10px] font-black tracking-widest uppercase rounded-lg hover:bg-white/20 transition-all">
                  Follow Desk
                </button>
             </div>
@@ -197,26 +219,40 @@ async function SubcategoryPageContent({ params, searchParams }) {
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           
           <main className="flex-1 min-w-0">
-            {tagLanes.length > 0 && (
-              <CategoryTagRails lanes={tagLanes} heading="Tags driving this beat" />
-            )}
-
             <div className="mb-6 flex justify-center">
               <AdSlot slotKey="child_category_leaderboard" />
             </div>
 
-            <div className="mb-8 md:mb-10">
-              <CategoryHero
-                story={hero}
-                hClass="min-h-[220px] md:min-h-[360px] lg:min-h-[400px]"
-                layout="stacked"
-              />
-            </div>
+            <section className="mb-8 md:mb-10 grid grid-cols-1 xl:grid-cols-12 gap-4">
+              <div className="xl:col-span-8">
+                <CategoryHero
+                  story={hero}
+                  hClass="min-h-[220px] md:min-h-[360px] lg:min-h-[420px]"
+                  layout="stacked"
+                />
+              </div>
+              <div className="xl:col-span-4 rounded-2xl border border-gray-200 bg-white p-4">
+                <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-3">
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-500">Latest pulse</h3>
+                  <span className={`h-1.5 w-1.5 rounded-full ${accentBarClass}`} />
+                </div>
+                <div className="space-y-3">
+                  {spotlight.slice(0, 2).map((story) => (
+                    <Link key={`mini-${story.id}`} href={`/news/${story.slug}`} className="block group">
+                      <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">{story.timestamp}</p>
+                      <p className="text-[13px] font-semibold text-gray-800 leading-snug group-hover:text-primary line-clamp-2">
+                        {story.title}
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </section>
 
             {spotlight.length > 0 && (
               <div className="mb-10 md:mb-12">
                  <div className="flex flex-col gap-1 mb-5">
-                    <div className="h-1 w-10 bg-gray-950"></div>
+                    <div className={`h-1 w-10 ${accentBarClass}`}></div>
                     <h2 className="text-lg md:text-xl font-black text-gray-950 font-[Playfair_Display] tracking-tight">Editors&apos; Spotlight</h2>
                  </div>
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
@@ -265,9 +301,12 @@ async function SubcategoryPageContent({ params, searchParams }) {
                     <li key={story.id}>
                       <Link
                         href={`/news/${story.slug}`}
-                        className="flex gap-3 sm:gap-4 items-start px-4 py-3.5 hover:bg-emerald-500/[0.06] transition-colors group"
+                        className="flex gap-3 sm:gap-4 items-start px-4 py-3.5 hover:bg-emerald-500/6 transition-colors group"
                       >
-                        <span className="w-2 h-2 rounded-full bg-emerald-600 shrink-0 mt-1.5 ring-2 ring-emerald-600/20" aria-hidden />
+                        <span
+                          className={`w-2 h-2 rounded-full shrink-0 mt-1.5 ring-2 ${layoutTone === "emerald" ? "bg-emerald-600 ring-emerald-600/20" : "bg-primary ring-primary/20"}`}
+                          aria-hidden
+                        />
                         <div className="min-w-0 flex-1">
                           <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400 font-[Inter]">
                             {story.timestamp}

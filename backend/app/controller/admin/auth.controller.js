@@ -1,4 +1,6 @@
 const authService = require('../../services/auth.service');
+const prisma = require('../../db_query/prisma');
+const { publicUserSelect } = require('../../db_query/user.query');
 
 const login = async (req, res, next) => {
   try {
@@ -48,9 +50,13 @@ const setupAdmin = async (req, res, next) => {
 
 const getMe = async (req, res, next) => {
   try {
+    const data = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: publicUserSelect,
+    });
     res.status(200).json({
       success: true,
-      data: req.user
+      data,
     });
   } catch (error) {
     next(error);

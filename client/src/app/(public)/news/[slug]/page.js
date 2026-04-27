@@ -10,6 +10,7 @@ import AdSlot from "@/components/ads/AdSlot";
 import { getPostDetail, getNewsFeed } from "@/actions/public";
 import { authorSlugFromName } from "@/lib/authorSlug";
 import NewsDetailLoading from "./loading";
+import RecordArticleClick from "@/components/article/RecordArticleClick";
 
 function ChevronRightIcon({ className = "w-3 h-3 text-gray-200" }) {
   return (
@@ -128,8 +129,9 @@ async function ArticlePageContent({ params }) {
 
   const categoryNews = (categoryNewsRes?.posts || [])
     .filter((p) => p.slug !== slug)
-    .slice(0, 10)
     .map(normalizePost);
+  const latestCategoryTopTen = categoryNews.slice(0, 10);
+  const moreCategoryCards = categoryNews.slice(10, 13);
 
   const seenBreaking = new Set();
   const mergedBreaking = [];
@@ -170,6 +172,7 @@ async function ArticlePageContent({ params }) {
 
   return (
     <>
+      <RecordArticleClick slug={slug} />
       <ReadingProgressBar />
 
       <div className="bg-white border-b border-gray-100">
@@ -268,7 +271,7 @@ async function ArticlePageContent({ params }) {
                       </p>
                     )}
 
-                    <div className="article-body-content space-y-3 text-gray-800 leading-[1.65] font-[Inter] text-[13px] md:text-[14px] break-words [overflow-wrap:anywhere] [&_*]:max-w-full [&_a]:break-all [&_pre]:overflow-x-auto">
+                    <div className="article-body-content space-y-3 text-gray-800 leading-[1.65] font-[Inter] text-[13px] md:text-[14px] wrap-anywhere **:max-w-full [&_a]:break-all [&_pre]:overflow-x-auto">
                       {Array.isArray(article.content) ? (
                         article.content.map((block, idx) => {
                           const type = block.type?.toLowerCase();
@@ -331,7 +334,7 @@ async function ArticlePageContent({ params }) {
                             return (
                               <div
                                 key={idx}
-                                className="prose prose-sm prose-gray max-w-none text-gray-800 article-body-readable break-words [overflow-wrap:anywhere] [&_h3]:text-base [&_h3]:mt-2.5 [&_h3]:mb-1 [&_p]:text-[13px] md:[&_p]:text-[14px] [&_p]:leading-relaxed"
+                                className="prose prose-sm prose-gray max-w-none text-gray-800 article-body-readable wrap-anywhere [&_h3]:text-base [&_h3]:mt-2.5 [&_h3]:mb-1 [&_p]:text-[13px] md:[&_p]:text-[14px] [&_p]:leading-relaxed"
                                 dangerouslySetInnerHTML={{
                                   __html: normalizeRichTextHtml(block.content),
                                 }}
@@ -343,7 +346,7 @@ async function ArticlePageContent({ params }) {
                         })
                       ) : (
                         <div
-                          className="prose prose-sm prose-gray max-w-none text-gray-800 article-body-readable break-words [overflow-wrap:anywhere] [&_p]:text-[13px] md:[&_p]:text-[14px]"
+                          className="prose prose-sm prose-gray max-w-none text-gray-800 article-body-readable wrap-anywhere [&_p]:text-[13px] md:[&_p]:text-[14px]"
                           dangerouslySetInnerHTML={{
                             __html: normalizeRichTextHtml(article.content),
                           }}
@@ -381,7 +384,7 @@ async function ArticlePageContent({ params }) {
                     </div>
                   </div>
 
-                  {categoryNews.length > 0 && (
+                  {latestCategoryTopTen.length > 0 && (
                     <div className="mt-8 mb-5">
                       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                         <div className="flex items-center gap-2">
@@ -392,11 +395,50 @@ async function ArticlePageContent({ params }) {
                         </div>
                       </div>
                       <RelatedArticles
-                        articles={categoryNews}
+                        articles={latestCategoryTopTen}
                         viewAllHref={`/${parentCategorySlug}`}
                         viewAllLabel={`View all in ${parentCategoryName}`}
                       />
                     </div>
+                  )}
+
+                  {moreCategoryCards.length > 0 && (
+                    <section className="mt-3 space-y-3">
+                      {moreCategoryCards.map((story) => (
+                        <Link
+                          key={`wide-${story.id}`}
+                          href={`/news/${story.slug}`}
+                          className="group block overflow-hidden rounded-2xl border border-gray-200 bg-white hover:shadow-md transition-shadow"
+                        >
+                          <div className="grid grid-cols-1 md:grid-cols-5">
+                            <div className="relative md:col-span-2 h-48 md:h-full bg-gray-100">
+                              <Image
+                                src={story.image || story.featuredImage || "/placeholder.jpg"}
+                                alt={story.title}
+                                fill
+                                unoptimized
+                                className="object-cover group-hover:scale-[1.02] transition-transform duration-500"
+                                sizes="(max-width: 768px) 100vw, 40vw"
+                              />
+                            </div>
+                            <div className="md:col-span-3 p-4 md:p-5 flex flex-col justify-center">
+                              <span className="text-[10px] font-black uppercase tracking-[0.18em] text-primary mb-2">
+                                More from {parentCategoryName}
+                              </span>
+                              <h3 className="text-lg md:text-xl font-bold text-gray-900 font-[Playfair_Display] leading-tight group-hover:text-primary transition-colors">
+                                {story.title}
+                              </h3>
+                              <p className="mt-2 text-[13px] text-gray-600 line-clamp-2">
+                                {story.subtitle || story.excerpt || "Continue reading this developing coverage."}
+                              </p>
+                              <span className="mt-3 text-[10px] font-semibold uppercase tracking-widest text-gray-400">
+                                {story.timestamp}
+                              </span>
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                    </section>
                   )}
 
                   <div className="mt-6 pt-3 border-t border-gray-100">

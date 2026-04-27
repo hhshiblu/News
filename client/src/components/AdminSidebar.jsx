@@ -76,6 +76,7 @@ const getMenuGroups = (role) => {
                 children: [
                   { title: "Authors List", url: "/dashboard/authors" },
                   { title: "Our Team", url: "/dashboard/team-members" },
+                  { title: "Departments", url: "/dashboard/departments" },
                   { title: "Partners", url: "/dashboard/partners" },
                   { title: "Admin Panel", url: "/dashboard/users" },
                 ],
@@ -96,10 +97,9 @@ const getMenuGroups = (role) => {
       : []),
     {
       label: "Account",
-      items: [
-        { title: "My Profile", icon: User, url: "/dashboard/profile" },
-        { title: "Settings", icon: Settings, url: "/dashboard/settings" },
-      ],
+      items: isAdmin
+        ? [{ title: "Settings", icon: Settings, url: "/dashboard/settings" }]
+        : [{ title: "My account", icon: User, url: "/dashboard/account" }],
     },
   ];
 };

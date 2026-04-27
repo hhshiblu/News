@@ -1,149 +1,172 @@
 import Link from "next/link";
-import { Hash, TrendingUp, Search, ChevronRight, Newspaper } from "lucide-react";
-import { getAllTags } from "@/data/queries";
+import { Hash, TrendingUp, Zap, Flame, BookOpen } from "lucide-react";
+import { getCategories } from "@/actions/public";
 
 export const metadata = {
   title: "Topics & Tags — LabourPulse",
-  description: "Browse news by topics, from RMG and economy to international relations and policy.",
+  description: "Browse news by topics: Breaking News, Trending, Hot News, and all category tags.",
 };
 
-export default function TagIndexPage() {
-  const allTags = getAllTags();
-  
-  // Group tags by their first letter for the A-Z directory
-  const groupedTags = allTags.reduce((acc, tag) => {
-    const firstLetter = tag.name.charAt(0).toUpperCase();
-    if (!acc[firstLetter]) acc[firstLetter] = [];
-    acc[firstLetter].push(tag);
-    return acc;
-  }, {});
+const SPECIAL_TAGS = [
+  {
+    slug: "breaking-news",
+    label: "Breaking News",
+    desc: "Real-time alerts and critical updates as they happen.",
+    icon: Zap,
+    color: "#DD0000",
+    bg: "#fff5f5",
+    border: "#DD0000",
+  },
+  {
+    slug: "trending",
+    label: "Trending Now",
+    desc: "The most-read stories right now across LabourPulse.",
+    icon: TrendingUp,
+    color: "#C41E3A",
+    bg: "#fef2f2",
+    border: "#C41E3A",
+  },
+  {
+    slug: "hot-news",
+    label: "Hot News",
+    desc: "Stories catching fire — high engagement, breaking context.",
+    icon: Flame,
+    color: "#f97316",
+    bg: "#fff7ed",
+    border: "#f97316",
+  },
+  {
+    slug: "must-read",
+    label: "Must Read",
+    desc: "Editor-curated stories every serious reader shouldn't miss.",
+    icon: BookOpen,
+    color: "#1E5B8A",
+    bg: "#eff6ff",
+    border: "#1E5B8A",
+  },
+];
 
-  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
-  const trendingTags = [...allTags].sort((a, b) => b.count - a.count).slice(0, 12);
+export default async function TagIndexPage() {
+  const catRes = await getCategories();
+  const categories = (catRes?.data || []).filter((c) => c.slug && c.name);
 
   return (
     <main className="bg-white min-h-screen">
-      {/* ── HERO SECTION ── */}
-      <section className="relative py-24 bg-gray-900 overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20" />
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-primary/10 -skew-x-12 translate-x-24" />
-        
-        <div className="max-w-[1280px] mx-auto px-4 relative z-10 text-center md:text-left">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/20 border border-primary/30 rounded-full text-primary text-xs font-black uppercase tracking-[0.3em] mb-8 animate-pulse">
-            <TrendingUp size={14} /> Discovery Hub
+      {/* ── HERO ── */}
+      <section className="bg-gray-950 py-16 md:py-20 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-primary/10 -translate-y-1/2 translate-x-1/3 blur-3xl" />
+        <div className="max-w-[1280px] mx-auto px-4 relative z-10 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary text-white text-[10px] font-black uppercase tracking-[0.3em] mb-6 font-[Inter]">
+            <Hash size={12} /> Topic Discovery
           </div>
-          <h1 className="text-5xl md:text-7xl font-black text-white font-[Playfair_Display] leading-tight mb-6 italic">
-            Explore the <span className="text-primary italic">Global Pulse</span> <br /> 
-            by Specialized Topics
+          <h1 className="text-4xl md:text-6xl font-black text-white font-[Playfair_Display] leading-tight mb-4 italic">
+            Explore by <span className="text-primary">Topic</span>
           </h1>
-          <p className="text-xl text-gray-400 max-w-2xl font-[Inter] leading-relaxed mb-10">
-            From industrial disputes to macro-economic shifts, navigate through our comprehensive 
-            index of topics shaping the future of global labour.
+          <p className="text-gray-400 text-[16px] max-w-2xl mx-auto font-[Inter] leading-relaxed">
+            From breaking urgent alerts to deep-dive category archives — navigate every story by topic.
           </p>
-          
-          <div className="relative max-w-xl mx-auto md:mx-0 group">
-             <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-primary transition-colors" size={20} />
-             <input 
-               type="text" 
-               placeholder="Search for a topic (e.g. RMG, Wages, Policy)..."
-               className="w-full bg-white/5 border border-white/10 text-white pl-16 pr-8 py-6 rounded-2xl outline-none focus:bg-white/10 focus:border-primary transition-all font-[Inter] text-lg"
-             />
-          </div>
         </div>
       </section>
 
-      {/* ── TRENDING TOPICS ── */}
-      <section className="py-20 border-b border-gray-100">
-        <div className="max-w-[1280px] mx-auto px-4">
-          <div className="flex items-center justify-between mb-12">
-            <h2 className="text-3xl font-black text-gray-900 font-[Playfair_Display]">Trending Topics</h2>
-            <div className="h-0.5 flex-1 bg-gray-100 mx-8 hidden md:block"></div>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {trendingTags.map((tag) => (
-              <Link 
-                key={tag.slug} 
+      {/* ── SPECIAL TAGS ── */}
+      <section className="max-w-[1280px] mx-auto px-4 py-12 md:py-16">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-1 h-6 bg-primary rounded-full shrink-0" />
+          <h2 className="text-[13px] font-black uppercase tracking-[0.22em] text-gray-900 font-[Inter]">
+            Special Collections
+          </h2>
+          <div className="h-px flex-1 bg-gray-200" />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {SPECIAL_TAGS.map((tag) => {
+            const Icon = tag.icon;
+            return (
+              <Link
+                key={tag.slug}
                 href={`/tag/${tag.slug}`}
-                className="group p-8 bg-gray-50 border border-gray-100 rounded-3xl hover:bg-white hover:border-primary hover:shadow-2xl hover:shadow-primary/10 transition-all duration-500 hover:-translate-y-1"
+                className="group relative overflow-hidden border-2 p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
+                style={{ borderColor: tag.border, background: tag.bg }}
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="w-12 h-12 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
-                    <Hash size={22} />
-                  </div>
-                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{tag.count} Articles</span>
+                {/* Icon */}
+                <div
+                  className="w-10 h-10 rounded-sm flex items-center justify-center mb-4 text-white"
+                  style={{ background: tag.color }}
+                >
+                  <Icon size={20} />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2 font-[Inter]">{tag.name}</h3>
-                <div className="flex items-center gap-2 text-[10px] font-black text-primary uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all">
-                  Explore Hub <ChevronRight size={14} />
+                <h3 className="text-[16px] font-black text-gray-900 font-[Playfair_Display] mb-2">
+                  {tag.label}
+                </h3>
+                <p className="text-[12px] text-gray-500 font-[Inter] leading-relaxed mb-4">
+                  {tag.desc}
+                </p>
+                <div
+                  className="inline-flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest font-[Inter]"
+                  style={{ color: tag.color }}
+                >
+                  Browse stories →
                 </div>
               </Link>
-            ))}
-          </div>
+            );
+          })}
         </div>
       </section>
 
-      {/* ── A-Z DIRECTORY ── */}
-      <section className="py-20 bg-gray-50/50">
-        <div className="max-w-[1280px] mx-auto px-4">
-          <div className="flex items-center justify-between mb-16">
-            <h2 className="text-3xl font-black text-gray-900 font-[Playfair_Display]">Alphabetical Directory</h2>
-            <div className="flex gap-2">
-               {alphabet.map(letter => (
-                 <button 
-                   key={letter}
-                   disabled={!groupedTags[letter]}
-                   className={`w-8 h-8 rounded flex items-center justify-center text-xs font-black transition-all ${
-                     groupedTags[letter] ? 'text-gray-900 hover:bg-primary hover:text-white cursor-pointer' : 'text-gray-200'
-                   }`}
-                 >
-                   {letter}
-                 </button>
-               ))}
+      {/* ── CATEGORY TAGS ── */}
+      {categories.length > 0 && (
+        <section className="bg-[#f8f9fa] border-t border-gray-200 py-12 md:py-16">
+          <div className="max-w-[1280px] mx-auto px-4">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-1 h-6 bg-accent rounded-full shrink-0" />
+              <h2 className="text-[13px] font-black uppercase tracking-[0.22em] text-gray-900 font-[Inter]">
+                Category Topics
+              </h2>
+              <div className="h-px flex-1 bg-gray-200" />
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {categories.map((cat) => (
+                <Link
+                  key={cat.slug}
+                  href={`/tag/${cat.slug}`}
+                  className="group flex items-center gap-2.5 p-3 bg-white border border-gray-200 hover:border-primary hover:bg-primary hover:text-white transition-all duration-200"
+                >
+                  <Hash size={12} className="shrink-0 text-gray-300 group-hover:text-white" />
+                  <span className="text-[12.5px] font-bold text-gray-700 group-hover:text-white font-[Inter] truncate">
+                    {cat.name}
+                  </span>
+                </Link>
+              ))}
             </div>
           </div>
+        </section>
+      )}
 
-          <div className="columns-1 md:columns-2 lg:columns-4 gap-12">
-            {alphabet.map(letter => {
-              if (!groupedTags[letter]) return null;
-              return (
-                <div key={letter} className="break-inside-avoid mb-12">
-                  <div className="flex items-center gap-4 mb-6">
-                    <span className="text-4xl font-black text-primary opacity-20 font-[Playfair_Display]">{letter}</span>
-                    <div className="h-[2px] flex-1 bg-gray-200"></div>
-                  </div>
-                  <div className="space-y-3">
-                    {groupedTags[letter].map(tag => (
-                      <Link 
-                        key={tag.slug} 
-                        href={`/tag/${tag.slug}`}
-                        className="group flex items-center justify-between py-2 border-b border-gray-100/50 hover:border-primary transition-all"
-                      >
-                        <span className="text-[15px] font-bold text-gray-600 group-hover:text-gray-900 group-hover:translate-x-1 transition-all flex items-center gap-2">
-                           <Hash size={12} className="text-gray-300 group-hover:text-primary" /> {tag.name}
-                        </span>
-                        <span className="text-[10px] font-bold text-gray-400 group-hover:text-primary transition-colors flex items-center gap-1">
-                          <Newspaper size={10} /> {tag.count}
-                        </span>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ── CALL TO ACTION ── */}
-      <section className="py-24 bg-primary relative overflow-hidden">
-        <div className="absolute inset-0 bg-black/10" />
-        <div className="max-w-4xl mx-auto px-4 relative z-10 text-center">
-           <h2 className="text-4xl font-black text-white font-[Playfair_Display] mb-6">Can't find a specialized topic?</h2>
-           <p className="text-white/80 text-xl mb-10 font-[Inter]">Our team of investigative journalists is constantly expanding our coverage. Contact our editorial desk to suggest a new area of focus.</p>
-           <Link href="/contact" className="px-12 py-5 bg-white text-primary font-black rounded-2xl hover:bg-gray-900 hover:text-white transition-all shadow-xl uppercase tracking-widest text-xs">
-             Contact Editorial Desk
-           </Link>
+      {/* ── QUICK LINKS  ── */}
+      <section className="max-w-[1280px] mx-auto px-4 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Link href="/breaking" className="group flex items-center gap-4 bg-red-600 text-white p-6 hover:bg-red-700 transition-colors">
+            <Zap size={24} className="fill-white shrink-0" />
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest font-[Inter] text-red-200 mb-1">Full Page</p>
+              <h3 className="text-[16px] font-bold font-[Playfair_Display]">Breaking News Hub →</h3>
+            </div>
+          </Link>
+          <Link href="/tag/trending" className="group flex items-center gap-4 bg-gray-900 text-white p-6 hover:bg-gray-950 transition-colors">
+            <TrendingUp size={24} className="shrink-0 text-primary" />
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest font-[Inter] text-gray-400 mb-1">Most Popular</p>
+              <h3 className="text-[16px] font-bold font-[Playfair_Display]">Trending Stories →</h3>
+            </div>
+          </Link>
+          <Link href="/editorial" className="group flex items-center gap-4 bg-accent text-white p-6 hover:opacity-90 transition-opacity">
+            <BookOpen size={24} className="shrink-0" />
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest font-[Inter] text-blue-200 mb-1">In-depth</p>
+              <h3 className="text-[16px] font-bold font-[Playfair_Display]">Editorial Archive →</h3>
+            </div>
+          </Link>
         </div>
       </section>
     </main>

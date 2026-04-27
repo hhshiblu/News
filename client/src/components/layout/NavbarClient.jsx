@@ -5,7 +5,6 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Search, X, ChevronDown, ChevronRight, ArrowRight, Loader2, Menu } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { CATEGORIES } from "@/data/db";
 import { searchArticles } from "@/data/queries";
 import Image from "next/image";
 
@@ -77,7 +76,7 @@ export default function NavbarClient({ initialCategories = [] }) {
   );
 
   useEffect(() => {
-    setDynamicCategories(initialCategories?.length ? initialCategories : CATEGORIES || []);
+    setDynamicCategories(Array.isArray(initialCategories) ? initialCategories : []);
   }, [initialCategories]);
 
   useEffect(() => {
@@ -174,9 +173,8 @@ export default function NavbarClient({ initialCategories = [] }) {
     }
   };
 
-  const allNavItems = dynamicCategories?.length
-    ? dynamicCategories
-    : CATEGORIES;
+  /** Only categories returned by the API (no static fallback). */
+  const allNavItems = Array.isArray(dynamicCategories) ? dynamicCategories : [];
 
   const topCategories = allNavItems.slice(0, 4);
 

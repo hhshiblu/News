@@ -10,6 +10,25 @@ const filePathFromPublicUrl = (url) => {
 };
 
 const toPublicImageUrl = (req, file) => `${req.protocol}://${req.get("host")}/uploads/partner/${file.filename}`;
+const MAX_PARTNER_DESCRIPTION = 190;
+
+const toTrimmedOrNull = (value) => {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  const t = String(value).trim();
+  return t ? t : null;
+};
+
+const validatePartnerDescription = (value) => {
+  if (value == null) return;
+  if (value.length > MAX_PARTNER_DESCRIPTION) {
+    const err = new Error(
+      `Description is too long. Maximum ${MAX_PARTNER_DESCRIPTION} characters allowed.`
+    );
+    err.statusCode = 400;
+    throw err;
+  }
+};
 
 const listPartnersAdmin = async (req, res, next) => {
   try {
@@ -37,22 +56,30 @@ const createPartner = async (req, res, next) => {
     } = req.body;
     const logo = req.file ? toPublicImageUrl(req, req.file) : null;
     if (!logo) return res.status(400).json({ success: false, message: "Partner logo is required" });
+    const safeDescription = toTrimmedOrNull(description);
+    validatePartnerDescription(safeDescription);
     const created = await prisma.partner.create({
       data: {
         name: String(name || "").trim(),
         logoUrl: logo,
-        websiteUrl: websiteUrl ? String(websiteUrl).trim() : null,
-        description: description ? String(description).trim() : null,
-        industry: industry ? String(industry).trim() : null,
-        contactEmail: contactEmail ? String(contactEmail).trim() : null,
-        contactPhone: contactPhone ? String(contactPhone).trim() : null,
-        address: address ? String(address).trim() : null,
+        websiteUrl: toTrimmedOrNull(websiteUrl),
+        description: safeDescription,
+        industry: toTrimmedOrNull(industry),
+        contactEmail: toTrimmedOrNull(contactEmail),
+        contactPhone: toTrimmedOrNull(contactPhone),
+        address: toTrimmedOrNull(address),
         active: active === undefined ? true : active === true || String(active) === "true",
         priority: Number.isFinite(Number(priority)) ? Number(priority) : 0,
       },
     });
     res.status(201).json({ success: true, data: created });
   } catch (e) {
+    if (e?.code === "P2000") {
+      return res.status(400).json({
+        success: false,
+        message: "One or more fields are too long for Partner. Please shorten text and try again.",
+      });
+    }
     next(e);
   }
 };
@@ -80,17 +107,26 @@ const updatePartner = async (req, res, next) => {
       const oldFilePath = filePathFromPublicUrl(existing.logoUrl);
       if (oldFilePath && fs.existsSync(oldFilePath)) fs.unlinkSync(oldFilePath);
     }
-    if (websiteUrl !== undefined) patch.websiteUrl = websiteUrl ? String(websiteUrl).trim() : null;
-    if (description !== undefined) patch.description = description ? String(description).trim() : null;
-    if (industry !== undefined) patch.industry = industry ? String(industry).trim() : null;
-    if (contactEmail !== undefined) patch.contactEmail = contactEmail ? String(contactEmail).trim() : null;
-    if (contactPhone !== undefined) patch.contactPhone = contactPhone ? String(contactPhone).trim() : null;
-    if (address !== undefined) patch.address = address ? String(address).trim() : null;
+    if (websiteUrl !== undefined) patch.websiteUrl = toTrimmedOrNull(websiteUrl);
+    if (description !== undefined) {
+      patch.description = toTrimmedOrNull(description);
+      validatePartnerDescription(patch.description);
+    }
+    if (industry !== undefined) patch.industry = toTrimmedOrNull(industry);
+    if (contactEmail !== undefined) patch.contactEmail = toTrimmedOrNull(contactEmail);
+    if (contactPhone !== undefined) patch.contactPhone = toTrimmedOrNull(contactPhone);
+    if (address !== undefined) patch.address = toTrimmedOrNull(address);
     if (active !== undefined) patch.active = active === true || String(active) === "true";
     if (priority !== undefined) patch.priority = Number.isFinite(Number(priority)) ? Number(priority) : 0;
     const updated = await prisma.partner.update({ where: { id }, data: patch });
     res.status(200).json({ success: true, data: updated });
   } catch (e) {
+    if (e?.code === "P2000") {
+      return res.status(400).json({
+        success: false,
+        message: "One or more fields are too long for Partner. Please shorten text and try again.",
+      });
+    }
     next(e);
   }
 };

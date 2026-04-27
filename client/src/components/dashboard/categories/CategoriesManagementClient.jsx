@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { X, Folder, Image as ImageIcon, Edit, Trash2, PlusCircle, AlertTriangle } from "lucide-react";
-import { createCategoryAction } from "@/actions/category.action";
+import { createCategoryAction, deleteCategoryAction } from "@/actions/category.action";
 import { toast } from "sonner";
 import DashboardSelect from "@/components/ui/DashboardSelect";
 import ImageUploadPreview from "@/components/ui/ImageUploadPreview";
@@ -37,13 +37,18 @@ export default function CategoriesManagementClient({ initialCategories = [] }) {
   };
 
   const confirmDelete = () => {
-    if (categoryToDelete) {
-      setCategories(
-        categories.filter((c) => c.id !== categoryToDelete.id && c.parentId !== categoryToDelete.id)
-      );
-    }
-    setIsDeleteModalOpen(false);
-    toast.success("Category deleted successfully!");
+    if (!categoryToDelete) return;
+    startTransition(async () => {
+      const res = await deleteCategoryAction(categoryToDelete.id);
+      if (res.success) {
+        setIsDeleteModalOpen(false);
+        setCategoryToDelete(null);
+        toast.success("Category deleted successfully!");
+        router.refresh();
+      } else {
+        toast.error(res.message || "Delete failed");
+      }
+    });
   };
 
   const parentSelectOptions = [

@@ -1,4 +1,6 @@
 const postService = require('../../services/post.service');
+// Redis/BullMQ click queue temporarily disabled.
+// const { addPostClickJob } = require('../../services/queue.service');
 
 const getPublicFeed = async (req, res, next) => {
     try {
@@ -61,8 +63,6 @@ const getSinglePost = async (req, res, next) => {
         const { slug } = req.params;
         const post = await postService.getPostBySlugService(slug);
         
-        // Here we would potentially trigger BullMQ to safely increment view metadata.
-        
         res.status(200).json({ success: true, data: post });
     } catch (error) {
         if(error.message === "Post Not Found") {
@@ -72,4 +72,11 @@ const getSinglePost = async (req, res, next) => {
     }
 };
 
-module.exports = { getPublicFeed, getSinglePost };
+const recordPostClick = async (req, res) => {
+    const { slug } = req.params;
+    if (!slug) return res.status(400).json({ success: false, message: 'Missing slug' });
+    // Click tracking is currently disabled (Redis off).
+    return res.status(200).json({ success: true, message: 'click tracking disabled' });
+};
+
+module.exports = { getPublicFeed, getSinglePost, recordPostClick };

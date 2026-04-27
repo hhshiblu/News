@@ -3,35 +3,43 @@ const prisma = require('../db_query/prisma');
 
 const connection = {
   host: process.env.REDIS_HOST || '127.0.0.1',
-  port: parseInt(process.env.REDIS_PORT) || 6379,
+  port: parseInt(process.env.REDIS_PORT, 10) || 6379,
+  ...(process.env.REDIS_PASSWORD && { password: process.env.REDIS_PASSWORD }),
 };
 
-// Queue Setup
-const viewCountQueue = new Queue('post-views', { connection });
+const postClicksQueue = new Queue('post-clicks', { connection });
 
-// Worker Setup (this would typically run in a separate process or server file in large scales)
-const viewCountWorker = new Worker('post-views', async job => {
-    if (job.name === 'increment-view') {
-        const { postId } = job.data;
-        // Efficient background db update
-        await prisma.post.update({
-            where: { id: postId },
-            data: { viewCount: { increment: 1 } }
-        });
+const postClicksWorker = new Worker(
+  'post-clicks',
+  async (job) => {
+    if (job.name !== 'increment-click') return;
+    const { postId, slug } = job.data;
+    let id = postId;
+    if (!id && slug) {
+      const p = await prisma.post.findFirst({
+        where: { slug: String(slug), status: 'PUBLISHED' },
+        select: { id: true },
+      });
+      if (!p) return;
+      id = p.id;
     }
-}, { connection });
+    if (!id) return;
+    await prisma.post.update({
+      where: { id },
+      data: { viewCount: { increment: 1 } },
+    });
+  },
+  { connection }
+);
 
-viewCountWorker.on('completed', job => {
-  console.log(`${job.id} has completed!`);
+postClicksWorker.on('failed', (job, err) => {
+  console.error('[post-clicks]', job?.id, err?.message);
 });
 
-viewCountWorker.on('failed', (job, err) => {
-  console.log(`${job.id} has failed with ${err.message}`);
-});
-
-// Service exposure
-const addPostViewJob = async (postId) => {
-    await viewCountQueue.add('increment-view', { postId });
+/** Enqueue a public article click (increments viewCount in DB). */
+const addPostClickJob = async ({ postId, slug } = {}) => {
+  if (!postId && !slug) return;
+  await postClicksQueue.add('increment-click', { postId, slug });
 };
 
-module.exports = { addPostViewJob };
+module.exports = { addPostClickJob };

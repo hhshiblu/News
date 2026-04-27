@@ -1,9 +1,14 @@
 const categoryQueries = require('../db_query/category.query');
 
 // Build Tree Memory function for O(n) rendering
+const isRootParent = (val) => val === null || val === undefined || val === '';
+
 const buildTree = (items, parentId = null) => {
     return items
-        .filter(item => item.parentId === parentId)
+        .filter(item => {
+            if (isRootParent(parentId)) return isRootParent(item.parentId);
+            return item.parentId === parentId;
+        })
         .map(item => ({
             ...item,
             children: buildTree(items, item.id)

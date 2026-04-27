@@ -1,4 +1,4 @@
-import { FileText, ShieldAlert, ArrowRight, Activity, TrendingUp, CheckCircle, Clock } from "lucide-react";
+import { FileText, MousePointerClick, ArrowRight, Activity, TrendingUp, CheckCircle, Clock } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import { ViewsChart } from "@/components/DashboardCharts";
@@ -8,112 +8,117 @@ import { getAdminPostsAction } from "@/actions/admin-data.action";
 
 export default async function DashboardPage() {
   const user = await getMe();
-  const isAdmin = user?.role === 'ADMIN';
-  const { total, posts } = await getAdminPostsAction("limit=5");
-  const pendingCount = posts.filter(p => p.status === 'PENDING').length;
+  const isAdmin = user?.role === "ADMIN";
+  const { total, posts } = await getAdminPostsAction("limit=250");
+  const pendingCount = posts.filter((p) => p.status === "PENDING").length;
+  const publishedCount = posts.filter((p) => p.status === "PUBLISHED").length;
+  const totalClicks = posts.reduce((s, p) => s + (p.viewCount ?? 0), 0);
+
+  const chartData = [...posts]
+    .sort((a, b) => (b.viewCount ?? 0) - (a.viewCount ?? 0))
+    .slice(0, 8)
+    .map((p) => ({
+      name:
+        (p.title || "?").length > 14 ? `${(p.title || "").slice(0, 14)}…` : p.title || "?",
+      clicks: p.viewCount ?? 0,
+    }));
 
   const stats = [
-    { label: "Total Articles", value: total, icon: FileText, color: "text-blue-600", bg: "bg-blue-50", trend: "+12.5%" },
-    { label: "Pending Review", value: pendingCount, icon: Clock, color: "text-amber-600", bg: "bg-amber-50", trend: "Action Required" },
-    { label: "Published Items", value: posts.filter(p => p.status === 'PUBLISHED').length, icon: CheckCircle, color: "text-emerald-600", bg: "bg-emerald-50", trend: "Live on site" },
-    { label: "Total Reach", value: "14.2K", icon: TrendingUp, color: "text-indigo-600", bg: "bg-indigo-50", trend: "+18% views" }
+    { label: "Articles", value: total, icon: FileText, color: "text-blue-600", bg: "bg-blue-50", sub: `${publishedCount} live` },
+    { label: "Pending", value: pendingCount, icon: Clock, color: "text-amber-600", bg: "bg-amber-50", sub: "Queue" },
+    { label: "Published", value: publishedCount, icon: CheckCircle, color: "text-emerald-600", bg: "bg-emerald-50", sub: "On site" },
+    { label: "Clicks", value: totalClicks.toLocaleString(), icon: MousePointerClick, color: "text-rose-600", bg: "bg-rose-50", sub: "All-time" },
   ];
 
+  const recent = (posts || []).slice(0, 6);
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
-        
-        {/* Welcome Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-                <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Editorial Hub</h1>
-                <p className="text-gray-500 font-medium mt-1">Real-time performance metrics and content lifecycle overview.</p>
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-lg font-bold text-gray-900 tracking-tight">Editorial Hub</h1>
+          <p className="text-[12px] text-gray-500 font-medium mt-0.5">Overview · posts · engagement</p>
+        </div>
+        {!isAdmin && (
+          <Link
+            href="/dashboard/posts/create"
+            className="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-[11px] font-bold !text-white shadow-sm transition-colors hover:bg-emerald-700"
+          >
+            New post
+          </Link>
+        )}
+      </div>
+
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {stats.map((stat, i) => (
+          <div
+            key={i}
+            className="rounded-2xl border border-gray-100 bg-white p-3.5 shadow-sm transition-shadow hover:shadow-md"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className={`rounded-xl p-2 ${stat.bg} ${stat.color}`}>
+                <stat.icon className="h-4 w-4" />
+              </div>
+              <span className="text-[9px] font-semibold uppercase tracking-wide text-gray-400">{stat.sub}</span>
             </div>
-            {!isAdmin && (
-                <Link 
-                    href="/dashboard/posts/create" 
-                    className="inline-flex items-center justify-center px-6 py-3 bg-emerald-600 text-white font-bold text-sm rounded-2xl shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 transition-all hover:-translate-y-0.5 active:translate-y-0 uppercase tracking-widest"
-                >
-                    Create New Post
-                </Link>
-            )}
+            <p className="mt-2.5 text-xl font-black tabular-nums text-gray-900">{stat.value}</p>
+            <p className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-400">{stat.label}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 gap-5 pb-10 lg:grid-cols-3">
+        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm lg:col-span-2">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-primary/10 p-1.5">
+                <Activity className="h-3.5 w-3.5 text-primary" />
+              </div>
+              <h2 className="text-sm font-bold text-gray-800">Top stories by clicks</h2>
+            </div>
+            <TrafficRangeFilter />
+          </div>
+          <ViewsChart data={chartData} valueKey="clicks" />
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {stats.map((stat, i) => (
-                <div key={i} className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:border-emerald-100 transition-all group">
-                    <div className="flex items-center justify-between">
-                        <div className={`p-4 rounded-2xl ${stat.bg} ${stat.color} transition-transform group-hover:scale-110`}>
-                            <stat.icon className="w-6 h-6" />
-                        </div>
-                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${stat.bg} ${stat.color} uppercase tracking-wider`}>
-                            {stat.trend}
-                        </span>
-                    </div>
-                    <div className="mt-6">
-                        <h3 className="text-3xl font-black text-gray-900 tracking-tight">{stat.value}</h3>
-                        <p className="text-xs font-bold text-gray-400 mt-1 uppercase tracking-widest">{stat.label}</p>
-                    </div>
-                </div>
-            ))}
-        </div>
-
-        {/* Analytics & Recent Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-10">
-            
-            {/* Main Graph Area */}
-            <div className="lg:col-span-2 bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
-                <div className="flex items-center justify-between mb-10">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-emerald-500 rounded-lg shadow-lg shadow-emerald-500/20">
-                            <Activity className="w-4 h-4 text-white" />
-                        </div>
-                        <h2 className="text-lg font-bold text-gray-800 tracking-tight">Traffic Performance</h2>
-                    </div>
-                    <TrafficRangeFilter />
-                </div>
-                <ViewsChart />
-            </div>
-
-            {/* Recent Activity List */}
-            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-                <div className="p-6 border-b border-gray-50 flex items-center justify-between bg-gray-50/30">
-                    <h2 className="text-sm font-bold text-gray-800 uppercase tracking-widest">Recent Updates</h2>
-                    <Link href="/dashboard/posts" className="text-[10px] font-black text-emerald-600 hover:text-emerald-700 uppercase tracking-widest flex items-center gap-1 group">
-                        View All <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-1" />
+        <div className="flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+          <div className="flex items-center justify-between border-b border-gray-50 bg-gray-50/40 px-4 py-3">
+            <h2 className="text-[11px] font-bold uppercase tracking-wider text-gray-600">Recent</h2>
+            <Link href="/dashboard/posts" className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 hover:text-emerald-700">
+              All <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
+          <div className="max-h-[min(360px,50vh)] flex-1 divide-y divide-gray-50 overflow-y-auto">
+            {recent.length === 0 ? (
+              <p className="p-6 text-center text-[11px] text-gray-400">No articles</p>
+            ) : (
+              recent.map((post) => (
+                <div key={post.id} className="flex items-start gap-2 px-4 py-2.5 hover:bg-gray-50/80">
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      href={`/dashboard/posts/${post.id}`}
+                      className="line-clamp-2 text-[11px] font-semibold leading-snug text-gray-900 hover:text-primary"
+                    >
+                      {post.title}
                     </Link>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[9px] text-gray-400">
+                      <span>{post.category?.name}</span>
+                      <span className="tabular-nums text-rose-600/90">{post.viewCount ?? 0} clicks</span>
+                    </div>
+                  </div>
+                  <TrendingUp className="mt-0.5 h-3 w-3 shrink-0 text-gray-300" />
                 </div>
-                
-                <div className="flex-1 divide-y divide-gray-50">
-                    {posts.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center p-12 text-center text-gray-400 space-y-3">
-                             <ShieldAlert className="w-10 h-10 opacity-20" />
-                             <p className="text-xs font-bold uppercase tracking-widest">No articles found</p>
-                        </div>
-                    ) : posts.map((post) => (
-                        <div key={post.id} className="p-5 hover:bg-emerald-50/30 transition-colors flex items-center gap-4 group">
-                             <div className="flex-1 min-w-0">
-                                 <h4 className="text-sm font-bold text-gray-900 truncate group-hover:text-emerald-700 transition-colors">{post.title}</h4>
-                                 <div className="flex items-center gap-3 mt-1">
-                                     <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">{post.category?.name || "Global"}</span>
-                                     <span className="w-1 h-1 bg-gray-300 rounded-full" />
-                                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{new Date(post.createdAt).toLocaleDateString()}</span>
-                                 </div>
-                             </div>
-                             {post.status === 'PUBLISHED' ? (
-                                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/30" title="Published" />
-                             ) : (
-                                <div className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" title="Pending" />
-                             )}
-                        </div>
-                    ))}
-                </div>
-
-                <Link href="/admin/posts/create" className="m-4 p-4 rounded-2xl bg-emerald-50 text-emerald-700 font-black text-[10px] uppercase tracking-[0.2em] text-center hover:bg-emerald-100 transition-all">
-                    Start Writing
-                </Link>
-            </div>
+              ))
+            )}
+          </div>
+          <Link
+            href="/dashboard/posts/create"
+            className="m-3 rounded-xl bg-emerald-50 py-2.5 text-center text-[10px] font-bold uppercase tracking-wide text-emerald-700 hover:bg-emerald-100"
+          >
+            Write
+          </Link>
         </div>
+      </div>
     </div>
   );
 }

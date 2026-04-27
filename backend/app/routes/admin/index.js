@@ -11,10 +11,13 @@ const submissionRoutes = require('./submission.routes');
 const newsletterRoutes = require('./newsletter.routes');
 const partnerRoutes = require("./partner.routes");
 const teamMemberRoutes = require("./teamMember.routes");
+const departmentRoutes = require("./department.routes");
+const siteRoutes = require("./site.routes");
 
 const router = express.Router();
 
 router.use('/auth', authRoutes);
+router.use('/site-config', siteRoutes);
 router.use('/users', userRoutes);
 router.use('/categories', categoryRoutes);
 router.use('/posts', postRoutes);
@@ -26,5 +29,6 @@ router.use('/submissions', submissionRoutes);
 router.use('/newsletter', newsletterRoutes);
 router.use("/partners", partnerRoutes);
 router.use("/team-members", teamMemberRoutes);
+router.use("/departments", departmentRoutes);
 
 module.exports = router;

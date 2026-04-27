@@ -4,11 +4,24 @@ const createUserQuery = async (data) => {
     return prisma.user.create({ data });
 };
 
+const publicUserSelect = {
+    id: true,
+    name: true,
+    email: true,
+    role: true,
+    bio: true,
+    avatar: true,
+    position: true,
+    socials: true,
+    status: true,
+    createdAt: true,
+};
+
 const updateUserQuery = async (id, data) => {
     return prisma.user.update({
         where: { id },
         data,
-        select: { id: true, name: true, email: true, role: true, bio: true, avatar: true }
+        select: publicUserSelect,
     });
 };
 
@@ -19,14 +32,17 @@ const deleteUserQuery = async (id) => {
 const getAllUsersQuery = async (filters = {}) => {
     return prisma.user.findMany({
         where: filters,
-        select: { id: true, name: true, email: true, role: true, bio: true, avatar: true, status: true, createdAt: true, posts: { select: { id: true, status: true } } }
+        select: {
+            ...publicUserSelect,
+            posts: { select: { id: true, status: true } },
+        },
     });
 };
 
 const getUserByIdQuery = async (id) => {
     return prisma.user.findUnique({
         where: { id },
-        select: { id: true, name: true, email: true, role: true, bio: true, avatar: true, createdAt: true }
+        select: { ...publicUserSelect },
     });
 };
 
@@ -35,5 +51,6 @@ module.exports = {
     updateUserQuery,
     deleteUserQuery,
     getAllUsersQuery,
-    getUserByIdQuery
+    getUserByIdQuery,
+    publicUserSelect,
 };
