@@ -33,7 +33,7 @@ function GridHalf({ category, posts = [] }) {
 
       {/* Lead Item */}
       {lead && (
-        <Link href={`/news/${lead.slug}`} className="group block mb-6">
+        <Link href={`/news/${lead.slug}`} className="group block mb-4">
           <div className="relative w-full aspect-[16/9] overflow-hidden rounded-sm bg-gray-900">
             <Image
               src={imgSrc(lead)}
@@ -59,7 +59,7 @@ function GridHalf({ category, posts = [] }) {
       )}
 
       {/* 2x2 Grid below */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-5 mt-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-4">
         {others.map((p, i) => (
           <Link key={p.id || i} href={`/news/${p.slug}`} className="group block">
             <div className="relative w-full aspect-[4/3] overflow-hidden rounded-sm mb-2">
@@ -90,10 +90,10 @@ export default function DualCategoryGrid({ desk1, desk2 }) {
   return (
     <section className="bg-white py-10 md:py-12 border-t border-gray-100">
       <div className="max-w-[1280px] mx-auto px-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
           {desk1 && <GridHalf category={desk1.category} posts={desk1.posts} />}
           {desk2 && (
-            <div className="lg:border-l lg:border-gray-100 lg:pl-16">
+            <div className="lg:border-l lg:border-gray-200 lg:pl-8">
               <GridHalf category={desk2.category} posts={desk2.posts} />
             </div>
           )}

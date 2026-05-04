@@ -184,27 +184,6 @@ export default function NavbarClient({ initialCategories = [] }) {
         ref={headerRef}
         className={`sticky top-0 z-50 bg-white border-b border-gray-200 transition-shadow duration-300 ${scrolled ? "shadow-md" : ""}`}
       >
-        <div className="hidden md:block bg-gray-50 border-b border-gray-200">
-          <div className="max-w-[1280px] mx-auto px-4 flex items-center justify-between h-8">
-            <span className="text-[11px] text-gray-500 font-[Inter]">{todayLabel || "Loading date..."}</span>
-            <div className="flex items-center gap-4 text-[11px] text-gray-500 font-[Inter]">
-              <button className="hover:text-gray-800 transition-colors">বাংলা</button>
-              <span className="text-gray-300">|</span>
-              <button className="hover:text-gray-800 transition-colors focus:outline-none">English</button>
-              {!loadingUser && user ? (
-                <>
-                  <span className="text-gray-300">|</span>
-                  <Link href="/dashboard" className="font-bold text-gray-800 hover:text-primary transition-colors flex items-center gap-1.5 focus:outline-none py-1 px-2.5 bg-gray-100 rounded-full">
-                    <div className="w-4 h-4 bg-primary text-white rounded-full flex items-center justify-center text-[8px] font-bold">
-                      {user.name.charAt(0)}
-                    </div>
-                    Hi, {user.name.split(" ")[0]}
-                  </Link>
-                </>
-              ) : null}
-            </div>
-          </div>
-        </div>
 
         <div className="max-w-[1280px] mx-auto px-4 min-w-0">
           <div className="flex items-center h-[58px] gap-2 sm:gap-4 min-w-0">
@@ -220,7 +199,7 @@ export default function NavbarClient({ initialCategories = [] }) {
 
             <Link href="/" className="flex items-center flex-shrink-0">
               <span className="bg-primary text-white font-bold text-lg md:text-xl px-2.5 md:px-3 py-1" style={{ fontFamily: "'Playfair Display', serif" }}>
-                Labour
+                The Labour
               </span>
               <span className="text-gray-900 font-bold text-lg md:text-xl pl-2" style={{ fontFamily: "'Playfair Display', serif" }}>
                 Pulse
@@ -358,7 +337,7 @@ export default function NavbarClient({ initialCategories = [] }) {
             <div ref={sidebarRef} className={`mobile-sidebar ${mobileOpen ? "open" : ""}`} aria-label="Navigation menu">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
           <Link href="/" onClick={closeSidebar} className="flex items-center">
-            <span className="bg-primary text-white font-bold text-lg px-2.5 py-0.5" style={{ fontFamily: "'Playfair Display', serif" }}>Labour</span>
+            <span className="bg-primary text-white font-bold text-lg px-2.5 py-0.5" style={{ fontFamily: "'Playfair Display', serif" }}>The Labour</span>
             <span className="font-bold text-lg pl-2 text-gray-900" style={{ fontFamily: "'Playfair Display', serif" }}>Pulse</span>
           </Link>
           <button onClick={closeSidebar} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors text-gray-600" aria-label="Close menu">

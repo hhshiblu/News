@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import AdSlot from "@/components/ads/AdSlot";
 
 function FlameIcon({ className = "w-4 h-4" }) {
@@ -31,6 +32,7 @@ export default function ArticleSidebar({
         <AdSlot slotKey="public_sidebar_medium" hideLabel />
       </div>
 
+      {/* ── Breaking News ── */}
       <div className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
         <div className="bg-gradient-to-r from-primary/12 to-transparent px-3 py-2.5 border-b border-gray-100 flex items-center justify-between gap-2">
           <h3 className="text-[11px] font-black uppercase tracking-[0.12em] text-gray-900 font-[Inter] flex items-center gap-2">
@@ -51,13 +53,20 @@ export default function ArticleSidebar({
               <li key={item.id}>
                 <Link
                   href={`/news/${item.slug}`}
-                  className="flex gap-2.5 items-start px-3 py-2.5 hover:bg-gray-50/90 transition-colors group"
+                  className="flex gap-3 items-start px-3 py-2.5 hover:bg-gray-50/90 transition-colors group"
                 >
-                  <span
-                    className="w-2 h-2 rounded-full bg-red-600 shrink-0 mt-1 shadow-sm shadow-red-900/40"
-                    aria-hidden
-                  />
-                  <span className="text-[12px] font-bold text-gray-800 leading-snug group-hover:text-primary transition-colors font-[Inter] line-clamp-3 min-w-0">
+                  {/* Thumbnail */}
+                  <div className="w-14 h-11 relative shrink-0 rounded-md overflow-hidden bg-gray-100">
+                    <Image
+                      src={item.image || item.featuredImage || "/placeholder.jpg"}
+                      alt={item.title}
+                      fill
+                      unoptimized
+                      sizes="56px"
+                      className="object-cover group-hover:scale-105 transition-transform"
+                    />
+                  </div>
+                  <span className="text-[12px] font-bold text-gray-800 leading-snug group-hover:text-primary transition-colors font-[Inter] line-clamp-2 min-w-0 flex-1">
                     {item.title}
                   </span>
                 </Link>
@@ -67,6 +76,7 @@ export default function ArticleSidebar({
         </ul>
       </div>
 
+      {/* ── From Author ── */}
       {showAuthor && (
         <div className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
           <div className="bg-gradient-to-r from-gray-900/[0.06] to-transparent px-3 py-2.5 border-b border-gray-100 flex items-center justify-between gap-2">
@@ -80,13 +90,20 @@ export default function ArticleSidebar({
               <li key={item.id}>
                 <Link
                   href={`/news/${item.slug}`}
-                  className="flex gap-2.5 items-start px-3 py-2.5 hover:bg-gray-50/90 transition-colors group"
+                  className="flex gap-3 items-start px-3 py-2.5 hover:bg-gray-50/90 transition-colors group"
                 >
-                  <span
-                    className="w-1.5 h-1.5 rounded-full bg-emerald-700 shrink-0 mt-1.5 ring-2 ring-emerald-700/15"
-                    aria-hidden
-                  />
-                  <span className="text-[12px] font-bold text-gray-800 leading-snug group-hover:text-primary transition-colors font-[Inter] line-clamp-3 min-w-0">
+                  {/* Thumbnail */}
+                  <div className="w-14 h-11 relative shrink-0 rounded-md overflow-hidden bg-gray-100">
+                    <Image
+                      src={item.image || item.featuredImage || "/placeholder.jpg"}
+                      alt={item.title}
+                      fill
+                      unoptimized
+                      sizes="56px"
+                      className="object-cover group-hover:scale-105 transition-transform"
+                    />
+                  </div>
+                  <span className="text-[12px] font-bold text-gray-800 leading-snug group-hover:text-primary transition-colors font-[Inter] line-clamp-2 min-w-0 flex-1">
                     {item.title}
                   </span>
                 </Link>
@@ -96,7 +113,7 @@ export default function ArticleSidebar({
           <div className="px-3 py-2 border-t border-gray-50">
             <Link
               href={authorHref}
-              className="inline-flex items-center justify-center w-full py-2 rounded-lg border border-gray-200 text-[10px] font-black uppercase tracking-widest text-gray-900 hover:bg-gray-950 hover:text-white hover:border-gray-950 transition-colors font-[Inter]"
+              className="inline-flex items-center justify-center w-full py-2 rounded-lg bg-primary text-white text-[10px] font-black uppercase tracking-widest hover:bg-primary-dark transition-colors font-[Inter]"
             >
               View all
             </Link>

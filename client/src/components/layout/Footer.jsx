@@ -98,12 +98,12 @@ export default function Footer({ navigationCategories = [] }) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10">
           
           {/* Brand & About Column (lg: 4 cols) */}
-          <div className="lg:col-span-4 flex flex-col items-start">
-            <Link href="/" className="mb-6 flex items-center">
-              <span className="bg-primary text-white font-bold text-2xl px-3 py-1 font-[Playfair_Display]">Labour</span>
+          <div className="lg:col-span-4 flex flex-col items-center md:items-start text-center md:text-left">
+            <Link href="/" className="mb-6 flex items-center justify-center md:justify-start">
+              <span className="bg-primary text-white font-bold text-2xl px-3 py-1 font-[Playfair_Display]">The Labour</span>
               <span className="font-bold text-2xl pl-2 font-[Playfair_Display]">Pulse</span>
             </Link>
-            <p className="text-gray-400 text-[14px] leading-relaxed mb-8 pr-4">
+            <p className="text-gray-400 text-[14px] leading-relaxed mb-8 md:pr-4">
               {footerAbout}
             </p>
             <div className="flex items-center gap-4">
@@ -123,7 +123,7 @@ export default function Footer({ navigationCategories = [] }) {
           </div>
 
           {/* Sections Column (lg: 3 cols) */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3 text-center md:text-left">
             <h3 className="text-[14px] font-bold uppercase tracking-widest mb-6 opacity-60">Sections</h3>
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3">
               {navigationCategories.length === 0 ? (
@@ -146,7 +146,7 @@ export default function Footer({ navigationCategories = [] }) {
           </div>
 
           {/* Company & Legal Column (lg: 2 cols) */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 text-center md:text-left">
             <h3 className="text-[14px] font-bold uppercase tracking-widest mb-6 opacity-60">{footerLinks.company.title}</h3>
             <ul className="space-y-3 mb-8">
               {footerLinks.company.links.map((link) => (
@@ -171,7 +171,7 @@ export default function Footer({ navigationCategories = [] }) {
           </div>
 
           {/* Contact & Subscribe Column (lg: 3 cols) */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3 text-center md:text-left">
             <h3 className="text-[14px] font-bold uppercase tracking-widest mb-6 text-gray-500">Stay Connected</h3>
             <div className="bg-gray-900/50 border border-gray-800 p-6 rounded-2xl mb-8">
               <p className="text-[13px] font-bold mb-3 text-white">Daily Briefing</p>
@@ -191,7 +191,7 @@ export default function Footer({ navigationCategories = [] }) {
               </form>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-3">
                <span className="text-[11px] font-bold text-gray-600 uppercase tracking-widest">Connect:</span>
                <div className="flex gap-3">
                   <a href="#" className="text-gray-500 hover:text-white transition-colors"><SocialIcons.Facebook /></a>
@@ -217,7 +217,7 @@ export default function Footer({ navigationCategories = [] }) {
                 <Link href="/cookies" className="text-[10px] font-bold text-gray-400 hover:text-white uppercase tracking-widest transition-colors">Cookies</Link>
              </div>
           </div>
-          <p className="text-[11px] font-bold text-gray-700 flex items-center gap-1.5 uppercase tracking-tighter">
+          <p className="text-[11px] font-bold text-gray-700 flex items-center justify-center md:justify-end gap-1.5 uppercase tracking-tighter w-full md:w-auto mt-4 md:mt-0">
             PROUDLY DEVELOPED IN DHAKA
           </p>
         </div>

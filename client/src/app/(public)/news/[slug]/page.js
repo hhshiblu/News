@@ -156,7 +156,7 @@ async function ArticlePageContent({ params }) {
   const authorBylinePosts = (authorFeedRes?.posts || [])
     .filter((p) => p.slug !== slug)
     .slice(0, 7)
-    .map((p) => ({ id: p.id, slug: p.slug, title: p.title }));
+    .map((p) => ({ id: p.id, slug: p.slug, title: p.title, featuredImage: p.featuredImage, image: p.featuredImage || "/placeholder.jpg" }));
 
   article = {
     ...article,
@@ -402,44 +402,7 @@ async function ArticlePageContent({ params }) {
                     </div>
                   )}
 
-                  {moreCategoryCards.length > 0 && (
-                    <section className="mt-3 space-y-3">
-                      {moreCategoryCards.map((story) => (
-                        <Link
-                          key={`wide-${story.id}`}
-                          href={`/news/${story.slug}`}
-                          className="group block overflow-hidden rounded-2xl border border-gray-200 bg-white hover:shadow-md transition-shadow"
-                        >
-                          <div className="grid grid-cols-1 md:grid-cols-5">
-                            <div className="relative md:col-span-2 h-48 md:h-full bg-gray-100">
-                              <Image
-                                src={story.image || story.featuredImage || "/placeholder.jpg"}
-                                alt={story.title}
-                                fill
-                                unoptimized
-                                className="object-cover group-hover:scale-[1.02] transition-transform duration-500"
-                                sizes="(max-width: 768px) 100vw, 40vw"
-                              />
-                            </div>
-                            <div className="md:col-span-3 p-4 md:p-5 flex flex-col justify-center">
-                              <span className="text-[10px] font-black uppercase tracking-[0.18em] text-primary mb-2">
-                                More from {parentCategoryName}
-                              </span>
-                              <h3 className="text-lg md:text-xl font-bold text-gray-900 font-[Playfair_Display] leading-tight group-hover:text-primary transition-colors">
-                                {story.title}
-                              </h3>
-                              <p className="mt-2 text-[13px] text-gray-600 line-clamp-2">
-                                {story.subtitle || story.excerpt || "Continue reading this developing coverage."}
-                              </p>
-                              <span className="mt-3 text-[10px] font-semibold uppercase tracking-widest text-gray-400">
-                                {story.timestamp}
-                              </span>
-                            </div>
-                          </div>
-                        </Link>
-                      ))}
-                    </section>
-                  )}
+
 
                   <div className="mt-6 pt-3 border-t border-gray-100">
                     <ShareButtons

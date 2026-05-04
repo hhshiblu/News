@@ -1,30 +1,28 @@
-import { ChevronRight, Bookmark, Share2, TrendingUp } from "lucide-react";
+import { ChevronRight, TrendingUp } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import CategoryHero from "@/components/category/CategoryHero";
 import Sidebar from "@/components/layout/Sidebar";
 import AdSlot from "@/components/ads/AdSlot";
-import MarketTicker from "@/components/sections/MarketTicker";
-import SectionHeader from "@/components/sections/SectionHeader";
-import HorizontalCard from "@/components/news/HorizontalCard";
-import MediumCard from "@/components/news/MediumCard";
-import SmallCard from "@/components/news/SmallCard";
 import BigCard from "@/components/news/BigCard";
-import MosaicNewsGrid from "@/components/news/MosaicNewsGrid";
-import Pagination from "@/components/ui/Pagination";
+import LoadMoreFeed from "@/components/news/LoadMoreFeed";
 import { fetchPublicPosts } from "@/lib/api";
 import { getPublicCategoryBySlugAction } from "@/actions/public-extra.action";
 
-const CATEGORY_PAGE_SIZE = 30;
-const ARCHIVE_PAGE_SIZE = 12;
+const INITIAL_LOAD = 30; // enough for hero zone + feed
+const FEED_SIZE = 10;
+
 const normalizePost = (post) => ({
   ...post,
   image: post.featuredImage || "/placeholder.jpg",
   author: post.author?.name || "Staff Reporter",
   category: post.category?.name || "News",
   categorySlug: post.category?.slug,
-  timestamp: post.publishedAt ? new Date(post.publishedAt).toLocaleDateString() : "Recently"
+  timestamp: post.publishedAt
+    ? new Date(post.publishedAt).toLocaleDateString()
+    : "Recently",
 });
 
 const getStoryKey = (story) => String(story?.id || story?.slug || "");
@@ -43,57 +41,35 @@ function pickUnique(posts, usedSet, { start = 0, count = Infinity, predicate } =
   return bucket;
 }
 
-export async function generateMetadata({ params, searchParams }) {
+export async function generateMetadata({ params }) {
   const { categorySlug } = await params;
-  const sp = await searchParams;
-  const page = Math.max(1, parseInt(sp?.page, 10) || 1);
   const categoryData = await getPublicCategoryBySlugAction(categorySlug);
-  
-  const label = categoryData?.data?.name || (categorySlug || "").charAt(0).toUpperCase() + (categorySlug || "").slice(1);
-  const titleBase = `${label} — Latest Standard Coverage — LabourPulse`;
+  const label =
+    categoryData?.data?.name ||
+    (categorySlug || "").charAt(0).toUpperCase() + (categorySlug || "").slice(1);
 
   return {
-    title: page > 1 ? `${label} — Page ${page} — LabourPulse` : titleBase,
+    title: `${label} — Latest Coverage — LabourPulse`,
     description: `The definitive source for ${label} news, analysis, and exclusive insights from LabourPulse.`,
   };
 }
 
-async function ParentCategoryPageContent({ params, searchParams }) {
+
+async function ParentCategoryPageContent({ params }) {
   const { categorySlug } = await params;
-  const sp = await searchParams;
-  let page = Math.max(1, parseInt(sp?.page, 10) || 1);
-  const allPage = Math.max(1, parseInt(sp?.allPage, 10) || 1);
 
   const categoryResponse = await getPublicCategoryBySlugAction(categorySlug);
   const categoryData = categoryResponse?.data;
 
   const postsResponse = await fetchPublicPosts({
     parentCategorySlug: categorySlug,
-    page,
-    limit: CATEGORY_PAGE_SIZE,
+    page: 1,
+    limit: INITIAL_LOAD,
   });
   const rawPosts = postsResponse?.posts || [];
-  const totalPages = Math.max(1, postsResponse?.totalPages ?? 1);
-  if (page > totalPages) {
-    redirect(totalPages <= 1 ? `/${categorySlug}` : `/${categorySlug}?page=${totalPages}`);
-  }
+  const totalPosts = postsResponse?.total ?? rawPosts.length;
 
   const allPosts = rawPosts.map(normalizePost);
-  let archivePosts = [];
-  let archiveTotalPages = 1;
-  if (page === 1) {
-    const archiveRes = await fetchPublicPosts({
-      parentCategorySlug: categorySlug,
-      page: allPage,
-      limit: ARCHIVE_PAGE_SIZE,
-      offset: CATEGORY_PAGE_SIZE,
-    });
-    archivePosts = (archiveRes.posts || []).map(normalizePost);
-    archiveTotalPages = Math.max(1, archiveRes.totalPages ?? 1);
-    if (allPage > archiveTotalPages) {
-      redirect(archiveTotalPages <= 1 ? `/${categorySlug}` : `/${categorySlug}?allPage=${archiveTotalPages}`);
-    }
-  }
 
   if (!categoryData) {
     return (
@@ -101,103 +77,101 @@ async function ParentCategoryPageContent({ params, searchParams }) {
         <h1 className="text-3xl font-black text-gray-900 font-[Playfair_Display] mb-4">
           {categorySlug.toUpperCase()}
         </h1>
-        <p className="text-gray-500 font-[Inter] mb-8">This section is currently under editorial review.</p>
-        <Link href="/" className="px-8 py-3 bg-primary text-white font-bold rounded-full hover:shadow-xl transition-all">← Back to Hub</Link>
+        <p className="text-gray-500 font-[Inter] mb-8">
+          This section is currently under editorial review.
+        </p>
+        <Link
+          href="/"
+          className="px-8 py-3 bg-primary text-white font-bold rounded-full hover:shadow-xl transition-all"
+        >
+          ← Back to Hub
+        </Link>
       </div>
     );
   }
 
   const label = categoryData.name;
+  const subcategories = categoryData.children || [];
 
   if (allPosts.length === 0) {
-    if (page > 1) redirect(`/${categorySlug}`);
     return (
       <div className="max-w-[1280px] mx-auto px-4 py-20 text-center">
         <h1 className="text-3xl font-black text-gray-900 font-[Playfair_Display] mb-4">
           {label}
         </h1>
-        <p className="text-gray-500 font-[Inter] mb-8">This section is currently under editorial review.</p>
-        <Link href="/" className="px-8 py-3 bg-primary text-white font-bold rounded-full hover:shadow-xl transition-all">← Back to Hub</Link>
+        <p className="text-gray-500 font-[Inter] mb-8">
+          This section is currently under editorial review.
+        </p>
+        <Link
+          href="/"
+          className="px-8 py-3 bg-primary text-white font-bold rounded-full hover:shadow-xl transition-all"
+        >
+          ← Back to Hub
+        </Link>
       </div>
     );
   }
 
-  if (page > 1) {
-    return (
-      <div className="bg-[#fcfcfc]">
-        <div className="w-full h-px bg-gray-200" />
-        <div className="max-w-[1280px] mx-auto px-4 py-4 w-full">
-          <div className="flex flex-col lg:flex-row gap-4 lg:gap-5">
-            <main className="flex-1 min-w-0">
-              <nav className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-gray-400 mb-4 font-[Inter]">
-                <Link href="/" className="hover:text-primary transition-colors">Home</Link>
-                <ChevronRight size={10} className="text-gray-300 shrink-0" />
-                <Link href={`/${categorySlug}`} className="hover:text-primary text-gray-900">
-                  {label}
-                </Link>
-              </nav>
-              <h1 className="text-2xl md:text-3xl font-black text-gray-950 font-[Playfair_Display] mb-6 leading-tight">
-                {label}
-                <span className="block sm:inline sm:ml-2 text-base md:text-lg font-bold text-gray-400 mt-1 sm:mt-0">
-                  · Page {page}
-                </span>
-              </h1>
-              <div className="mb-6">
-                <MosaicNewsGrid posts={allPosts} maxItems={7} />
-              </div>
-              {allPosts.length > 7 && (
-                <div className="space-y-4 md:space-y-5 mb-6">
-                  {allPosts.slice(7).map((story) => (
-                    <HorizontalCard key={`list-${story.id}`} story={story} compact />
-                  ))}
-                </div>
-              )}
-              <Pagination basePath={`/${categorySlug}`} currentPage={page} totalPages={totalPages} />
-            </main>
-            <aside className="lg:w-[300px] xl:w-[300px] shrink-0">
-              <div className="sticky top-24">
-                <Sidebar />
-              </div>
-            </aside>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  const subcategories = categoryData.children || [];
-
-  // Unique distribution across blocks: one story appears once per page.
+  // ── Distribute posts across zones (unique — no repeats) ──
   const usedStories = new Set();
   const leadStory = pickUnique(allPosts, usedStories, { count: 1 })[0];
-  const sideHeadlines = pickUnique(allPosts, usedStories, { start: 1, count: 4 });
-  const topRegistry = pickUnique(allPosts, usedStories, { start: 5, count: 6 });
-  const detailedSpotlight =
+  const sideHeadlines = pickUnique(allPosts, usedStories, { count: 4 });
+  const editorsPicks = pickUnique(allPosts, usedStories, { count: 3 });
+  const spotlightStory =
     pickUnique(allPosts, usedStories, { predicate: (p) => !!p?.isOpinion, count: 1 })[0] ||
-    pickUnique(allPosts, usedStories, { start: 0, count: 1 })[0] ||
+    pickUnique(allPosts, usedStories, { count: 1 })[0] ||
     null;
-  const editorialFeed = pickUnique(allPosts, usedStories);
-  const layoutTone = categorySlug.length % 2 === 0 ? "emerald" : "primary";
-  const accentBarClass = layoutTone === "emerald" ? "bg-emerald-600" : "bg-primary";
+  const feedPosts = pickUnique(allPosts, usedStories); // remaining → feed
+
+  // How many were consumed by hero zones
+  const consumed = usedStories.size;
 
   return (
     <div className="bg-[#fcfcfc]">
-      {/* Ribbon Removed (Live was there) */}
-      <div className="w-full h-px bg-gray-200" />
+      {/* ━━━ ZONE 1: Category Header ━━━ */}
+      <div className="border-b border-gray-200 bg-white">
+        <div className="max-w-[1280px] mx-auto px-4 pt-4 pb-5">
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-gray-400 mb-3 font-[Inter]">
+            <Link href="/" className="hover:text-primary transition-colors">Home</Link>
+            <ChevronRight size={10} className="text-gray-300 shrink-0" />
+            <span className="text-gray-900">{label}</span>
+          </nav>
 
-      <div className="bg-white border-b border-gray-100">
-        <div className="max-w-[1280px] mx-auto px-4 pt-3 pb-5">
-          <div className="flex flex-col lg:flex-row gap-4 lg:gap-5">
-            
-            <div className="lg:w-2/3">
-              <div className="flex items-center gap-2 mb-2">
-                 <div className={`px-2 py-0.5 text-white text-[9px] font-black uppercase tracking-widest rounded ${layoutTone === "emerald" ? "bg-emerald-700" : "bg-gray-900"}`}>Hub</div>
-                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{label}</span>
+          {/* Title row */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="w-1 h-10 bg-primary rounded-full shrink-0 mt-1" />
+              <div>
+                <h1 className="text-2xl md:text-4xl font-black text-gray-950 font-[Playfair_Display] leading-tight">
+                  {label}<span className="text-primary italic">.</span>
+                </h1>
               </div>
-              <h1 className="text-xl md:text-3xl font-black text-gray-950 font-[Playfair_Display] leading-tight tracking-tight mb-3">
-                {label}<span className="text-primary italic">.</span>
-              </h1>
-              
-              <div className="relative group rounded-2xl overflow-hidden shadow-lg border border-gray-200/80 bg-white">
+            </div>
+            {subcategories.length > 0 && (
+              <div className="flex flex-wrap gap-1.5">
+                {subcategories.slice(0, 6).map((sub) => (
+                  <Link
+                    key={sub.id}
+                    href={`/${categorySlug}/${sub.slug}`}
+                    className="px-2.5 py-1 bg-gray-50 hover:bg-primary hover:text-white text-[10px] font-black rounded-md border border-gray-200 transition-all font-[Inter]"
+                  >
+                    {sub.name}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ━━━ ZONE 2: Hero — Lead Story + Side Headlines ━━━ */}
+      <div className="bg-white border-b border-gray-100">
+        <div className="max-w-[1280px] mx-auto px-4 py-5">
+          <div className="flex flex-col lg:flex-row gap-5">
+            {/* Lead story — 65% */}
+            <div className="lg:w-[65%]">
+              <div className="relative group rounded-xl overflow-hidden shadow-sm border border-gray-200/80 bg-white">
                 <CategoryHero
                   story={leadStory}
                   hClass="min-h-[200px] md:min-h-[300px] lg:min-h-[340px]"
@@ -207,170 +181,149 @@ async function ParentCategoryPageContent({ params, searchParams }) {
               </div>
             </div>
 
-            <div className="lg:w-1/3 flex flex-col">
-              <div className="flex items-center justify-between gap-2 mb-3 pb-2 border-b-2 border-gray-900">
+            {/* Side headlines — 35% */}
+            <div className="lg:w-[35%] flex flex-col">
+              <div className="flex items-center justify-between gap-2 mb-3 pb-2 border-b-2 border-primary">
                 <div className="flex items-center gap-1.5">
                   <TrendingUp size={14} className="text-primary shrink-0" />
-                  <h2 className="text-[11px] font-black uppercase tracking-widest font-[Inter]">Latest</h2>
+                  <h2 className="text-[11px] font-black uppercase tracking-widest font-[Inter]">
+                    Latest
+                  </h2>
                 </div>
-                <Link href="/" className="text-[9px] font-black uppercase tracking-widest text-primary hover:opacity-80 font-[Inter]">
-                  View all —
-                </Link>
               </div>
-              <div className="flex flex-col gap-4 flex-1">
-                {sideHeadlines.map(story => (
-                  <Link key={story.id} href={`/news/${story.slug}`} className="group flex gap-2 items-start">
-                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 mt-1.5 ring-2 ${layoutTone === "emerald" ? "bg-emerald-600 ring-emerald-600/15" : "bg-primary ring-primary/20"}`} aria-hidden />
-                    <div className="min-w-0">
+              <div className="flex flex-col divide-y divide-gray-100 flex-1">
+                {sideHeadlines.map((story) => (
+                  <Link
+                    key={story.id}
+                    href={`/news/${story.slug}`}
+                    className="group flex gap-3 items-start py-3 first:pt-0"
+                  >
+                    {/* Thumbnail */}
+                    <div className="w-16 h-12 relative shrink-0 rounded-md overflow-hidden bg-gray-100">
+                      <Image
+                        src={story.image || "/placeholder.jpg"}
+                        alt={story.title}
+                        fill
+                        unoptimized
+                        sizes="64px"
+                        className="object-cover group-hover:scale-105 transition-transform"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-1.5 text-[8px] font-bold text-primary uppercase tracking-wider mb-0.5">
-                         <span>{story.category}</span>
-                         <span className="text-gray-300">·</span>
-                         <span className="text-gray-400">{story.timestamp}</span>
+                        <span>{story.category}</span>
+                        <span className="text-gray-300">·</span>
+                        <span className="text-gray-400">{story.timestamp}</span>
                       </div>
-                      <h3 className="text-[12px] font-bold text-gray-900 group-hover:text-primary leading-snug transition-colors line-clamp-3 font-[Inter]">
+                      <h3 className="text-[13px] font-bold text-gray-900 group-hover:text-primary leading-snug transition-colors line-clamp-2 font-[Inter]">
                         {story.title}
                       </h3>
                     </div>
                   </Link>
                 ))}
-                
-                {subcategories.length > 0 && (
-                  <div className="mt-auto pt-4 border-t border-gray-100">
-                    <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Sections</h3>
-                    <div className="flex flex-wrap gap-1.5">
-                       {subcategories.slice(0, 6).map(sub => (
-                         <Link key={sub.id} href={`/${categorySlug}/${sub.slug}`} className="px-2.5 py-1 bg-gray-50 hover:bg-gray-950 hover:text-white text-[10px] font-black rounded-md border border-gray-100 transition-all font-[Inter]">
-                           {sub.name}
-                         </Link>
-                       ))}
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Economy-specific: MarketTicker */}
-      {categorySlug === "economy" && <MarketTicker />}
-
-      <div className="max-w-[1280px] mx-auto px-4 py-4">
-        <div className="flex flex-col lg:flex-row gap-4 lg:gap-5">
-          
+      {/* ━━━ MAIN CONTENT AREA ━━━ */}
+      <div className="max-w-[1280px] mx-auto px-4 py-5">
+        <div className="flex flex-col lg:flex-row gap-5">
           <main className="flex-1 min-w-0">
+            {/* Ad leaderboard */}
             <div className="mb-6 flex justify-center">
               <AdSlot slotKey="category_hub_leaderboard" />
             </div>
 
-            <div className="mb-8">
-               <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-[11px] font-black uppercase tracking-[0.18em] text-gray-950 font-[Inter] flex items-center gap-3">
-                     <div className="w-8 h-0.5 bg-gray-900"></div> Registry
+            {/* ━━━ ZONE 3: Editors' Picks — 3-col BigCards ━━━ */}
+            {editorsPicks.length > 0 && (
+              <div className="mb-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-0.5 w-8 bg-primary" />
+                  <h2 className="text-[11px] font-black uppercase tracking-[0.18em] text-gray-950 font-[Inter]">
+                    Editor&apos;s Picks
                   </h2>
-               </div>
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
-                  {topRegistry.map(story => (
+                  <div className="h-px flex-1 bg-gray-200" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {editorsPicks.map((story) => (
                     <BigCard key={story.id} story={story} compact />
                   ))}
-               </div>
-            </div>
-
-            {/* 2. PERSPECTIVE SECTION (Detailed Spotlight) */}
-            {detailedSpotlight && (
-              <div className="mb-7 md:mb-8 p-0 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col md:flex-row">
-                 <div className="md:w-[45%] h-[200px] md:h-auto md:min-h-[240px] relative">
-                    <img src={detailedSpotlight.image} alt={detailedSpotlight.title} className="absolute inset-0 w-full h-full object-cover" />
-                 </div>
-                 <div className="p-4 md:p-5 md:w-[55%] flex flex-col justify-center bg-gray-950 text-white">
-                    <div className="text-primary text-[9px] font-black uppercase tracking-widest mb-1.5">Editorial Spotlight</div>
-                    <h2 className="text-lg md:text-xl font-black font-[Playfair_Display] leading-tight mb-2">
-                      {detailedSpotlight.title}
-                    </h2>
-                    <p className="text-gray-400 text-[12px] font-[Inter] line-clamp-3 mb-4">
-                       {detailedSpotlight.excerpt || "Diving deep into the core issues that define our industry today. This analysis provides unparalleled context and actionable insights."}
-                    </p>
-                    <Link href={`/news/${detailedSpotlight.slug}`} className="flex items-center gap-3 text-white font-bold text-xs uppercase tracking-widest hover:text-primary transition-colors group">
-                       View Perspective <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                 </div>
+                </div>
               </div>
             )}
 
-            {/* 3. EDITORIAL FEED (Standard News Deck) */}
-            <div className="mb-8">
-               <div className="mb-3 flex flex-col gap-1">
-                  <div className={`h-1 w-12 ${accentBarClass}`}></div>
-                  <h2 className="text-base md:text-lg font-black text-gray-950 font-[Playfair_Display]">Editorial Feed</h2>
-               </div>
-               <div className="space-y-4 md:space-y-5">
-                  {editorialFeed.map(story => (
-                    <HorizontalCard key={story.id} story={story} compact />
-                  ))}
-               </div>
-              {totalPages > 1 && (
-                <Pagination basePath={`/${categorySlug}`} currentPage={page} totalPages={totalPages} />
-              )}
-            </div>
-
-            {page === 1 && archivePosts.length > 0 && (
-              <section className="mt-14 pt-10 border-t-2 border-dashed border-gray-200">
-                <div className="flex flex-wrap items-end justify-between gap-3 mb-6">
-                  <div>
-                    <span className="text-[10px] font-black uppercase tracking-[0.25em] text-primary font-[Inter] block mb-1">
-                      Full archive
-                    </span>
-                    <h2 className="text-xl md:text-2xl font-bold text-gray-950 font-[Playfair_Display]">
-                      All news in {label}
-                    </h2>
-                    <p className="text-[12px] text-gray-500 font-[Inter] mt-1 max-w-xl">
-                      Everything after the front page bundle—newest first, paginated so the page stays light.
-                    </p>
-                  </div>
-                </div>
-                <ul className="space-y-0 divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white overflow-hidden">
-                  {archivePosts.map((story) => (
-                    <li key={story.id}>
-                      <Link
-                        href={`/news/${story.slug}`}
-                        className="flex gap-3 sm:gap-4 items-start px-4 py-3.5 hover:bg-primary/4 transition-colors group"
-                      >
-                        <span className="w-2 h-2 rounded-full bg-primary shrink-0 mt-1.5 ring-2 ring-primary/20" aria-hidden />
-                        <div className="min-w-0 flex-1">
-                          <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400 font-[Inter]">
-                            {story.timestamp}
-                          </span>
-                          <p className="text-[14px] md:text-[15px] font-semibold text-gray-900 font-[Inter] leading-snug group-hover:text-primary line-clamp-2">
-                            {story.title}
-                          </p>
-                        </div>
-                        <ChevronRight size={16} className="text-gray-300 group-hover:text-primary shrink-0 mt-1" aria-hidden />
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-                {archiveTotalPages > 1 && (
-                  <Pagination
-                    basePath={`/${categorySlug}`}
-                    currentPage={allPage}
-                    totalPages={archiveTotalPages}
-                    paramName="allPage"
+            {/* ━━━ ZONE 4: Editorial Spotlight — white bg horizontal card ━━━ */}
+            {spotlightStory && (
+              <div className="mb-8 p-0 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden flex flex-col md:flex-row">
+                <div className="md:w-[45%] h-[200px] md:h-auto md:min-h-[220px] relative">
+                  <Image
+                    src={spotlightStory.image}
+                    alt={spotlightStory.title}
+                    fill
+                    unoptimized
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 45vw"
                   />
-                )}
-              </section>
+                </div>
+                <div className="p-5 md:p-6 md:w-[55%] flex flex-col justify-center bg-white">
+                  <div className="text-primary text-[9px] font-black uppercase tracking-widest mb-1.5 font-[Inter]">
+                    Editorial Spotlight
+                  </div>
+                  <h2 className="text-lg md:text-xl font-black font-[Playfair_Display] leading-tight mb-2 text-gray-950">
+                    {spotlightStory.title}
+                  </h2>
+                  <p className="text-gray-500 text-[13px] font-[Inter] line-clamp-3 mb-4">
+                    {spotlightStory.excerpt ||
+                      "Diving deep into the core issues that define our industry today."}
+                  </p>
+                  <Link
+                    href={`/news/${spotlightStory.slug}`}
+                    className="flex items-center gap-3 text-primary font-bold text-xs uppercase tracking-widest hover:text-primary-dark transition-colors group"
+                  >
+                    Read Story{" "}
+                    <ChevronRight
+                      size={14}
+                      className="group-hover:translate-x-1 transition-transform"
+                    />
+                  </Link>
+                </div>
+              </div>
             )}
 
+            {/* ━━━ ZONE 5: Latest Stories Feed — 2-col horizontal cards + See More ━━━ */}
+            <div className="mb-6">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="h-1 w-12 bg-primary rounded-sm" />
+                <h2 className="text-base md:text-lg font-black text-gray-950 font-[Playfair_Display]">
+                  Latest Stories
+                </h2>
+                <div className="h-px flex-1 bg-gray-200" />
+              </div>
+
+              <LoadMoreFeed
+                initialPosts={feedPosts.slice(0, FEED_SIZE)}
+                fetchParams={{ parentCategorySlug: categorySlug }}
+                endpoint="/public/posts"
+                limit={FEED_SIZE}
+                offset={consumed}
+                totalFromServer={totalPosts > consumed ? totalPosts - consumed : undefined}
+                buttonLabel="See More Stories"
+                buttonClass="px-8 py-3 bg-primary text-white rounded-full hover:bg-primary-dark uppercase tracking-widest shadow-sm hover:shadow-md"
+                variant="category"
+              />
+            </div>
           </main>
 
+          {/* Sidebar */}
           <aside className="lg:w-[300px] xl:w-[300px] shrink-0">
             <div className="sticky top-24">
               <Sidebar />
             </div>
           </aside>
-
         </div>
       </div>
-
     </div>
   );
 }

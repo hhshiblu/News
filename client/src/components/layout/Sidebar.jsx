@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Flame, Clock, Zap, MessageSquare } from "lucide-react";
 import AdSlot from "@/components/ads/AdSlot";
 import { fetchPublicPosts } from "@/lib/api";
@@ -55,6 +56,7 @@ export default function Sidebar() {
 
   return (
     <aside className="flex flex-col gap-5">
+      {/* ── Breaking News ── */}
       <div className="bg-gray-950 text-white p-4 rounded-xl overflow-hidden relative border border-gray-800">
         <div className="absolute top-0 right-0 p-2 opacity-10">
           <Zap size={64} className="text-primary fill-primary" />
@@ -71,17 +73,24 @@ export default function Sidebar() {
               <Link
                 key={item.id}
                 href={`/news/${item.slug}`}
-                className="group flex gap-2.5 items-start"
+                className="group flex gap-3 items-start"
               >
-                <span
-                  className="w-2 h-2 rounded-full bg-red-600 shrink-0 mt-1.5 shadow-sm shadow-red-900/50"
-                  aria-hidden
-                />
+                {/* Thumbnail */}
+                <div className="w-14 h-11 relative shrink-0 rounded-md overflow-hidden bg-gray-800">
+                  <Image
+                    src={item.image}
+                    alt={item.title}
+                    fill
+                    unoptimized
+                    sizes="56px"
+                    className="object-cover group-hover:scale-105 transition-transform"
+                  />
+                </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[12px] font-bold text-gray-100 leading-snug group-hover:text-primary transition-colors line-clamp-3 font-[Inter]">
+                  <p className="text-[12px] font-bold text-gray-100 leading-snug group-hover:text-primary transition-colors line-clamp-2 font-[Inter]">
                     {item.title}
                   </p>
-                  <span className="text-[9px] text-gray-500 mt-1 block font-bold tracking-widest uppercase">
+                  <span className="text-[9px] text-gray-500 mt-0.5 block font-bold tracking-widest uppercase">
                     {item.timestamp}
                   </span>
                 </div>
@@ -99,6 +108,7 @@ export default function Sidebar() {
         <AdSlot slotKey="public_sidebar_medium" />
       </div>
 
+      {/* ── Trending ── */}
       <div>
         <div className="flex items-center justify-between mb-4 pb-2 border-b-2 border-gray-900">
           <h2 className="flex items-center gap-1.5 text-[12px] font-black uppercase tracking-widest font-[Inter] text-gray-950">
@@ -119,8 +129,19 @@ export default function Sidebar() {
                 >
                   {idx + 1}
                 </span>
-                <div className="min-w-0 pt-0.5">
-                  <h3 className="text-[12px] font-bold text-gray-800 group-hover:text-primary leading-snug transition-colors line-clamp-3 font-[Inter]">
+                {/* Thumbnail */}
+                <div className="w-14 h-11 relative shrink-0 rounded-md overflow-hidden bg-gray-100">
+                  <Image
+                    src={item.image}
+                    alt={item.title}
+                    fill
+                    unoptimized
+                    sizes="56px"
+                    className="object-cover group-hover:scale-105 transition-transform"
+                  />
+                </div>
+                <div className="min-w-0 pt-0.5 flex-1">
+                  <h3 className="text-[12px] font-bold text-gray-800 group-hover:text-primary leading-snug transition-colors line-clamp-2 font-[Inter]">
                     {item.title}
                   </h3>
                 </div>
@@ -134,6 +155,7 @@ export default function Sidebar() {
         </div>
       </div>
 
+      {/* ── Latest ── */}
       <div className="pt-4 border-t border-gray-100">
         <div className="flex items-center justify-between mb-3 pb-2 border-b border-gray-200">
           <h2 className="flex items-center gap-1.5 text-[12px] font-black uppercase tracking-widest font-[Inter] text-gray-700">
@@ -146,19 +168,26 @@ export default function Sidebar() {
             View all —
           </Link>
         </div>
-        <div className="space-y-2.5">
+        <div className="space-y-3">
           {latest.slice(0, 6).map((item) => (
             <Link
               key={item.id}
               href={`/news/${item.slug}`}
-              className="flex gap-2.5 items-start group"
+              className="flex gap-3 items-start group"
             >
-              <span
-                className="w-2 h-2 rounded-full bg-emerald-600 shrink-0 mt-1.5 ring-2 ring-emerald-600/20"
-                aria-hidden
-              />
+              {/* Thumbnail */}
+              <div className="w-14 h-11 relative shrink-0 rounded-md overflow-hidden bg-gray-100">
+                <Image
+                  src={item.image}
+                  alt={item.title}
+                  fill
+                  unoptimized
+                  sizes="56px"
+                  className="object-cover group-hover:scale-105 transition-transform"
+                />
+              </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-[12px] font-bold text-gray-800 group-hover:text-primary leading-snug line-clamp-3 transition-colors font-[Inter]">
+                <h3 className="text-[12px] font-bold text-gray-800 group-hover:text-primary leading-snug line-clamp-2 transition-colors font-[Inter]">
                   {item.title}
                 </h3>
                 <div className="flex flex-wrap items-center gap-1.5 text-[9px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">
@@ -172,6 +201,7 @@ export default function Sidebar() {
         </div>
       </div>
 
+      {/* ── Insight Digest ── */}
       <div className="bg-primary/5 border border-primary/15 p-4 rounded-xl">
         <div className="flex items-center gap-2 mb-2">
           <div className="p-1.5 bg-primary text-white rounded-md">

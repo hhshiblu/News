@@ -22,30 +22,30 @@ export default function MustReadSection({ posts = [] }) {
   const cards = posts.slice(0, 3);
 
   return (
-    <section className="bg-[#0f172a] py-10 md:py-12">
+    <section className="bg-white py-10 md:py-12 border-t border-gray-100">
       <div className="max-w-[1280px] mx-auto px-4">
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
           <span className="w-2.5 h-2.5 rounded-full bg-primary shrink-0" />
-          <h2 className="text-[12px] font-black uppercase tracking-[0.3em] text-gray-400 font-[Inter]">
+          <h2 className="text-[12px] font-black uppercase tracking-[0.3em] text-gray-900 font-[Inter]">
             Opinion & Must Read
           </h2>
-          <div className="h-px flex-1 bg-gray-700" />
-          <Link href="/editorial" className="text-[10px] font-bold text-gray-500 hover:text-primary transition-colors uppercase tracking-widest font-[Inter]">
+          <div className="h-px flex-1 bg-gray-200" />
+          <Link href="/editorial" className="text-[10px] font-bold text-gray-400 hover:text-primary transition-colors uppercase tracking-widest font-[Inter]">
             View All →
           </Link>
         </div>
 
         {/* 3 horizontal image cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 divide-y md:divide-y-0 md:divide-x divide-gray-700/60">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {cards.map((post, i) => (
             <Link
               key={post.id}
               href={`/news/${post.slug}`}
-              className={`group flex flex-col gap-0 hover:bg-white/5 transition-colors ${i === 0 ? "md:pr-7" : i === 1 ? "md:px-7" : "md:pl-7"} py-0 md:py-0`}
+              className={`group flex flex-col gap-0 rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300`}
             >
               {/* Card image */}
-              <div className="relative w-full aspect-[16/9] overflow-hidden rounded-sm mb-4 bg-gray-800">
+              <div className="relative w-full aspect-[16/9] overflow-hidden bg-gray-100">
                 <Image
                   src={post.featuredImage || post.image || "/placeholder.jpg"}
                   alt={post.title}
@@ -60,8 +60,8 @@ export default function MustReadSection({ posts = [] }) {
               </div>
 
               {/* Author row */}
-              <div className={`flex items-center gap-2 mb-3 ${i === 0 ? "" : "mt-4 md:mt-0"}`}>
-                <div className="relative w-7 h-7 rounded-full overflow-hidden bg-gray-600 shrink-0">
+              <div className={`flex items-center gap-2 px-4 pt-4 mb-2`}>
+                <div className="relative w-7 h-7 rounded-full overflow-hidden bg-gray-200 shrink-0">
                   <Image
                     src={post.author?.image || "/placeholder.jpg"}
                     alt={typeof post.author === "object" ? post.author?.name : "Author"}
@@ -70,23 +70,23 @@ export default function MustReadSection({ posts = [] }) {
                   />
                 </div>
                 <div>
-                  <p className="text-[11px] font-bold text-gray-300 font-[Inter] leading-none">
+                  <p className="text-[11px] font-bold text-gray-900 font-[Inter] leading-none">
                     {typeof post.author === "object" ? post.author?.name : post.author || "Editorial"}
                   </p>
-                  <p className="text-[9px] text-gray-500 font-[Inter]">Columnist</p>
+                  <p className="text-[9px] text-gray-400 font-[Inter]">Columnist</p>
                 </div>
               </div>
 
               {/* Title */}
-              <h3 className="text-white text-[15px] md:text-[16px] font-bold font-[Playfair_Display] leading-snug line-clamp-3 group-hover:text-gray-300 transition-colors mb-2">
+              <h3 className="text-gray-900 text-[15px] md:text-[16px] font-bold font-[Playfair_Display] leading-snug line-clamp-3 group-hover:text-primary transition-colors mb-2 px-4">
                 {post.title}
               </h3>
               {post.excerpt && (
-                <p className="text-gray-500 text-[12px] leading-relaxed line-clamp-2 font-[Inter] mb-2">
+                <p className="text-gray-500 text-[12px] leading-relaxed line-clamp-2 font-[Inter] mb-2 px-4">
                   {post.excerpt}
                 </p>
               )}
-              <span className="text-[10px] text-gray-600 flex items-center gap-1 font-[Inter] mt-auto">
+              <span className="text-[10px] text-gray-400 flex items-center gap-1 font-[Inter] mt-auto px-4 pb-4">
                 <Clock size={9} /> {fmt(post)}
               </span>
             </Link>

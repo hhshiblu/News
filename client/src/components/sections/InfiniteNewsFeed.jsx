@@ -119,7 +119,7 @@ export default function InfiniteNewsFeed({ initialPosts = [], initialOffset = 0,
   }, [offset, exhausted]);
 
   return (
-    <section className="bg-[#f3f4f6] border-t border-gray-200 py-10 md:py-12">
+    <section className="bg-white border-t border-gray-100 py-10 md:py-12">
       <div className="max-w-[1280px] mx-auto px-4">
         {/* Section header */}
         <div className="flex items-center gap-3 mb-8">
