@@ -44,6 +44,22 @@ const createUserService = async (userData) => {
     return sanitizedUser;
 };
 
+const verifyMyPasswordService = async (userId, oldPassword) => {
+    const user = await userQueries.getUserWithPasswordQuery(userId);
+    if (!user) {
+        const err = new Error("User Not Found");
+        err.statusCode = 404;
+        throw err;
+    }
+    if (!user.password) {
+        const err = new Error("No password is set for this account.");
+        err.statusCode = 400;
+        throw err;
+    }
+    const match = await bcrypt.compare(oldPassword, user.password);
+    return match;
+};
+
 const updateSelfUserService = async (userId, body) => {
     const data = {};
     const allow = ["name", "bio", "avatar", "position", "socials", "password"];
@@ -58,6 +74,23 @@ const updateSelfUserService = async (userId, body) => {
         }
     }
     if (data.password) {
+        if (!body.oldPassword) {
+            const err = new Error("Old password is required to change password.");
+            err.statusCode = 400;
+            throw err;
+        }
+        const user = await userQueries.getUserWithPasswordQuery(userId);
+        if (!user.password) {
+            const err = new Error("No password is set for this account.");
+            err.statusCode = 400;
+            throw err;
+        }
+        const match = await bcrypt.compare(body.oldPassword, user.password);
+        if (!match) {
+            const err = new Error("Incorrect old password.");
+            err.statusCode = 400;
+            throw err;
+        }
         data.password = await bcrypt.hash(data.password, 10);
     } else {
         delete data.password;
@@ -97,5 +130,6 @@ module.exports = {
     updateSelfUserService,
     deleteUserService,
     getAllUsersService,
-    getUserByIdService
+    getUserByIdService,
+    verifyMyPasswordService
 };

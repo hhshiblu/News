@@ -29,41 +29,41 @@ export default function DashboardShell({ user, children }) {
         </Suspense>
       }
     >
-      <header className="flex h-[64px] shrink-0 items-center justify-between border-b border-red-800 px-3 lg:px-6 bg-primary z-20 w-full sticky top-0">
+      <header className="flex h-[64px] shrink-0 items-center justify-between border-b border-gray-200 px-3 lg:px-6 bg-white z-20 w-full sticky top-0">
         <div className="flex items-center gap-4">
           <SidebarTrigger />
-          <div className="hidden md:flex items-center gap-2 bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 w-64 transition-all focus-within:ring-2 focus-within:ring-white/30">
-            <Search className="w-4 h-4 text-white/70" />
+          <div className="hidden md:flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 w-64 transition-all focus-within:ring-2 focus-within:ring-primary/10 focus-within:border-primary/30">
+            <Search className="w-4 h-4 text-gray-400" />
             <input
               type="text"
               placeholder="Global search..."
-              className="bg-transparent border-none outline-none text-xs text-white font-medium placeholder:text-white/70 w-full"
+              className="bg-transparent border-none outline-none text-[13px] text-gray-800 font-medium placeholder:text-gray-400 w-full"
             />
           </div>
         </div>
 
         <div className="flex items-center gap-2 md:gap-3 relative">
-          <button className="p-2 text-white/90 hover:bg-white/10 rounded-lg transition-all relative cursor-pointer">
+          <button className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all relative cursor-pointer">
             <Bell className="w-[18px] h-[18px]" />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-amber-300 border-2 border-primary rounded-full" />
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 border-2 border-white rounded-full" />
           </button>
 
           <button
             onClick={() => setOpenProfile((p) => !p)}
-            className="flex items-center gap-2 pl-1 group cursor-pointer rounded-lg px-2 py-1 hover:bg-white/10 transition-colors"
+            className="flex items-center gap-2 pl-1 group cursor-pointer rounded-lg px-2 py-1 hover:bg-gray-50 transition-colors"
           >
             <div className="flex flex-col text-right hidden sm:flex">
-              <span className="text-[11px] font-bold text-white leading-tight tracking-tight">
+              <span className="text-[11px] font-bold text-gray-900 leading-tight tracking-tight">
                 {user?.name || "Guest User"}
               </span>
-              <span className="text-[9px] uppercase font-bold text-white/80 tracking-wider font-mono">
+              <span className="text-[9px] uppercase font-bold text-gray-500 tracking-wider font-mono">
                 {user?.role || "GUEST"}
               </span>
             </div>
-            <div className="p-1 px-1.5 border border-white/20 rounded-lg bg-white/10 text-white font-bold text-sm shadow-sm transition-transform group-hover:scale-105">
+            <div className="p-1 px-1.5 border border-gray-200 rounded-lg bg-gray-100 text-gray-700 font-bold text-sm shadow-sm transition-transform group-hover:scale-105">
               {user?.name?.charAt(0) || <User className="w-5 h-5 opacity-40" />}
             </div>
-            <ChevronDown className="w-3 h-3 text-white/80" />
+            <ChevronDown className="w-3 h-3 text-gray-400 group-hover:text-gray-700" />
           </button>
 
           {openProfile && (

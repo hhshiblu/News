@@ -126,29 +126,29 @@ export default function CategoriesManagementClient({ initialCategories = [] }) {
                 <div className="col-span-3 flex items-center text-xs font-medium text-gray-600">
                   <span className="rounded-full border border-gray-200 bg-gray-100 px-3 py-0.5">0 posts</span>
                 </div>
-                <div className="col-span-3 flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                <div className="col-span-3 flex items-center justify-end gap-1 opacity-100 sm:opacity-0 transition-opacity sm:group-hover:opacity-100">
                   <button
                     type="button"
                     onClick={() => openAddModal(parent.id)}
-                    className="cursor-pointer rounded border border-transparent p-1.5 text-emerald-600 transition-colors hover:border-emerald-200 hover:bg-emerald-100"
+                    className="cursor-pointer rounded border border-transparent p-1 sm:p-1.5 bg-primary text-white transition-colors hover:bg-primary-dark"
                     title="Add nested category"
                   >
-                    <PlusCircle className="h-4 w-4" />
+                    <PlusCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </button>
                   <button
                     type="button"
-                    className="cursor-pointer rounded border border-transparent p-1.5 text-blue-600 transition-colors hover:border-blue-200 hover:bg-blue-100"
+                    className="cursor-pointer rounded border border-transparent p-1 sm:p-1.5 bg-primary text-white transition-colors hover:bg-primary-dark"
                     title="Edit category"
                   >
-                    <Edit className="h-4 w-4" />
+                    <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </button>
                   <button
                     type="button"
                     onClick={() => openDeleteModal(parent)}
-                    className="cursor-pointer rounded border border-transparent p-1.5 text-red-600 transition-colors hover:border-red-200 hover:bg-red-100"
+                    className="cursor-pointer rounded border border-transparent p-1 sm:p-1.5 bg-primary text-white transition-colors hover:bg-primary-dark"
                     title="Delete category"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </button>
                 </div>
               </div>
@@ -170,21 +170,21 @@ export default function CategoriesManagementClient({ initialCategories = [] }) {
                       <div className="col-span-3 flex items-center text-[11px] font-medium text-gray-600">
                         <span className="rounded-full border border-gray-200 bg-white px-2 py-0.5">0 posts</span>
                       </div>
-                      <div className="col-span-3 flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                      <div className="col-span-3 flex items-center justify-end gap-1 opacity-100 sm:opacity-0 transition-opacity sm:group-hover:opacity-100">
                         <button
                           type="button"
-                          className="cursor-pointer rounded border border-transparent p-1.5 text-blue-600 transition-colors hover:border-blue-200 hover:bg-blue-100"
+                          className="cursor-pointer rounded border border-transparent p-1 sm:p-1.5 bg-primary text-white transition-colors hover:bg-primary-dark"
                           title="Edit subcategory"
                         >
-                          <Edit className="h-3.5 w-3.5" />
+                          <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </button>
                         <button
                           type="button"
                           onClick={() => openDeleteModal(child)}
-                          className="cursor-pointer rounded border border-transparent p-1.5 text-red-600 transition-colors hover:border-red-200 hover:bg-red-100"
+                          className="cursor-pointer rounded border border-transparent p-1 sm:p-1.5 bg-primary text-white transition-colors hover:bg-primary-dark"
                           title="Delete subcategory"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </button>
                       </div>
                     </div>

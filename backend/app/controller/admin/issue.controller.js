@@ -10,9 +10,8 @@ const createIssue = async (req, res, next) => {
                 data: {
                     postId,
                     adminId,
-                    description,
-                    severity: severity || 'MEDIUM',
-                    resolved: false
+                    comment: description,
+                    isResolved: false
                 }
             }),
             prisma.post.update({
@@ -30,7 +29,7 @@ const createIssue = async (req, res, next) => {
 const getIssues = async (req, res, next) => {
     try {
         const where = {};
-        if (req.user.role === 'AUTHOR') {
+        if (req.user.role === 'REPORTER') {
             where.post = { authorId: req.user.id };
         }
 
@@ -54,7 +53,7 @@ const resolveIssue = async (req, res, next) => {
         const { id } = req.params;
         const issue = await prisma.issue.update({
             where: { id },
-            data: { resolved: true }
+            data: { isResolved: true }
         });
         res.status(200).json({ success: true, data: issue });
     } catch (error) {

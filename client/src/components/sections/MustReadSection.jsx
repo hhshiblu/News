@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Clock } from "lucide-react";
+import { getImageUrl } from "@/lib/apiBaseUrl";
 
 function catName(c) { return typeof c === "object" ? c?.name : c || "News"; }
 function fmt(s) {
@@ -47,7 +48,7 @@ export default function MustReadSection({ posts = [] }) {
               {/* Card image */}
               <div className="relative w-full aspect-[16/9] overflow-hidden bg-gray-100">
                 <Image
-                  src={post.featuredImage || post.image || "/placeholder.jpg"}
+                  src={getImageUrl(post.featuredImage || post.image)}
                   alt={post.title}
                   fill unoptimized
                   sizes="(max-width:768px) 100vw, 33vw"
@@ -63,7 +64,7 @@ export default function MustReadSection({ posts = [] }) {
               <div className={`flex items-center gap-2 px-4 pt-4 mb-2`}>
                 <div className="relative w-7 h-7 rounded-full overflow-hidden bg-gray-200 shrink-0">
                   <Image
-                    src={post.author?.image || "/placeholder.jpg"}
+                    src={getImageUrl(post.author?.avatar || post.author?.image)}
                     alt={typeof post.author === "object" ? post.author?.name : "Author"}
                     fill unoptimized sizes="28px"
                     className="object-cover"

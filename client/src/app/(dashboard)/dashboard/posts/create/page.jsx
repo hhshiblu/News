@@ -8,17 +8,14 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 // Drop-in React 19 replacement component 
-const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false, loading: () => <p className="text-xs text-gray-500 font-medium">Loading Editor...</p> });
+const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false, loading: () => <p className="text-[12px] text-gray-500 font-medium">Loading Editor...</p> });
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 const API_ORIGIN = API_BASE.replace(/\/api\/v1\/?$/, "");
-const makeBlockId = () =>
-  typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
+const makeBlockId = () => typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
 
 const normalizeEditorHtml = (value) => {
   if (typeof value !== "string") return value;
-  return value
-    .replace(/&nbsp;|&#160;|\u00A0/g, " ")
-    .replace(/white-space\s*:\s*nowrap;?/gi, "");
+  return value.replace(/&nbsp;|&#160;|\u00A0/g, " ").replace(/white-space\s*:\s*nowrap;?/gi, "");
 };
 
 export default function CreatePostPage() {
@@ -31,16 +28,38 @@ export default function CreatePostPage() {
   const [childCategoryId, setChildCategoryId] = useState("");
   const [selectedTags, setSelectedTags] = useState([]);
   
-  const [isPhotoStory, setIsPhotoStory] = useState(false);
   const [countryTag, setCountryTag] = useState("");
   const [subcategory, setSubcategory] = useState("");
 
-  // New storage for the Thumbnail / Featured Image
   const [featuredImage, setFeaturedImage] = useState("");
   const [featuredImageFile, setFeaturedImageFile] = useState(null);
 
   const [categories, setCategories] = useState([]);
+ 
   const [tagsList, setTagsList] = useState([]);
+  
+  const [currentUser, setCurrentUser] = useState(null);
+  const [featured, setFeatured] = useState(false);
+  const [isOpinion, setIsOpinion] = useState(false);
+  const [homeSpotlightPriority, setHomeSpotlightPriority] = useState(0);
+  const [feedPriority, setFeedPriority] = useState(0);
+  const isAdmin = currentUser?.role === "ADMIN";
+
+  const breakingTagIds = tagsList.filter((t) => ["breaking-news", "breaking"].includes(t.slug)).map((t) => t.id);
+  const breakingActive = breakingTagIds.length > 0 && breakingTagIds.some((id) => selectedTags.includes(id));
+
+  // Max lengths
+  const MAX_TITLE = 100;
+  const MAX_SUBTITLE = 200;
+  const MAX_CAPTION = 150;
+
+  const setBreakingCoverage = (on) => {
+    if (on) {
+      setSelectedTags((prev) => [...new Set([...prev, ...breakingTagIds])]);
+    } else {
+      setSelectedTags((prev) => prev.filter((id) => !breakingTagIds.includes(id)));
+    }
+  };
 
   const handleFeaturedImageChange = (e) => {
     const file = e.target.files[0];
@@ -52,39 +71,29 @@ export default function CreatePostPage() {
   };
 
   useEffect(() => {
-     fetch(`${API_BASE}/public/categories`)
-       .then(res => res.json())
-       .then(data => { if(data.success) setCategories(data.data); });
+     const fetchCategories = fetch(`${API_BASE}/public/categories`).then(res => res.json());
+     const fetchTags = fetch(`${API_BASE}/admin/tags`, { credentials: "include" }).then(res => res.json());
+     const fetchMe = fetch(`${API_BASE}/admin/auth/me`, { credentials: "include" }).then(res => res.json());
 
-     fetch(`${API_BASE}/admin/tags`, { credentials: "include" })
-       .then(res => res.json())
-       .then(data => { if(data.success) setTagsList(data.data); });
+     Promise.all([fetchCategories, fetchTags, fetchMe]).then(([catsData, tagsData, meData]) => {
+         if (meData?.success && meData.data) setCurrentUser(meData.data);
+         if(catsData.success) setCategories(catsData.data);
+         if(tagsData.success) setTagsList(tagsData.data);
+     }).catch(() => {
+         toast.error("Failed synchronizing networking loops");
+     });
   }, []);
 
   const [blocks, setBlocks] = useState([
     { id: makeBlockId(), type: "text", content: "" }
   ]);
 
-  const toggleTag = (tagId) => {
-      setSelectedTags(prev => prev.includes(tagId) ? prev.filter(t => t !== tagId) : [...prev, tagId]);
-  };
-
   const addBlock = (type) => {
-    setBlocks((prev) => [...prev, { id: makeBlockId(), type, content: "", file: null, metaInfo: "" }]);
+    setBlocks((prev) => [...prev, { id: makeBlockId(), type, content: "", file: null, metaInfo: type === "video" ? "url" : "" }]);
   };
 
   const updateBlockContent = (id, newContent) => {
-    setBlocks(prevBlocks => {
-      let changed = false;
-      const newBlocks = prevBlocks.map((b) => {
-        if (b.id === id && b.content !== newContent) {
-          changed = true;
-          return { ...b, content: newContent };
-        }
-        return b;
-      });
-      return changed ? newBlocks : prevBlocks;
-    });
+    setBlocks(prevBlocks => prevBlocks.map(b => b.id === id ? { ...b, content: newContent } : b));
   };
 
   const handleFileChange = (id, e) => {
@@ -101,8 +110,8 @@ export default function CreatePostPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!title || !parentCategoryId) {
-        toast.error("Title and Category are required!");
+    if (!title || !subtitle || !parentCategoryId || selectedTags.length === 0 || !featuredImageFile) {
+        toast.error("Please fill in all mandatory fields (Title, Subtitle, Category, Tags, Image)!");
         return;
     }
 
@@ -152,11 +161,18 @@ export default function CreatePostPage() {
           featuredImage: uploadedFeaturedImage,
           categoryId: childCategoryId || parentCategoryId,
           tags: selectedTags,
-          isPhotoStory,
+          isPhotoStory: false,
           countryTag, subcategory,
           content: parsedBlocks,
           status: 'PENDING'
         };
+
+        if (isAdmin) {
+          payload.featured = featured;
+          payload.isOpinion = isOpinion;
+          payload.homeSpotlightPriority = Number(homeSpotlightPriority) || 0;
+          payload.feedPriority = Number(feedPriority) || 0;
+        }
         
         const res = await fetch(`${API_BASE}/admin/posts`, { 
             method: 'POST', 
@@ -190,286 +206,425 @@ export default function CreatePostPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto pb-28 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h1 className="text-xl md:text-2xl font-black text-gray-900 tracking-tight leading-none">Create Post</h1>
-          <p className="text-[11px] text-gray-500 mt-1">Compact editor for fast newsroom publishing.</p>
-        </div>
-        <button onClick={handleSubmit} className="px-5 py-2.5 bg-primary text-white font-bold text-[11px] rounded-lg hover:bg-[#8B0000] transition-all uppercase tracking-widest cursor-pointer flex items-center gap-2">
-          <MousePointer2 size={14} /> Create Post
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        
-        {/* Main Editor Section */}
-        <div className="xl:col-span-2 space-y-4">
-            
-            {/* Core Metadata */}
-            <div className="bg-white p-4 md:p-5 rounded-xl border border-gray-100 shadow-sm space-y-4">
-                <div>
-                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Headline</label>
-                   <input 
-                     value={title} onChange={e => setTitle(e.target.value)}
-                     className="w-full border-none p-0 text-2xl font-black focus:ring-0 placeholder:text-gray-200 bg-transparent text-gray-900 tracking-tight" 
-                     placeholder="The most compelling headline..." 
-                   />
-                </div>
-
-                <div>
-                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Sub-headline</label>
-                   <textarea 
-                     value={subtitle} onChange={e => setSubtitle(e.target.value)}
-                     className="w-full border-none p-0 text-base font-bold focus:ring-0 placeholder:text-gray-200 bg-transparent text-gray-600 tracking-tight min-h-[96px] resize-y" 
-                     placeholder="Add secondary context or a dekko..." 
-                   />
-                </div>
-
-                <div className="h-px bg-gray-50" />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                       <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Primary Category</label>
-                       <select value={parentCategoryId} onChange={e => { setParentCategoryId(e.target.value); setChildCategoryId(""); }} className="w-full border-gray-100 bg-gray-50 p-3 text-[13px] font-bold rounded-xl focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all cursor-pointer">
-                          <option value="">Select Category...</option>
-                          {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                       </select>
-                    </div>
-                    <div>
-                       <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Subcategory</label>
-                       <select 
-                        value={childCategoryId} 
-                        onChange={e => {
-                            const selectedId = e.target.value;
-                            setChildCategoryId(selectedId);
-                            if (selectedId) {
-                                const parent = categories.find(c => c.id === parentCategoryId);
-                                const child = parent?.children?.find(ch => ch.id === selectedId);
-                                if (child) setSubcategory(child.name);
-                            } else {
-                                setSubcategory("");
-                            }
-                        }} 
-                        disabled={!parentCategoryId}
-                        className={`w-full border-gray-100 p-3 text-[13px] font-bold rounded-xl focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all cursor-pointer ${!parentCategoryId ? 'bg-gray-100 text-gray-400 opacity-50' : 'bg-gray-50 text-gray-700'}`}
-                       >
-                          <option value="">Select Subcategory...</option>
-                          {parentCategoryId && categories.find(c => c.id === parentCategoryId)?.children?.map(child => (
-                              <option key={child.id} value={child.id}>{child.name}</option>
-                          ))}
-                       </select>
-                    </div>
-                </div>
-            </div>
-
-            {/* Featured Image / Thumbnail Upload */}
-            <div className="bg-white p-4 md:p-5 rounded-xl border border-gray-100 shadow-sm space-y-4">
-                <div className="flex items-center justify-between">
-                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Thumbnail / Featured Image</label>
-                    {featuredImage && (
-                        <button onClick={() => { setFeaturedImage(""); setFeaturedImageFile(null); }} className="text-[10px] font-black text-rose-500 uppercase tracking-widest hover:text-rose-600 transition-colors">
-                            Change Image
-                        </button>
-                    )}
-                </div>
-                
-                {featuredImage ? (
-                    <div className="relative group rounded-2xl overflow-hidden border border-gray-100 aspect-video">
-                        <img src={featuredImage} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt="Featured Preview" />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                             <Trash2 onClick={() => { setFeaturedImage(""); setFeaturedImageFile(null); }} className="text-white cursor-pointer hover:text-rose-400 transition-colors" size={32} />
-                        </div>
-                    </div>
-                ) : (
-                    <label className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-100 rounded-xl bg-gray-50/30 hover:bg-emerald-50/30 hover:border-emerald-200 cursor-pointer transition-all">
-                        <div className="p-4 bg-white rounded-2xl shadow-sm mb-4">
-                            <Upload className="w-8 h-8 text-emerald-500" />
-                        </div>
-                        <span className="text-[11px] font-black text-gray-600 uppercase tracking-[0.2em]">Upload Article Header</span>
-                        <span className="text-[9px] font-medium text-gray-400 uppercase tracking-widest mt-2">Recommended: 1200 x 630px</span>
-                        <input type="file" className="hidden" onChange={handleFeaturedImageChange} accept="image/*" />
-                    </label>
-                )}
-                
-                <div>
-                   <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 px-1">Hero Caption</label>
-                   <input 
-                     value={heroCaption} onChange={e => setHeroCaption(e.target.value)}
-                     className="w-full border-none p-0 text-xs font-medium focus:ring-0 placeholder:text-gray-200 bg-transparent text-gray-500 italic" 
-                     placeholder="Credits or description for the featured image..." 
-                   />
-                </div>
-            </div>
-
-            {/* Block Builder */}
-            <div className="bg-white p-4 md:p-5 rounded-xl border border-gray-100 shadow-sm space-y-4">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xs font-black text-gray-800 uppercase tracking-widest flex items-center gap-2">
-                        <Activity className="w-4 h-4 text-emerald-500" /> Narrative Blocks
-                    </h2>
-                </div>
-
-                <div className="space-y-4">
-                    {blocks.map((block) => (
-                        <div key={block.id} className="group relative bg-gray-50/50 p-5 rounded-2xl border border-transparent hover:border-emerald-200 transition-all">
-                            
-                            {block.type === 'text' && (
-                                <ReactQuill 
-                                    theme="snow"
-                                    value={block.content}
-                                    onChange={(v) => updateBlockContent(block.id, v)}
-                                    modules={modules}
-                                    className="bg-white rounded-xl overflow-hidden border border-gray-100 [&_.ql-editor]:min-h-[220px] [&_.ql-editor]:text-[15px] [&_.ql-editor]:leading-7"
-                                />
-                            )}
-
-                            {block.type === 'image' && (
-                                <div className="space-y-4 text-center">
-                                    {block.content ? (
-                                        <div className="relative rounded-xl overflow-hidden border border-gray-200 max-h-80 mx-auto w-fit">
-                                            <img src={block.content} className="max-h-80 w-auto object-contain" />
-                                        </div>
-                                    ) : (
-                                        <label className="flex flex-col items-center justify-center p-10 border-2 border-dashed border-gray-200 rounded-2xl bg-white hover:bg-gray-50 cursor-pointer transition-colors">
-                                            <SquarePen className="w-8 h-8 text-gray-300 mb-2" />
-                                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Upload Resource</span>
-                                            <input type="file" className="hidden" onChange={(e) => handleFileChange(block.id, e)} />
-                                        </label>
-                                    )}
-                                    <input 
-                                        type="text" 
-                                        placeholder="Caption for this image..." 
-                                        className="w-full bg-white border border-gray-100 rounded-xl px-4 py-2 text-xs font-medium outline-none focus:ring-1 focus:ring-emerald-500" 
-                                        value={block.metaInfo} 
-                                        onChange={e => setBlocks((prev) => prev.map((b) => b.id === block.id ? {...b, metaInfo: e.target.value} : b))}
-                                    />
-                                </div>
-                            )}
-
-                            {block.type === 'pullquote' && (
-                                <div className="bg-white p-6 rounded-xl border-l-4 border-emerald-500 shadow-sm space-y-3">
-                                    <Quote className="w-5 h-5 text-emerald-200" />
-                                    <textarea 
-                                        placeholder="Enter the standout quote..."
-                                        className="w-full text-lg font-bold text-emerald-900 border-none p-0 outline-none bg-transparent placeholder:text-gray-200"
-                                        value={block.content}
-                                        onChange={e => updateBlockContent(block.id, e.target.value)}
-                                    />
-                                    <input 
-                                        placeholder="Attribution (e.g. Name, Position)"
-                                        className="w-full text-[10px] font-black text-gray-400 uppercase tracking-widest border-none p-0 outline-none bg-transparent mt-2"
-                                        value={block.metaInfo}
-                                        onChange={e => setBlocks((prev) => prev.map((b) => b.id === block.id ? {...b, metaInfo: e.target.value} : b))}
-                                    />
-                                </div>
-                            )}
-
-                            <button onClick={() => removeBlock(block.id)} className="absolute top-2 right-2 p-1.5 bg-white text-gray-300 hover:text-rose-500 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity border border-gray-100">
-                                <Trash2 size={14} />
-                            </button>
-                        </div>
-                    ))}
-                </div>
-            </div>
+    <div className="w-full px-1 md:px-4 pb-28 animate-in fade-in slide-in-from-bottom-4 duration-700 bg-[#f8fafc] min-h-screen">
+      <div className="max-w-[1400px] mx-auto pt-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 bg-white p-5 md:p-6 rounded-2xl border border-gray-100 shadow-sm">
+          <div>
+            <h1 className="text-[14px] font-black text-gray-900 tracking-tight uppercase">News Creation Engine</h1>
+            <p className="text-[12px] text-gray-500 mt-1 font-medium tracking-wide">Premium Editorial Suite</p>
+          </div>
+          <button onClick={handleSubmit} className="px-6 py-2.5 bg-[#8B0000] text-white font-bold text-[12px] rounded-lg hover:bg-[#6b0000] transition-colors shadow-sm uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer">
+            <MousePointer2 size={14} /> Create news
+          </button>
         </div>
 
-        {/* Sidebar Section */}
-        <div className="space-y-4">
-            
-            {/* Publication Config */}
-            <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm space-y-4">
-                <h3 className="text-xs font-black text-gray-800 uppercase tracking-widest border-b border-gray-50 pb-3">Publication Config</h3>
-                <p className="text-[10px] text-gray-500 leading-relaxed bg-gray-50 border border-gray-100 rounded-xl px-3 py-2.5">
-                  <strong className="text-gray-700">Featured home cards, Must read, Breaking:</strong> only an{" "}
-                  <strong>admin</strong> can set these after your story is in the system—open{" "}
-                  <strong>Edit post</strong> from the posts list.
-                </p>
-                <div className="space-y-4 pt-2">
-                    <label className="flex items-center justify-between group cursor-pointer">
-                        <div className="flex items-center gap-3">
-                            <FileText className={`w-4 h-4 transition-colors ${isPhotoStory ? 'text-purple-500' : 'text-gray-300'}`} />
-                            <span className="text-xs font-bold text-gray-700">Photo Story Mode</span>
-                        </div>
-                        <input type="checkbox" checked={isPhotoStory} onChange={e => setIsPhotoStory(e.target.checked)} className="rounded text-purple-600 focus:ring-purple-500 border-gray-300" />
-                    </label>
-                </div>
+        <div className="flex flex-col-reverse lg:grid lg:grid-cols-12 gap-4 md:gap-6">
+          
+          {/* Main Editor Section */}
+          <div className="lg:col-span-8 space-y-4 md:space-y-6">
+              
+              {/* Core Metadata */}
+              <div className="bg-white p-5 md:p-8 rounded-2xl border border-gray-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] space-y-8">
+                  <div className="relative">
+                     <label className="flex items-center text-[12px] font-black text-gray-500 uppercase tracking-wider mb-2 px-1">
+                        Headline <span className="text-rose-500 ml-1 leading-none">*</span>
+                        <span className="ml-auto text-[12px] font-bold text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded">{title.length}/{MAX_TITLE}</span>
+                     </label>
+                     <input 
+                       value={title} onChange={e => setTitle(e.target.value)}
+                       maxLength={MAX_TITLE}
+                       className="w-full bg-transparent border-0 border-b-2 border-gray-100 px-1 py-2 text-[14px] font-bold focus:ring-0 focus:border-[#8B0000] placeholder:text-gray-300 text-gray-900 transition-colors" 
+                       placeholder="The most compelling headline..." 
+                     />
+                  </div>
 
-                <div className="h-px bg-gray-50" />
+                  <div className="relative">
+                     <label className="flex items-center text-[12px] font-black text-gray-500 uppercase tracking-wider mb-2 px-1">
+                        Sub-headline <span className="text-rose-500 ml-1 leading-none">*</span>
+                        <span className="ml-auto text-[12px] font-bold text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded">{subtitle.length}/{MAX_SUBTITLE}</span>
+                     </label>
+                     <textarea 
+                       value={subtitle} onChange={e => setSubtitle(e.target.value)}
+                       maxLength={MAX_SUBTITLE}
+                       className="w-full bg-gray-50/50 border border-gray-100 p-4 rounded-xl text-[14px] font-medium focus:ring-2 focus:ring-[#8B0000]/20 focus:border-[#8B0000]/50 placeholder:text-gray-300 text-gray-700 min-h-[120px] resize-y transition-all outline-none" 
+                       placeholder="Add secondary context or a dekko..." 
+                     />
+                  </div>
 
-                <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest"><Shield size={12}/> Geopolitical Tag</label>
-                    <input value={countryTag} onChange={e => setCountryTag(e.target.value)} className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2 text-xs font-bold text-gray-700 outline-none focus:ring-2 focus:ring-emerald-500/20" placeholder="e.g. USA, Bangladesh, EU" />
-                </div>
-            </div>
-
-            {/* Taxonomy & Metadata */}
-            <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm space-y-4">
-                <h3 className="text-xs font-black text-gray-800 uppercase tracking-[0.2em] flex items-center gap-2.5">
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full" />
-                    Taxonomy & Metadata
-                </h3>
-                
-                <div className="space-y-5">
-                    <div className="relative group">
-                        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Tags</label>
-                        <select 
-                            value=""
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6 pt-4 border-t border-gray-100/50">
+                      <div>
+                         <label className="flex items-center text-[12px] font-black text-gray-500 uppercase tracking-wider mb-2 px-1">
+                            Primary Category <span className="text-rose-500 ml-1 leading-none">*</span>
+                         </label>
+                         <div className="relative">
+                           <select value={parentCategoryId} onChange={e => { setParentCategoryId(e.target.value); setChildCategoryId(""); }} className="w-full border border-gray-200 bg-white p-3 text-[13px] font-bold text-gray-700 rounded-xl focus:ring-4 focus:ring-[#8B0000]/10 focus:border-[#8B0000] outline-none transition-all cursor-pointer appearance-none shadow-sm">
+                              <option value="">Select Category...</option>
+                              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                           </select>
+                           <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                         </div>
+                      </div>
+                      <div>
+                         <label className="flex items-center text-[12px] font-black text-gray-500 uppercase tracking-wider mb-2 px-1">Subcategory</label>
+                         <div className="relative">
+                           <select 
+                            value={childCategoryId} 
                             onChange={e => {
-                                if (e.target.value && !selectedTags.includes(e.target.value)) {
-                                    setSelectedTags([...selectedTags, e.target.value]);
+                                const selectedId = e.target.value;
+                                setChildCategoryId(selectedId);
+                                if (selectedId) {
+                                    const parent = categories.find(c => c.id === parentCategoryId);
+                                    const child = parent?.children?.find(ch => ch.id === selectedId);
+                                    if (child) setSubcategory(child.name);
+                                } else {
+                                    setSubcategory("");
                                 }
-                            }}
-                            className="w-full bg-gray-50/50 border border-gray-100 rounded-2xl px-5 py-4 text-xs font-bold text-gray-700 outline-none focus:ring-4 focus:ring-emerald-500/5 focus:border-emerald-500/30 transition-all cursor-pointer appearance-none"
-                        >
-                            <option value="">{tagsList.length === 0 ? 'Synchronizing tags...' : 'Search tags from database...'}</option>
-                            {tagsList.map((tag) => (
-                                <option key={tag.id} value={tag.id}>
-                                  {tag.name}
-                                </option>
+                            }} 
+                            disabled={!parentCategoryId}
+                            className={`w-full p-3 text-[13px] font-bold rounded-xl outline-none transition-all cursor-pointer appearance-none shadow-sm border ${!parentCategoryId ? 'bg-gray-50 border-gray-100 text-gray-400 opacity-60' : 'bg-white border-gray-200 text-gray-700 focus:ring-4 focus:ring-[#8B0000]/10 focus:border-[#8B0000]'}`}
+                           >
+                              <option value="">Select Subcategory...</option>
+                              {parentCategoryId && categories.find(c => c.id === parentCategoryId)?.children?.map(child => (
+                                  <option key={child.id} value={child.id}>{child.name}</option>
                               ))}
-                        </select>
-                        <div className="absolute right-5 bottom-4 pointer-events-none text-gray-400 group-focus-within:text-emerald-500 transition-colors">
-                            <ChevronDown className="w-4 h-4" />
-                        </div>
-                    </div>
+                           </select>
+                           <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                         </div>
+                      </div>
+                  </div>
+              </div>
 
-                    <div className="flex flex-wrap gap-2.5 pt-2">
-                        {selectedTags.length === 0 ? (
-                            <div className="w-full py-10 border-2 border-dashed border-gray-50 rounded-2xl flex flex-col items-center justify-center text-gray-300">
-                                <Tag size={24} className="mb-2 opacity-20" />
-                                <p className="text-[10px] font-black uppercase tracking-widest">No tags indexed</p>
-                            </div>
-                        ) : selectedTags.map(tagId => {
-                            const tag = tagsList.find(t => t.id === tagId);
-                            return tag ? (
-                                <span key={tagId} className="px-4 py-2 bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase rounded-xl border border-emerald-100/50 flex items-center gap-2.5 group hover:bg-emerald-100 hover:border-emerald-200 transition-all shadow-sm">
+              {/* Block Builder */}
+              <div className="bg-white p-5 md:p-8 rounded-2xl border border-gray-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] space-y-6">
+                  <div className="flex items-center justify-between pb-4 border-b border-gray-100/60">
+                      <h2 className="text-[13px] font-black text-gray-800 uppercase tracking-wider flex items-center gap-2">
+                          <Activity className="w-4 h-4 text-[#8B0000]" /> Narrative Content
+                      </h2>
+                  </div>
+
+                  <div className="space-y-6">
+                      {blocks.map((block, idx) => (
+                          <div key={block.id} className="group relative bg-white border border-gray-100 p-4 rounded-xl hover:border-[#8B0000]/30 hover:shadow-md transition-all duration-300">
+                              
+                              <div className="absolute -left-2 -top-2 w-6 h-6 bg-gray-900 text-white rounded-full flex items-center justify-center text-[10px] font-black shadow-sm z-10 border-2 border-white">
+                                {idx + 1}
+                              </div>
+
+                              {block.type === 'text' && (
+                                  <ReactQuill 
+                                      theme="snow"
+                                      value={block.content}
+                                      onChange={(v) => updateBlockContent(block.id, v)}
+                                      modules={modules}
+                                      className="bg-transparent [&_.ql-toolbar]:border-none [&_.ql-toolbar]:bg-gray-50 [&_.ql-toolbar]:rounded-t-lg [&_.ql-container]:border-none [&_.ql-container]:bg-transparent [&_.ql-editor]:min-h-[150px] [&_.ql-editor]:text-[14px] [&_.ql-editor]:leading-relaxed [&_.ql-editor]:text-gray-800"
+                                  />
+                              )}
+
+                              {block.type === 'image' && (
+                                  <div className="space-y-4 text-center mt-2">
+                                      {block.content ? (
+                                          <div className="relative rounded-lg overflow-hidden border border-gray-200 shadow-sm max-h-72 mx-auto w-fit bg-gray-50">
+                                              <img src={block.content} className="max-h-72 w-auto object-contain" />
+                                          </div>
+                                      ) : (
+                                          <label className="flex flex-col items-center justify-center p-8 border border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer transition-all">
+                                              <div className="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center mb-3">
+                                                <ImageIcon className="w-5 h-5 text-gray-400" />
+                                              </div>
+                                              <span className="text-[12px] font-bold text-gray-500 uppercase">Upload Resource Image</span>
+                                              <input type="file" className="hidden" onChange={(e) => handleFileChange(block.id, e)} />
+                                          </label>
+                                      )}
+                                      <div className="px-2">
+                                        <input 
+                                            type="text" 
+                                            placeholder="Caption for this image..." 
+                                            className="w-full bg-gray-50 border border-gray-100 rounded-lg px-3 py-2.5 text-[12px] font-medium outline-none focus:ring-2 focus:ring-[#8B0000]/20 focus:border-[#8B0000]/30 text-center placeholder:text-gray-400 text-gray-700 transition-all" 
+                                            value={block.metaInfo} 
+                                            onChange={e => setBlocks((prev) => prev.map((b) => b.id === block.id ? {...b, metaInfo: e.target.value} : b))}
+                                        />
+                                      </div>
+                                  </div>
+                              )}
+
+                              {block.type === 'pullquote' && (
+                                  <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 shadow-inner space-y-3 relative mt-2">
+                                      <Quote className="absolute top-4 left-4 w-6 h-6 text-gray-200 rotate-180 pointer-events-none" />
+                                      <textarea 
+                                          placeholder="Enter the standout quote..."
+                                          className="w-full text-[14px] font-black text-gray-800 border-none p-0 outline-none bg-transparent placeholder:text-gray-400 text-center resize-none"
+                                          value={block.content}
+                                          onChange={e => updateBlockContent(block.id, e.target.value)}
+                                      />
+                                      <input 
+                                          placeholder="Attribution (e.g. Name, Position)"
+                                          className="w-full text-[12px] font-bold text-gray-500 uppercase tracking-wider border-none p-0 outline-none bg-transparent mt-1 text-center"
+                                          value={block.metaInfo}
+                                          onChange={e => setBlocks((prev) => prev.map((b) => b.id === block.id ? {...b, metaInfo: e.target.value} : b))}
+                                      />
+                                  </div>
+                              )}
+
+                              {block.type === 'video' && (
+                                  <div className="space-y-4 text-center mt-2">
+                                      <div className="flex border border-gray-200 rounded-lg overflow-hidden bg-gray-50 max-w-sm mx-auto">
+                                          <button onClick={() => setBlocks((prev) => prev.map((b) => b.id === block.id ? {...b, metaInfo: 'url', content: ''} : b))} className={`flex-1 py-2 text-[11px] font-bold tracking-wider uppercase transition-colors cursor-pointer ${block.metaInfo === 'url' ? 'bg-white text-[#8B0000] shadow-sm' : 'text-gray-500 hover:bg-gray-100'}`}>URL Link</button>
+                                          <button onClick={() => setBlocks((prev) => prev.map((b) => b.id === block.id ? {...b, metaInfo: 'upload', content: ''} : b))} className={`flex-1 py-2 text-[11px] font-bold tracking-wider uppercase transition-colors cursor-pointer ${block.metaInfo === 'upload' ? 'bg-white text-[#8B0000] shadow-sm' : 'text-gray-500 hover:bg-gray-100'}`}>Upload File</button>
+                                      </div>
+                                      <div className="px-2 mt-4">
+                                          {block.metaInfo === 'url' ? (
+                                              <input type="text" placeholder="https://youtube.com/watch?v=..." className="w-full bg-gray-50 border border-gray-100 rounded-lg px-3 py-2.5 text-[12px] font-medium outline-none focus:ring-2 focus:ring-[#8B0000]/20 focus:border-[#8B0000]/30 text-center placeholder:text-gray-400 text-gray-700 transition-all" value={block.content} onChange={e => updateBlockContent(block.id, e.target.value)} />
+                                          ) : (
+                                              <div className="flex flex-col items-center justify-center">
+                                                  {block.content ? (
+                                                      <div className="relative rounded-lg overflow-hidden border border-gray-200 shadow-sm mx-auto w-fit bg-gray-50">
+                                                          <div className="p-4 bg-emerald-50 text-emerald-700 text-xs font-bold uppercase tracking-widest flex items-center gap-2"><Video className="w-4 h-4"/> Video Object Attached</div>
+                                                          <label className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer text-white font-bold text-[10px] tracking-wider uppercase">
+                                                              Replace
+                                                              <input type="file" accept="video/*" className="hidden" onChange={(e) => handleFileChange(block.id, e)} />
+                                                          </label>
+                                                      </div>
+                                                  ) : (
+                                                      <label className="flex flex-col items-center justify-center p-6 border border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer transition-all w-full max-w-sm mx-auto">
+                                                          <div className="w-10 h-10 bg-white rounded-full shadow-sm flex items-center justify-center mb-3">
+                                                              <Upload className="w-5 h-5 text-gray-400" />
+                                                          </div>
+                                                          <span className="text-[12px] font-bold text-gray-500 uppercase">Upload Video File</span>
+                                                          <input type="file" accept="video/*" className="hidden" onChange={(e) => handleFileChange(block.id, e)} />
+                                                      </label>
+                                                  )}
+                                              </div>
+                                          )}
+                                      </div>
+                                  </div>
+                              )}
+
+                              <button onClick={() => removeBlock(block.id)} className="absolute top-2 right-2 p-1.5 bg-white text-gray-400 hover:text-white hover:bg-rose-500 rounded-md opacity-0 group-hover:opacity-100 transition-all shadow-sm border border-gray-200 z-10">
+                                  <Trash2 size={14} />
+                              </button>
+                          </div>
+                      ))}
+                  </div>
+              </div>
+          </div>
+
+          {/* Sidebar Section (Moved Above Editor on Mobile) */}
+          <div className="lg:col-span-4 space-y-4 md:space-y-6">
+              
+              {/* Featured Image / Thumbnail Upload */}
+              <div className="bg-white rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] border border-gray-100 p-4 md:p-5 space-y-4">
+                  <div className="flex items-center justify-between">
+                      <label className="flex items-center text-[12px] font-black text-gray-800 uppercase tracking-wider">
+                          Featured Image <span className="text-rose-500 ml-1 leading-none">*</span>
+                      </label>
+                      {featuredImage && (
+                          <button onClick={() => { setFeaturedImage(""); setFeaturedImageFile(null); }} className="text-[12px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md hover:bg-rose-100 transition-colors">
+                              Remove
+                          </button>
+                      )}
+                  </div>
+                  
+                  {featuredImage ? (
+                      <div className="relative group rounded-lg overflow-hidden border border-gray-200 aspect-[16/10] shadow-sm">
+                          <img src={featuredImage} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" alt="Featured Preview" />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                               <div onClick={() => { setFeaturedImage(""); setFeaturedImageFile(null); }} className="w-10 h-10 bg-white rounded-full flex items-center justify-center cursor-pointer hover:bg-rose-600 hover:text-white text-gray-800 shadow-sm transition-all">
+                                  <Trash2 size={16} />
+                               </div>
+                          </div>
+                      </div>
+                  ) : (
+                      <label className="flex flex-col items-center justify-center p-6 border border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer transition-all aspect-[16/10] group">
+                          <div className="p-3 bg-white rounded-full shadow-sm mb-3 group-hover:scale-110 transition-transform">
+                              <Upload className="w-5 h-5 text-gray-400" />
+                          </div>
+                          <span className="text-[12px] font-bold text-gray-600 uppercase">Upload Cover</span>
+                          <span className="text-[12px] font-medium text-gray-400 mt-1">1200 x 630px</span>
+                          <input type="file" className="hidden" onChange={handleFeaturedImageChange} accept="image/*" />
+                      </label>
+                  )}
+                  
+                  <div className="relative mt-2">
+                     <label className="flex items-center text-[12px] font-bold text-gray-500 mb-1.5 px-1">
+                        Image Caption
+                        <span className="ml-auto text-[12px] font-medium text-gray-400 bg-gray-50 px-1 rounded">{heroCaption.length}/{MAX_CAPTION}</span>
+                     </label>
+                     <input 
+                       value={heroCaption} onChange={e => setHeroCaption(e.target.value)}
+                       maxLength={MAX_CAPTION}
+                       className="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-[13px] font-medium focus:ring-2 focus:ring-[#8B0000]/20 focus:border-[#8B0000]/30 placeholder:text-gray-400 text-gray-700 outline-none transition-all" 
+                       placeholder="Credits or description..." 
+                     />
+                  </div>
+              </div>
+
+              {/* Taxonomy & Metadata */}
+              <div className="bg-white p-4 md:p-5 rounded-2xl border border-gray-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] space-y-4">
+                  <h3 className="text-[13px] font-black text-gray-800 uppercase tracking-wider flex items-center gap-2 pb-3 border-b border-gray-100">
+                      Taxonomy
+                  </h3>
+                  
+                  <div className="space-y-4">
+                      <div className="relative group">
+                          <label className="flex items-center text-[12px] font-bold text-gray-600 mb-2 px-1">
+                              Tags <span className="text-rose-500 ml-1 leading-none">*</span>
+                          </label>
+                          <select 
+                              value=""
+                              onChange={e => {
+                                  if (e.target.value && !selectedTags.includes(e.target.value)) {
+                                      setSelectedTags([...selectedTags, e.target.value]);
+                                  }
+                              }}
+                              className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 text-[13px] font-medium text-gray-700 outline-none focus:ring-2 focus:ring-[#8B0000]/10 focus:border-[#8B0000] transition-all cursor-pointer appearance-none shadow-sm"
+                          >
+                              <option value="">{tagsList.length === 0 ? 'Synchronizing tags...' : 'Select Tags...'}</option>
+                              {tagsList.map((tag) => (
+                                  <option key={tag.id} value={tag.id}>
                                     {tag.name}
-                                    <button onClick={() => setSelectedTags(selectedTags.filter(id => id !== tagId))} className="text-emerald-300 hover:text-rose-500 transition-colors cursor-pointer p-0.5">
-                                        <X size={14}/>
-                                    </button>
-                                </span>
-                            ) : null;
-                        })}
+                                  </option>
+                                ))}
+                          </select>
+                          <div className="absolute right-4 bottom-3 pointer-events-none text-gray-400 group-focus-within:text-[#8B0000] transition-colors">
+                              <ChevronDown className="w-4 h-4" />
+                          </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                          {selectedTags.length === 0 ? (
+                              <div className="w-full py-6 border border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center text-gray-400 bg-gray-50">
+                                  <Tag size={16} className="mb-2 opacity-40" />
+                                  <p className="text-[12px] font-bold">No Tags Selected</p>
+                              </div>
+                          ) : selectedTags.map(tagId => {
+                              const tag = tagsList.find(t => t.id === tagId);
+                              return tag ? (
+                                  <span key={tagId} className="px-2.5 py-1 bg-gray-100 text-gray-700 text-[12px] font-semibold rounded-md border border-gray-200 flex items-center gap-1.5 hover:border-gray-300 transition-all shadow-sm">
+                                      {tag.name}
+                                      <button onClick={() => setSelectedTags(selectedTags.filter(id => id !== tagId))} className="text-gray-400 hover:text-rose-600 transition-colors cursor-pointer p-0.5">
+                                          <X size={12}/>
+                                      </button>
+                                  </span>
+                              ) : null;
+                          })}
+                      </div>
+                  </div>
+
+                  <div className="h-px bg-gray-100 my-4" />
+
+                  <div className="space-y-2">
+                      <label className="flex items-center gap-1.5 text-[12px] font-bold text-gray-600 px-1"><Shield size={14} className="text-blue-600"/> Geopolitical Tag</label>
+                      <input value={countryTag} onChange={e => setCountryTag(e.target.value)} className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-[13px] font-medium text-gray-700 outline-none focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600 transition-all shadow-sm" placeholder="e.g. USA, Bangladesh, EU" />
+                  </div>
+              </div>
+
+              {/* Admin Privileges */}
+              {isAdmin && (
+                <div className="bg-[#fff9f0] p-4 md:p-5 rounded-2xl border-2 border-[#ffedd5] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] space-y-4">
+                  <div className="flex items-center gap-2 text-amber-900 mb-2">
+                    <Shield className="w-4 h-4 shrink-0" />
+                    <h3 className="text-[11px] font-black uppercase tracking-[0.2em]">Admin Controls</h3>
+                  </div>
+
+                  <label className="flex items-center justify-between gap-3 cursor-pointer group">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Star className={`w-4 h-4 shrink-0 ${featured ? "text-amber-500 fill-amber-400" : "text-gray-400"}`} />
+                      <div>
+                        <span className="text-[12px] font-bold text-gray-900 block">Home “big cards” (PulseHero)</span>
+                        <span className="text-[10px] text-gray-500">Marks this story in the featured carousel on the homepage.</span>
+                      </div>
                     </div>
+                    <input
+                      type="checkbox"
+                      checked={featured}
+                      onChange={(e) => setFeatured(e.target.checked)}
+                      className="rounded border-gray-300 text-amber-600 focus:ring-amber-500 shrink-0 cursor-pointer"
+                    />
+                  </label>
+
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-600 uppercase tracking-wider block mb-1">
+                      Spotlight priority (0–999)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={999}
+                      value={homeSpotlightPriority}
+                      onChange={(e) => setHomeSpotlightPriority(e.target.value === "" ? "" : Number(e.target.value))}
+                      disabled={!featured}
+                      className="w-full max-w-[140px] bg-white border border-gray-200 rounded-lg px-3 py-2 text-[12px] font-mono disabled:opacity-40 outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
+                    />
+                  </div>
+
+                  <div className="border-t border-amber-200/50 pt-3">
+                    <label className="text-[10px] font-bold text-gray-600 uppercase tracking-wider block mb-1">
+                      Listing priority (0–999)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={999}
+                      value={feedPriority}
+                      onChange={(e) => setFeedPriority(e.target.value === "" ? "" : Number(e.target.value))}
+                      className="w-full max-w-[140px] bg-white border border-gray-200 rounded-lg px-3 py-2 text-[12px] font-mono outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500"
+                    />
+                  </div>
+
+                  <label className="flex items-center justify-between gap-3 cursor-pointer group border-t border-amber-200/50 pt-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <FileText className={`w-4 h-4 shrink-0 ${isOpinion ? "text-blue-600" : "text-gray-400"}`} />
+                      <div>
+                        <span className="text-[12px] font-bold text-gray-900 block">Must read / Opinion</span>
+                        <span className="text-[10px] text-gray-500">Fills the "Must Read" block when opinion slots are used.</span>
+                      </div>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={isOpinion}
+                      onChange={(e) => setIsOpinion(e.target.checked)}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 shrink-0 cursor-pointer"
+                    />
+                  </label>
+
+                  <label className="flex items-center justify-between gap-3 cursor-pointer group border-t border-amber-200/50 pt-3">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Zap className={`w-4 h-4 shrink-0 ${breakingActive ? "text-red-600" : "text-gray-400"}`} />
+                      <div>
+                        <span className="text-[12px] font-bold text-gray-900 block">Breaking ticker & /breaking</span>
+                        <span className="text-[10px] text-gray-500">
+                          Adds/removes breaking tags automatically.
+                        </span>
+                      </div>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={breakingActive}
+                      onChange={(e) => setBreakingCoverage(e.target.checked)}
+                      disabled={breakingTagIds.length === 0}
+                      className="rounded border-gray-300 text-red-600 focus:ring-red-500 shrink-0 cursor-pointer"
+                    />
+                  </label>
                 </div>
-            </div>
+              )}
+          </div>
         </div>
-      </div>
-      <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50">
-        <div className="bg-white border border-gray-200 shadow-xl rounded-xl px-2 py-2 flex items-center gap-1">
-          <button onClick={() => addBlock("text")} className="px-3 py-2 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100 flex items-center gap-1.5">
-            <Type size={14} /> Text
-          </button>
-          <button onClick={() => addBlock("image")} className="px-3 py-2 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100 flex items-center gap-1.5">
-            <ImageIcon size={14} /> Image
-          </button>
-          <button onClick={() => addBlock("pullquote")} className="px-3 py-2 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100 flex items-center gap-1.5">
-            <Quote size={14} /> Quote
-          </button>
-          <button onClick={() => addBlock("video")} className="px-3 py-2 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100 flex items-center gap-1.5">
-            <Video size={14} /> Video
-          </button>
+
+        {/* Floating Action Bar for Blocks - White with shadow */}
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-10 fade-in duration-500">
+          <div className="bg-white border border-gray-200 shadow-xl shadow-black/5 rounded-full px-1.5 py-1.5 flex items-center gap-1">
+            <button onClick={() => addBlock("text")} className="px-3 py-2 rounded-full text-[12px] font-bold text-gray-600 hover:text-[#8B0000] hover:bg-rose-50 flex items-center gap-1.5 transition-all uppercase tracking-wide cursor-pointer">
+              <Type size={14} /> Text
+            </button>
+            <div className="w-px h-4 bg-gray-200" />
+            <button onClick={() => addBlock("image")} className="px-3 py-2 rounded-full text-[12px] font-bold text-gray-600 hover:text-[#8B0000] hover:bg-rose-50 flex items-center gap-1.5 transition-all uppercase tracking-wide cursor-pointer">
+              <ImageIcon size={14} /> Image
+            </button>
+            <div className="w-px h-4 bg-gray-200" />
+            <button onClick={() => addBlock("pullquote")} className="px-3 py-2 rounded-full text-[12px] font-bold text-gray-600 hover:text-[#8B0000] hover:bg-rose-50 flex items-center gap-1.5 transition-all uppercase tracking-wide cursor-pointer">
+              <Quote size={14} /> Quote
+            </button>
+          </div>
         </div>
       </div>
     </div>

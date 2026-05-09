@@ -2,11 +2,11 @@ const postService = require('../../services/post.service');
 
 const createPost = async (req, res, next) => {
     try {
-        // Enforce role-based article creation: Only AUTHORS can create new stories
-        if (req.user.role !== 'AUTHOR') {
+        // Enforce role-based article creation: Only REPORTERS can create new stories
+        if (req.user.role !== 'REPORTER' && req.user.role !== 'ADMIN') {
             return res.status(403).json({ 
                 success: false, 
-                message: 'Access Denied: Only authors can pitch new articles. Admins oversee moderation.' 
+                message: 'Access Denied: Only reporters can pitch new articles.' 
             });
         }
 
@@ -66,8 +66,8 @@ const getAdminPosts = async (req, res, next) => {
              filter.authorId = req.query.authorId;
         }
 
-        // Role-based filtering: Authors only see their own posts
-        if (req.user.role === 'AUTHOR') {
+        // Role-based filtering: Reporters only see their own posts
+        if (req.user.role === 'REPORTER') {
             filter.authorId = req.user.id;
         }
         

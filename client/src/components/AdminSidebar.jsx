@@ -22,7 +22,7 @@ const getMenuGroups = (role) => {
   const isAdmin = role === "ADMIN";
 
   const articleChildren = [
-    { title: "Active", url: "/dashboard/posts" },
+    { title: "All News", url: "/dashboard/posts" },
     { title: "Pending", url: "/dashboard/posts?status=PENDING" },
     { title: "Published", url: "/dashboard/posts?status=PUBLISHED" },
   ];
@@ -43,14 +43,18 @@ const getMenuGroups = (role) => {
           icon: FileText,
           children: articleChildren,
         },
-        {
-          title: "Taxonomy",
-          icon: List,
-          children: [
-            { title: "Categories", url: "/dashboard/categories" },
-            { title: "Tag Index", url: "/dashboard/tags" },
-          ],
-        },
+        ...(isAdmin
+          ? [
+              {
+                title: "Taxonomy",
+                icon: List,
+                children: [
+                  { title: "Categories", url: "/dashboard/categories" },
+                  { title: "Tag Index", url: "/dashboard/tags" },
+                ],
+              },
+            ]
+          : []),
       ],
     },
     ...(isAdmin
@@ -74,7 +78,7 @@ const getMenuGroups = (role) => {
                 title: "Team members",
                 icon: Users,
                 children: [
-                  { title: "Authors List", url: "/dashboard/authors" },
+                  { title: "Reporters List", url: "/dashboard/reporters" },
                   { title: "Our Team", url: "/dashboard/team-members" },
                   { title: "Departments", url: "/dashboard/departments" },
                   { title: "Partners", url: "/dashboard/partners" },
@@ -117,13 +121,13 @@ function childLinkIsActive(pathname, searchParams, childUrl) {
   return currentStatus === wanted;
 }
 
-export function AdminSidebar({ isOpen: propIsOpen, setIsOpen: propSetIsOpen, user = { role: "AUTHOR" } }) {
+export function AdminSidebar({ isOpen: propIsOpen, setIsOpen: propSetIsOpen, user = { role: "REPORTER" } }) {
   const ctx = useContext(SidebarContext);
   const isOpen = ctx ? ctx.isOpen : propIsOpen;
   const setIsOpen = ctx ? ctx.setIsOpen : propSetIsOpen;
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const role = user?.role || "AUTHOR";
+  const role = user?.role || "REPORTER";
   const menuGroups = getMenuGroups(role);
 
   const [openMenus, setOpenMenus] = useState({

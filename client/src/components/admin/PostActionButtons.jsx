@@ -180,10 +180,13 @@ export default function PostActionButtons({ post, userRole = 'AUTHOR' }) {
                 <button type="button" onClick={() => setShowIssueModal(true)} className="shrink-0 p-2 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all cursor-pointer" title="Report Editorial Issue">
                     <TriangleAlert className="w-4 h-4" />
                 </button>
-                <button type="button" onClick={openIssueList} className="shrink-0 p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all cursor-pointer" title="View Article Issues">
-                    <CircleAlert className="w-4 h-4" />
-                </button>
             </>
+        )}
+
+        {(isAdmin || (!isAdmin && currentStatus === 'PENDING')) && (
+            <button type="button" onClick={openIssueList} className="shrink-0 p-2 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-all cursor-pointer" title="View Article Issues">
+                <CircleAlert className="w-4 h-4" />
+            </button>
         )}
         
         <Link href={`/dashboard/posts/${post.id}`} className="shrink-0 p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all cursor-pointer" title="View Article Detail">

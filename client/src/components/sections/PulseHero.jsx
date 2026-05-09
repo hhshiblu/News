@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Clock } from "lucide-react";
+import { getImageUrl } from "@/lib/apiBaseUrl";
 
 function fmt(story) {
   const d = story.publishedAt || story.createdAt;
@@ -44,7 +45,7 @@ export default function PulseHero({ featuredPosts = [], latestPosts = [] }) {
           <Link href={`/news/${lead.slug}`} className="group block mb-5">
             <div className="relative w-full aspect-video overflow-hidden">
               <Image
-                src={lead.featuredImage || lead.image || "/placeholder.jpg"}
+                src={getImageUrl(lead.featuredImage || lead.image)}
                 alt={lead.title}
                 fill priority unoptimized
                 sizes="(max-width:768px) 100vw, 57vw"
@@ -81,7 +82,7 @@ export default function PulseHero({ featuredPosts = [], latestPosts = [] }) {
                 <Link key={s.id} href={`/news/${s.slug}`} className="group flex gap-3 items-start">
                   <div className="relative w-[90px] h-[68px] shrink-0 overflow-hidden rounded-sm">
                     <Image
-                      src={s.featuredImage || s.image || "/placeholder.jpg"}
+                      src={getImageUrl(s.featuredImage || s.image)}
                       alt={s.title} fill unoptimized sizes="90px"
                       className="object-cover group-hover:scale-105 transition-transform duration-400"
                     />
@@ -105,7 +106,7 @@ export default function PulseHero({ featuredPosts = [], latestPosts = [] }) {
             <Link key={s.id} href={`/news/${s.slug}`} className="group flex gap-3 items-start">
               <div className="relative w-[110px] h-[80px] shrink-0 overflow-hidden rounded-sm">
                 <Image
-                  src={s.featuredImage || s.image || "/placeholder.jpg"}
+                  src={getImageUrl(s.featuredImage || s.image)}
                   alt={s.title} fill unoptimized sizes="110px"
                   className="object-cover group-hover:scale-105 transition-transform duration-500"
                 />
@@ -132,7 +133,7 @@ export default function PulseHero({ featuredPosts = [], latestPosts = [] }) {
               className="flex gap-3 items-start group hover:bg-gray-50/60 transition-colors -mx-1 px-1 py-1 rounded">
               <div className="relative w-[70px] h-[52px] shrink-0 overflow-hidden rounded-sm">
                 <Image
-                  src={s.featuredImage || s.image || "/placeholder.jpg"}
+                  src={getImageUrl(s.featuredImage || s.image)}
                   alt={s.title} fill unoptimized sizes="70px"
                   className="object-cover group-hover:scale-105 transition-transform"
                 />

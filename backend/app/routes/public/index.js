@@ -1,7 +1,7 @@
 const express = require('express');
 const categoryRoutes = require('./category.routes');
 const postRoutes = require('./post.routes');
-const authorRoutes = require('./author.routes');
+const reporterRoutes = require('./reporter.routes');
 const newsletterRoutes = require('./newsletter.routes');
 const tagRoutes = require('./tag.routes');
 const submissionRoutes = require('./submission.routes');
@@ -15,7 +15,7 @@ router.get('/ads/presets', getAdSlotPresets);
 router.get('/ads', getAdBySlot);
 router.use('/categories', categoryRoutes);
 router.use('/posts', postRoutes);
-router.use('/authors', authorRoutes);
+router.use('/reporters', reporterRoutes);
 router.use('/newsletter', newsletterRoutes);
 router.use('/tags', tagRoutes);
 router.use('/submissions', submissionRoutes);

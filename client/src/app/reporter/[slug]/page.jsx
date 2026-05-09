@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
-import { getAuthorBySlug, getNewsFeed } from "@/actions/public";
+import { getReporterBySlug, getNewsFeed } from "@/actions/public";
 import Pagination from "@/components/ui/Pagination";
 import { CategoryTagRails } from "@/components/category/CategoryDeskRails";
 import AdSlot from "@/components/ads/AdSlot";
@@ -24,23 +24,23 @@ export async function generateMetadata({ params, searchParams }) {
   const { slug } = await params;
   const sp = await searchParams;
   const page = Math.max(1, parseInt(sp?.page, 10) || 1);
-  const res = await getAuthorBySlug(slug, { page, limit: PAGE_SIZE });
-  const name = res?.data?.author?.name;
-  const base = name ? `${name} — LabourPulse` : "Author";
+  const res = await getReporterBySlug(slug, { page, limit: PAGE_SIZE });
+  const name = res?.data?.reporter?.name;
+  const base = name ? `${name} — LabourPulse` : "Reporter";
   return {
     title: page > 1 ? `${base} (Page ${page})` : base,
     description: res?.data?.author?.bio || "",
   };
 }
 
-async function AuthorSlugPageContent({ params, searchParams }) {
+async function ReporterSlugPageContent({ params, searchParams }) {
   const { slug } = await params;
   const sp = await searchParams;
   let page = Math.max(1, parseInt(sp?.page, 10) || 1);
 
-  const res = await getAuthorBySlug(slug, { page, limit: PAGE_SIZE });
+  const res = await getReporterBySlug(slug, { page, limit: PAGE_SIZE });
   const payload = res?.success ? res.data : null;
-  const author = payload?.author;
+  const reporter = payload?.reporter;
   const posts = payload?.posts || [];
   const pagination = payload?.pagination || {
     page: 1,
@@ -52,14 +52,14 @@ async function AuthorSlugPageContent({ params, searchParams }) {
   const totalStories = pagination.total ?? posts.length;
 
   if (page > totalPages) {
-    redirect(totalPages <= 1 ? `/author/${slug}` : `/author/${slug}?page=${totalPages}`);
+    redirect(totalPages <= 1 ? `/reporter/${slug}` : `/reporter/${slug}?page=${totalPages}`);
   }
 
-  if (!author) {
+  if (!reporter) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center px-4">
         <h1 className="text-2xl font-bold text-gray-900 font-[Playfair_Display] mb-2">
-          Author not found
+          Reporter not found
         </h1>
         <Link href="/" className="text-primary font-semibold text-sm hover:underline">
           ← Back to home
@@ -69,14 +69,14 @@ async function AuthorSlugPageContent({ params, searchParams }) {
   }
 
   let tagLanes = [];
-  if (page === 1 && author.id) {
-    const feed = await getNewsFeed({ authorId: author.id, limit: LANE_SAMPLE });
+  if (page === 1 && reporter.id) {
+    const feed = await getNewsFeed({ authorId: reporter.id, limit: LANE_SAMPLE });
     const sample = feed.posts || [];
     tagLanes = buildTagLanes(sample, 4, 5);
   }
 
-  const socials = author.socials && typeof author.socials === "object" ? author.socials : {};
-  const basePath = `/author/${encodeURIComponent(slug)}`;
+  const socials = reporter.socials && typeof reporter.socials === "object" ? reporter.socials : {};
+  const basePath = `/reporter/${encodeURIComponent(slug)}`;
 
   return (
     <div className="bg-[#fafafa] min-h-screen flex flex-col">
@@ -89,8 +89,8 @@ async function AuthorSlugPageContent({ params, searchParams }) {
               <div className="absolute -inset-1 rounded-3xl bg-gradient-to-br from-primary/30 to-primary/5 blur-xl opacity-80" />
               <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-2xl overflow-hidden border-4 border-white shadow-xl ring-1 ring-gray-100">
                 <Image
-                  src={author.avatar || "/placeholder.jpg"}
-                  alt={author.name}
+                  src={reporter.avatar || "/placeholder.jpg"}
+                  alt={reporter.name}
                   fill
                   className="object-cover"
                   sizes="176px"
@@ -103,17 +103,17 @@ async function AuthorSlugPageContent({ params, searchParams }) {
                 LabourPulse contributor
               </p>
               <h1 className="text-2xl md:text-3xl font-bold text-gray-950 font-[Playfair_Display] tracking-tight mb-2">
-                {author.name}
+                {reporter.name}
               </h1>
-              {author.position && (
-                <p className="text-xs font-semibold text-gray-500 font-[Inter] mb-2">{author.position}</p>
+              {reporter.position && (
+                <p className="text-xs font-semibold text-gray-500 font-[Inter] mb-2">{reporter.position}</p>
               )}
               <p className="text-[13px] text-gray-600 font-[Inter] leading-relaxed max-w-2xl mx-auto md:mx-0 mb-4">
-                {author.bio || "Journalist and contributor to LabourPulse."}
+                {reporter.bio || "Journalist and contributor to LabourPulse."}
               </p>
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 text-sm">
                 <span className="px-2.5 py-0.5 rounded-full bg-gray-900 text-white text-[10px] font-bold uppercase tracking-wider">
-                  {author.role?.replace("_", " ") || "Author"}
+                  {reporter.role?.replace("_", " ") || "Reporter"}
                 </span>
                 <span className="text-gray-400 text-[12px] font-[Inter]">
                   {totalStories} stor{totalStories === 1 ? "y" : "ies"} published
@@ -237,7 +237,7 @@ async function AuthorSlugPageContent({ params, searchParams }) {
   );
 }
 
-function AuthorPageSkeleton() {
+function ReporterPageSkeleton() {
   return (
     <div className="max-w-[1200px] mx-auto px-4 py-8 animate-pulse">
       <div className="h-28 bg-gray-200 rounded-2xl mb-6" />
@@ -250,10 +250,10 @@ function AuthorPageSkeleton() {
   );
 }
 
-export default function AuthorSlugPage(props) {
+export default function ReporterSlugPage(props) {
   return (
-    <Suspense fallback={<AuthorPageSkeleton />}>
-      <AuthorSlugPageContent {...props} />
+    <Suspense fallback={<ReporterPageSkeleton />}>
+      <ReporterSlugPageContent {...props} />
     </Suspense>
   );
 }

@@ -24,10 +24,10 @@ async function main() {
     });
     console.log("Admin ensured:", admin.email);
 
-    // 2. Create Sample Authors
+    // 2. Create Sample Reporters
     const authorsData = [
-        { name: 'Author One', email: 'author1@gmail.com', bio: 'Senior reporter for special projects.' },
-        { name: 'Author Two', email: 'author2@gmail.com', bio: 'Lifestyle and culture columnist.' },
+        { name: 'Reporter One', email: 'reporter1@gmail.com', bio: 'Senior reporter for special projects.' },
+        { name: 'Reporter Two', email: 'reporter2@gmail.com', bio: 'Lifestyle and culture columnist.' },
         { name: 'Ariful Islam', email: 'ariful@news.com', bio: 'Senior crime reporter with 10 years experience.' },
         { name: 'Sultana Razia', email: 'razia@news.com', bio: 'Lifestyle and culture enthusiast.' },
         { name: 'Kamal Ahmed', email: 'kamal@news.com', bio: 'Sports analyst and former athlete.' },
@@ -42,12 +42,12 @@ async function main() {
             create: {
                 ...data,
                 password: commonPassword,
-                role: 'AUTHOR',
+                role: 'REPORTER',
                 status: 'ACTIVE',
                 avatar: `https://i.pravatar.cc/150?u=${data.email}`
             }
         });
-        console.log(`Author ensured: ${author.name} (${author.email})`);
+        console.log(`Reporter ensured: ${author.name} (${author.email})`);
     }
     
     // 3. Create Basic Tags

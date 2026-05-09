@@ -75,8 +75,15 @@ const getSinglePost = async (req, res, next) => {
 const recordPostClick = async (req, res) => {
     const { slug } = req.params;
     if (!slug) return res.status(400).json({ success: false, message: 'Missing slug' });
-    // Click tracking is currently disabled (Redis off).
-    return res.status(200).json({ success: true, message: 'click tracking disabled' });
+    try {
+        await require('../../db_query/prisma').post.updateMany({
+            where: { slug, status: 'PUBLISHED' },
+            data: { viewCount: { increment: 1 } }
+        });
+        return res.status(200).json({ success: true });
+    } catch (_) {
+        return res.status(200).json({ success: true }); // fail silently — never block the reader
+    }
 };
 
 module.exports = { getPublicFeed, getSinglePost, recordPostClick };

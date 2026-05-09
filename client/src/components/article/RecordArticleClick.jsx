@@ -9,12 +9,11 @@ export default function RecordArticleClick({ slug }) {
   useEffect(() => {
     if (!slug || done.current) return;
     done.current = true;
-    // Temporarily disabled: backend Redis/BullMQ click flow is off.
-    // fetch(`${API}/public/posts/${encodeURIComponent(slug)}/click`, {
-    //   method: "POST",
-    //   mode: "cors",
-    //   credentials: "omit",
-    // }).catch(() => {});
+    fetch(`${API}/public/posts/${encodeURIComponent(slug)}/click`, {
+      method: "POST",
+      mode: "cors",
+      credentials: "omit",
+    }).catch(() => {}); // fire-and-forget, never block the reader
   }, [slug]);
   return null;
 }

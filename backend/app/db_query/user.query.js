@@ -46,11 +46,18 @@ const getUserByIdQuery = async (id) => {
     });
 };
 
+const getUserWithPasswordQuery = async (id) => {
+    return prisma.user.findUnique({
+        where: { id }
+    });
+};
+
 module.exports = {
     createUserQuery,
     updateUserQuery,
     deleteUserQuery,
     getAllUsersQuery,
     getUserByIdQuery,
+    getUserWithPasswordQuery,
     publicUserSelect,
 };

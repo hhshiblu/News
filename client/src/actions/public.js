@@ -1,6 +1,6 @@
 "use server";
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+const BACKEND_URL = process.env.BACKEND_INTERNAL_URL ? `${process.env.BACKEND_INTERNAL_URL}/api/v1` : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1");
 
 /**
  * Fetches the public news feed with various filters
@@ -69,15 +69,15 @@ export async function getCategories() {
     }
 }
 
-/** Author profile + published posts (paginated via page & limit) */
-export async function getAuthorBySlug(slug, { page = 1, limit = 12 } = {}) {
+/** Reporter profile + published posts (paginated via page & limit) */
+export async function getReporterBySlug(slug, { page = 1, limit = 12 } = {}) {
     try {
         const enc = encodeURIComponent(slug);
         const qs = new URLSearchParams();
         if (page != null) qs.set("page", String(page));
         if (limit != null) qs.set("limit", String(limit));
         const q = qs.toString();
-        const res = await fetch(`${BACKEND_URL}/public/authors/${enc}${q ? `?${q}` : ""}`, {
+        const res = await fetch(`${BACKEND_URL}/public/reporters/${enc}${q ? `?${q}` : ""}`, {
             cache: "no-store",
         });
         if (!res.ok) {
@@ -85,7 +85,7 @@ export async function getAuthorBySlug(slug, { page = 1, limit = 12 } = {}) {
         }
         return await res.json();
     } catch (error) {
-        console.error("Author Fetch Error:", error);
+        console.error("Reporter Fetch Error:", error);
         return { success: false, data: null };
     }
 }

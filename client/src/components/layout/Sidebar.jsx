@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Flame, Clock, Zap, MessageSquare } from "lucide-react";
+import { Flame, Clock, Zap } from "lucide-react";
 import AdSlot from "@/components/ads/AdSlot";
 import { fetchPublicPosts } from "@/lib/api";
 
@@ -201,33 +201,6 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* ── Insight Digest ── */}
-      <div className="bg-primary/5 border border-primary/15 p-4 rounded-xl">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="p-1.5 bg-primary text-white rounded-md">
-            <MessageSquare size={16} />
-          </div>
-          <h3 className="text-base font-black text-gray-900 font-[Playfair_Display] leading-tight">
-            Insight Digest
-          </h3>
-        </div>
-        <p className="text-xs text-gray-600 mb-4 leading-relaxed font-[Inter]">
-          Critical stories in your inbox.
-        </p>
-        <div className="space-y-2">
-          <input
-            type="email"
-            placeholder="Email"
-            className="w-full px-3 py-2 text-xs rounded-lg border border-gray-200 outline-none focus:ring-2 focus:ring-primary/20 font-[Inter]"
-          />
-          <button
-            type="button"
-            className="w-full bg-gray-950 hover:bg-primary text-white py-2.5 text-[10px] font-black tracking-widest uppercase rounded-lg transition-all"
-          >
-            Subscribe
-          </button>
-        </div>
-      </div>
     </aside>
   );
 }

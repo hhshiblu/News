@@ -74,4 +74,17 @@ const updateMyProfile = async (req, res, next) => {
     }
 };
 
-module.exports = { createUser, updateUser, deleteUser, getAllUsers, getUserById, updateMyProfile };
+const verifyMyPassword = async (req, res, next) => {
+    try {
+        const { oldPassword } = req.body;
+        if (!oldPassword) {
+            return res.status(400).json({ success: false, message: "oldPassword is required" });
+        }
+        const match = await userService.verifyMyPasswordService(req.user.id, oldPassword);
+        res.status(200).json({ success: true, match });
+    } catch (error) {
+        next(error);
+    }
+};
+
+module.exports = { createUser, updateUser, deleteUser, getAllUsers, getUserById, updateMyProfile, verifyMyPassword };

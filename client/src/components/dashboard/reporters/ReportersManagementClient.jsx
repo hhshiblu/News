@@ -24,6 +24,12 @@ import { createAdminUserAction, patchAdminUserStatusAction } from "@/actions/adm
 import DashboardSelect from "@/components/ui/DashboardSelect";
 import { getApiStaticOrigin, getApiV1Base } from "@/lib/apiBaseUrl";
 
+const getAvatarUrl = (url) => {
+  if (!url) return "";
+  if (url.startsWith("http")) return url;
+  return `${getApiStaticOrigin()}${url.startsWith("/") ? url : "/" + url}`;
+};
+
 const ROLE_STYLE = {
   ADMIN: "bg-gray-900 text-white border-gray-900",
   AUTHOR: "bg-violet-50 border-violet-200 text-violet-800",
@@ -306,7 +312,7 @@ export default function AuthorsManagementClient({ initialAuthors = [], statusFil
                       {author.avatar ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
-                          src={`${getApiStaticOrigin()}${author.avatar.startsWith("/") ? author.avatar : "/" + author.avatar}`}
+                          src={getAvatarUrl(author.avatar)}
                           alt=""
                           className="w-8 h-8 rounded-full object-cover border border-gray-100 shrink-0"
                         />
@@ -392,7 +398,7 @@ export default function AuthorsManagementClient({ initialAuthors = [], statusFil
                 {selectedAuthor.avatar ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={`${getApiStaticOrigin()}${selectedAuthor.avatar.startsWith("/") ? selectedAuthor.avatar : "/" + selectedAuthor.avatar}`}
+                    src={getAvatarUrl(selectedAuthor.avatar)}
                     alt=""
                     className="w-12 h-12 rounded-full object-cover border border-gray-200 shrink-0"
                   />
@@ -426,6 +432,10 @@ export default function AuthorsManagementClient({ initialAuthors = [], statusFil
                 <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
                   <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Role</p>
                   <RoleBadge role={selectedAuthor.role} />
+                </div>
+                <div className="bg-gray-50 p-3 rounded-lg border border-gray-100 col-span-2 sm:col-span-1">
+                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Total Posts</p>
+                  <p className="text-sm font-semibold text-gray-800">{selectedAuthor._count?.posts ?? selectedAuthor.posts?.length ?? 0}</p>
                 </div>
               </div>
               {selectedAuthor.position ? (
@@ -560,15 +570,16 @@ export default function AuthorsManagementClient({ initialAuthors = [], statusFil
                 </label>
                 <label>
                   <span className="mb-1 block text-[10px] font-black uppercase tracking-widest text-gray-500">Role</span>
-                  <select
+                  <DashboardSelect
+                    fullWidth
                     value={newAuthor.role}
-                    onChange={(e) => setNewAuthor((s) => ({ ...s, role: e.target.value }))}
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm"
-                  >
-                    <option value="AUTHOR">Author</option>
-                    <option value="REPORTER">Reporter</option>
-                    <option value="RESEARCH_AUTHOR">Research author</option>
-                  </select>
+                    onChange={(val) => setNewAuthor((s) => ({ ...s, role: val }))}
+                    options={[
+                      { value: "AUTHOR", label: "Author" },
+                      { value: "REPORTER", label: "Reporter" },
+                      { value: "RESEARCH_AUTHOR", label: "Research author" },
+                    ]}
+                  />
                 </label>
                 <label>
                   <span className="mb-1 block text-[10px] font-black uppercase tracking-widest text-gray-500">Position</span>

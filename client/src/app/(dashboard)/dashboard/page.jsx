@@ -1,7 +1,7 @@
 import { FileText, MousePointerClick, ArrowRight, Activity, TrendingUp, CheckCircle, Clock } from "lucide-react";
 import Link from "next/link";
 import React from "react";
-import { ViewsChart } from "@/components/DashboardCharts";
+import { ViewsChart, StatusPieChart, CategoryBarChart } from "@/components/DashboardCharts";
 import TrafficRangeFilter from "@/components/dashboard/TrafficRangeFilter";
 import { getMe } from "@/lib/server-auth";
 import { getAdminPostsAction } from "@/actions/admin-data.action";
@@ -22,6 +22,18 @@ export default async function DashboardPage() {
         (p.title || "?").length > 14 ? `${(p.title || "").slice(0, 14)}…` : p.title || "?",
       clicks: p.viewCount ?? 0,
     }));
+
+  const statusData = [
+    { name: "Published", value: publishedCount },
+    { name: "Pending", value: pendingCount }
+  ];
+
+  const catCount = posts.reduce((acc, p) => {
+      const cat = p.category?.name || "Uncategorized";
+      acc[cat] = (acc[cat] || 0) + 1;
+      return acc;
+  }, {});
+  const categoryData = Object.keys(catCount).map(k => ({ name: k, count: catCount[k] }));
 
   const stats = [
     { label: "Articles", value: total, icon: FileText, color: "text-blue-600", bg: "bg-blue-50", sub: `${publishedCount} live` },
@@ -68,20 +80,32 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-5 pb-10 lg:grid-cols-3">
-        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm lg:col-span-2">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <div className="rounded-lg bg-primary/10 p-1.5">
-                <Activity className="h-3.5 w-3.5 text-primary" />
-              </div>
-              <h2 className="text-sm font-bold text-gray-800">Top stories by clicks</h2>
-            </div>
-            <TrafficRangeFilter />
+        {user?.role === 'ADMIN' && (
+          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm lg:col-span-1">
+            <h2 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-rose-600" /> Top stories by clicks
+            </h2>
+            <ViewsChart data={chartData} valueKey="clicks" />
           </div>
-          <ViewsChart data={chartData} valueKey="clicks" />
+        )}
+
+        <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm lg:col-span-1">
+          <h2 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 text-emerald-600" /> Post Status
+          </h2>
+          <StatusPieChart data={statusData} />
         </div>
 
-        <div className="flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+        {user?.role !== 'ADMIN' && (
+          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm lg:col-span-1">
+            <h2 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <FileText className="h-4 w-4 text-indigo-600" /> Posts by Category
+            </h2>
+            <CategoryBarChart data={categoryData} />
+          </div>
+        )}
+
+        <div className="flex flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm lg:col-span-1">
           <div className="flex items-center justify-between border-b border-gray-50 bg-gray-50/40 px-4 py-3">
             <h2 className="text-[11px] font-bold uppercase tracking-wider text-gray-600">Recent</h2>
             <Link href="/dashboard/posts" className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 hover:text-emerald-700">
@@ -118,6 +142,15 @@ export default async function DashboardPage() {
             Write
           </Link>
         </div>
+
+        {user?.role === 'ADMIN' && (
+          <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm lg:col-span-3">
+            <h2 className="text-sm font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <FileText className="h-4 w-4 text-indigo-600" /> Posts by Category
+            </h2>
+            <CategoryBarChart data={categoryData} />
+          </div>
+        )}
       </div>
     </div>
   );

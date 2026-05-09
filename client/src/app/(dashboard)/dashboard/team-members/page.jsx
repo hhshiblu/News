@@ -141,19 +141,16 @@ export default function TeamMembersPage() {
               <input id="tm-role" className={inputCls} placeholder="e.g. Senior reporter" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} />
             </FormField>
             <FormField label="Department" htmlFor="tm-dept" hint="From Departments — optional">
-              <select
+              <DashboardSelect
                 id="tm-dept"
-                className={inputCls}
+                fullWidth
                 value={form.departmentId}
-                onChange={(e) => setForm({ ...form, departmentId: e.target.value })}
-              >
-                <option value="">None</option>
-                {departments.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setForm({ ...form, departmentId: val })}
+                options={[
+                  { value: "", label: "None" },
+                  ...departments.map((d) => ({ value: d.id, label: d.name }))
+                ]}
+              />
             </FormField>
             <FormField label="Email" htmlFor="tm-email" hint="Optional — for internal contact only">
               <input id="tm-email" type="email" className={inputCls} placeholder="name@example.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />

@@ -8,8 +8,8 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3000'], // Frontend URL
-  credentials: true // Allow cookies
+  origin: (process.env.FRONTEND_URL || 'http://localhost:3000').split(','),
+  credentials: true
 }));
 app.use(cookieParser());
 app.use(express.json());

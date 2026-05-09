@@ -5,6 +5,13 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import ShareButtons from "@/components/article/ShareButtons";
 import PullQuote from "@/components/article/PullQuote";
+import { getApiStaticOrigin, getFrontendUrl } from "@/lib/apiBaseUrl";
+
+const getAvatarUrl = (url) => {
+  if (!url) return "/placeholder.jpg";
+  if (url.startsWith("http")) return url;
+  return `${getApiStaticOrigin()}${url.startsWith("/") ? url : "/" + url}`;
+};
 
 const ARTICLE_COL = "w-full max-w-[min(100%,52rem)] xl:max-w-[56rem]";
 
@@ -45,10 +52,10 @@ export default function DashboardArticlePreview({ post }) {
   const rawCategory = post.category;
   const categoryName = rawCategory?.name || "General";
   const authorName = post.author?.name || "Unknown Author";
-  const authorAvatar = post.author?.avatar || "/placeholder.jpg";
+  const authorAvatar = getAvatarUrl(post.author?.avatar);
   const timeRef = post.publishedAt || post.createdAt;
   const timeAgo = formatTimeAgo(timeRef);
-  const shareUrl = post.slug ? `https://labourpulse.com/news/${post.slug}` : "";
+  const shareUrl = post.slug ? `${getFrontendUrl()}/news/${post.slug}` : "";
 
   let contentBlocks = [];
   try {

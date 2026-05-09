@@ -34,3 +34,6 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+
+akhon ..opore nevbar .. Tuesday, May 5, 2026 ai bar ta delete koro..ata lagbe na kothaw.. and labour pluse er age 'the' add koro.. and in mobile screen a .. footer all items in center .. must... and footer a subcribe  var ta dynamic koro aine click korle jate data jay dackend a ..jemon ta footer er opore korcho ... home page a ...

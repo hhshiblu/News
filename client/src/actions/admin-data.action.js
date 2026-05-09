@@ -82,7 +82,7 @@ export async function deleteAdminSubmissionAction(id) {
 }
 
 /** statusFilter: ALL | ACTIVE | PENDING | BLOCKED */
-export async function listAdminAuthorsAction(statusFilter = "ALL") {
+export async function listAdminReportersAction(statusFilter = "ALL") {
   try {
     const queryParams = new URLSearchParams();
     queryParams.append("roleIn", "AUTHOR,REPORTER,RESEARCH_AUTHOR");
@@ -98,9 +98,25 @@ export async function listAdminAuthorsAction(statusFilter = "ALL") {
   }
 }
 
-export async function patchAdminUserStatusAction(authorId, newStatus) {
+export async function listAdminOnlyUsersAction(statusFilter = "ALL") {
   try {
-    const res = await authFetch(`/admin/users/${authorId}`, {
+    const queryParams = new URLSearchParams();
+    queryParams.append("roleIn", "ADMIN");
+    if (statusFilter && statusFilter !== "ALL") {
+      queryParams.append("status", statusFilter);
+    }
+    const res = await authFetch(`/admin/users?${queryParams.toString()}`);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) return [];
+    return data.data || [];
+  } catch (_) {
+    return [];
+  }
+}
+
+export async function patchAdminUserStatusAction(reporterId, newStatus) {
+  try {
+    const res = await authFetch(`/admin/users/${reporterId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: newStatus }),
@@ -127,6 +143,20 @@ export async function patchMyProfileAction(payload) {
   }
 }
 
+export async function verifyMyPasswordAction(oldPassword) {
+  try {
+    const res = await authFetch("/admin/users/me/verify-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ oldPassword }),
+    });
+    const data = await res.json().catch(() => ({}));
+    return { success: res.ok, match: data.match, message: data?.message };
+  } catch (e) {
+    return { success: false, message: e.message };
+  }
+}
+
 export async function createAdminUserAction(body) {
   try {
     const res = await authFetch("/admin/users", {
@@ -135,7 +165,7 @@ export async function createAdminUserAction(body) {
       body: JSON.stringify(body),
     });
     const data = await res.json().catch(() => ({}));
-    if (res.ok) revalidatePath("/dashboard/authors");
+    if (res.ok) revalidatePath("/dashboard/reporters");
     return { success: res.ok, data: data.data, message: data?.message };
   } catch (e) {
     return { success: false, message: e.message };

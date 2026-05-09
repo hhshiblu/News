@@ -38,9 +38,9 @@ export default function SidebarTrigger() {
             onClick={() => setIsOpen((v) => !v)}
             aria-expanded={!!isOpen}
             aria-controls="dashboard-sidebar-nav"
-            className="md:hidden p-2.5 bg-white/10 text-white hover:bg-white/20 rounded-xl transition-all cursor-pointer active:scale-95 border border-white/20"
+            className="md:hidden p-2 bg-gray-50 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-all cursor-pointer active:scale-95 border border-gray-200 shadow-sm"
         >
-            {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {isOpen ? <X className="w-[18px] h-[18px]" /> : <Menu className="w-[18px] h-[18px]" />}
         </button>
     );
 }

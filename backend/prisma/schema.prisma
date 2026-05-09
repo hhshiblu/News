@@ -15,7 +15,6 @@ datasource db {
 
 enum Role {
   ADMIN
-  AUTHOR
   REPORTER
   RESEARCH_AUTHOR
 }
@@ -38,7 +37,7 @@ model User {
   name      String
   email     String     @unique
   password  String
-  role      Role       @default(AUTHOR)
+  role      Role       @default(REPORTER)
   status    UserStatus @default(PENDING)
   bio       String?
   avatar    String?

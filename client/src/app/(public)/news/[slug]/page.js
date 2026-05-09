@@ -8,9 +8,10 @@ import ArticleSidebar from "@/components/article/ArticleSidebar";
 import RelatedArticles from "@/components/article/RelatedArticles";
 import AdSlot from "@/components/ads/AdSlot";
 import { getPostDetail, getNewsFeed } from "@/actions/public";
-import { authorSlugFromName } from "@/lib/authorSlug";
+import { reporterSlugFromName } from "@/lib/reporterSlug";
 import NewsDetailLoading from "./loading";
 import RecordArticleClick from "@/components/article/RecordArticleClick";
+import { getImageUrl, getFrontendUrl } from "@/lib/apiBaseUrl";
 
 function ChevronRightIcon({ className = "w-3 h-3 text-gray-200" }) {
   return (
@@ -58,7 +59,7 @@ const formatTimeAgo = (dateString) => {
 
 const normalizePost = (post) => ({
   ...post,
-  image: post.featuredImage || "/placeholder.jpg",
+  image: getImageUrl(post.featuredImage) || "/placeholder.jpg",
   author: post.author?.name || "Staff Reporter",
   category: post.category?.name || "News",
   categorySlug: post.category?.slug,
@@ -168,7 +169,8 @@ async function ArticlePageContent({ params }) {
   };
 
   const authorName = article.authorData?.name || "Staff";
-  const authorAvatar = article.authorData?.avatar || "/placeholder.jpg";
+  const authorAvatar = getImageUrl(article.authorData?.avatar || article.authorData?.image);
+  const frontendUrl = getFrontendUrl();
 
   return (
     <>
@@ -224,7 +226,7 @@ async function ArticlePageContent({ params }) {
                 <div className="flex justify-end mt-1.5 pt-1.5 border-b border-gray-100">
                   <ShareButtons
                     title={article.title}
-                    url={`https://labourpulse.com/news/${slug}`}
+                    url={`${frontendUrl}/news/${slug}`}
                   />
                 </div>
               </header>
@@ -233,7 +235,7 @@ async function ArticlePageContent({ params }) {
                 <div>
                   <div className="relative w-full h-[240px] sm:h-[300px] md:h-[340px] lg:h-[380px] rounded-xl overflow-hidden shadow-md border border-gray-100 bg-gray-100">
                     <Image
-                      src={article.featuredImage}
+                      src={getImageUrl(article.featuredImage)}
                       alt={article.title}
                       fill
                       unoptimized
@@ -254,7 +256,7 @@ async function ArticlePageContent({ params }) {
                   <div className="sticky top-24">
                     <ShareButtons
                       title={article.title}
-                      url={`https://labourpulse.com/news/${slug}`}
+                      url={`${frontendUrl}/news/${slug}`}
                       variant="sticky"
                     />
                   </div>
@@ -293,7 +295,7 @@ async function ArticlePageContent({ params }) {
                               <figure key={idx} className="my-2.5">
                                 <div className="relative w-full h-[220px] sm:h-[248px] md:h-[272px] rounded-lg overflow-hidden border border-gray-100 bg-gray-100 shadow-sm">
                                   <Image
-                                    src={block.content}
+                                    src={getImageUrl(block.content)}
                                     alt={block.metaInfo || article.title}
                                     fill
                                     unoptimized
@@ -375,7 +377,7 @@ async function ArticlePageContent({ params }) {
                           {article.authorData?.bio}
                         </p>
                         <Link
-                          href={`/author/${authorSlugFromName(authorName)}`}
+                          href={`/reporter/${reporterSlugFromName(authorName)}`}
                           className="text-[10px] font-black uppercase tracking-widest text-gray-950 border-b-2 border-primary pb-0.5 inline-flex items-center gap-1.5 hover:text-primary transition-colors"
                         >
                           Full portfolio <ArrowRightIcon className="w-3 h-3" />
@@ -407,7 +409,7 @@ async function ArticlePageContent({ params }) {
                   <div className="mt-6 pt-3 border-t border-gray-100">
                     <ShareButtons
                       title={article.title}
-                      url={`https://labourpulse.com/news/${slug}`}
+                      url={`${frontendUrl}/news/${slug}`}
                     />
                   </div>
                 </div>
@@ -421,7 +423,7 @@ async function ArticlePageContent({ params }) {
                 breakingNews={breakingNews}
                 authorPosts={authorBylinePosts}
                 authorName={authorName}
-                authorHref={`/author/${authorSlugFromName(authorName)}`}
+                authorHref={`/reporter/${reporterSlugFromName(authorName)}`}
               />
             </div>
           </aside>

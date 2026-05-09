@@ -57,7 +57,7 @@ const registerUser = async (userData) => {
             name,
             email,
             password: hashedPassword,
-            role: role || 'AUTHOR',
+            role: role || 'REPORTER',
             bio: bio || ''
         }
     });

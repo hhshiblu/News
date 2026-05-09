@@ -17,6 +17,7 @@ export default function DashboardSelect({
   buttonClassName = "",
   "aria-label": ariaLabel,
   disabled = false,
+  fullWidth = false,
 }) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef(null);
@@ -35,7 +36,7 @@ export default function DashboardSelect({
   return (
     <div
       ref={rootRef}
-      className={`relative w-full min-w-0 sm:w-[min(100%,13.5rem)] sm:max-w-[220px] sm:self-start ${className}`}
+      className={`relative min-w-0 ${fullWidth ? "w-full" : "w-full sm:w-[min(100%,13.5rem)] sm:max-w-[220px] sm:self-start"} ${className}`}
     >
       <button
         type="button"

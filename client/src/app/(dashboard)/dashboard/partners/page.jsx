@@ -183,7 +183,6 @@ export default function PartnersPage() {
               <thead className="bg-gray-50">
                 <tr className="text-[11px] uppercase tracking-wider text-gray-500">
                   <th className="px-4 py-3">Partner</th>
-                  <th className="px-4 py-3">Description</th>
                   <th className="px-4 py-3">Industry</th>
                   <th className="px-4 py-3">Contact</th>
                   <th className="px-4 py-3">Status</th>
@@ -202,7 +201,6 @@ export default function PartnersPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="max-w-[260px] px-4 py-3 text-gray-600">{it.description || "No description."}</td>
                     <td className="px-4 py-3 text-gray-700">{it.industry || "-"}</td>
                     <td className="px-4 py-3 text-gray-600">
                       <p>{it.contactEmail || "-"}</p>

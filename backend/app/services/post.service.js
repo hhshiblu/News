@@ -51,8 +51,8 @@ const createPostService = async (postData) => {
 
 const updatePostService = async (id, postData, userId, userRole) => {
     validateSubtitleLength(postData);
-    // 1. Ownership Validation for AUTHORS
-    if (userRole === 'AUTHOR') {
+    // 1. Ownership Validation for REPORTERS
+    if (userRole === 'REPORTER') {
         const existingPost = await postQueries.getPostByIdQuery(id);
         if (!existingPost) throw new Error("Post not found");
         if (existingPost.authorId !== userId) {
@@ -102,8 +102,8 @@ const updatePostService = async (id, postData, userId, userRole) => {
 };
 
 const deletePostService = async (id, userId, userRole) => {
-    // 1. Ownership Validation for AUTHORS
-    if (userRole === 'AUTHOR') {
+    // 1. Ownership Validation for REPORTERS
+    if (userRole === 'REPORTER') {
         const existingPost = await postQueries.getPostByIdQuery(id);
         if (!existingPost) throw new Error("Post not found");
         if (existingPost.authorId !== userId) {

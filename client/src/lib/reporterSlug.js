@@ -1,5 +1,5 @@
-/** URL slug for /author/[slug] — matches backend slugifyName */
-export function authorSlugFromName(name) {
+/** URL slug for /reporter/[slug] — matches backend slugifyName */
+export function reporterSlugFromName(name) {
   return String(name || "")
     .toLowerCase()
     .trim()
