@@ -45,8 +45,6 @@ const footerLinks = {
     links: [
       { label: "Terms of Service", href: "/terms" },
       { label: "Privacy Policy", href: "/privacy" },
-      { label: "Cookie Policy", href: "/cookies" },
-      { label: "Editorial Policy", href: "/editorial" },
     ]
   }
 };
@@ -214,7 +212,6 @@ export default function Footer({ navigationCategories = [] }) {
              <div className="flex gap-4">
                 <Link href="/terms" className="text-[10px] font-bold text-gray-400 hover:text-white uppercase tracking-widest transition-colors">Terms</Link>
                 <Link href="/privacy" className="text-[10px] font-bold text-gray-400 hover:text-white uppercase tracking-widest transition-colors">Privacy</Link>
-                <Link href="/cookies" className="text-[10px] font-bold text-gray-400 hover:text-white uppercase tracking-widest transition-colors">Cookies</Link>
              </div>
           </div>
           <p className="text-[11px] font-bold text-gray-700 flex items-center justify-center md:justify-end gap-1.5 uppercase tracking-tighter w-full md:w-auto mt-4 md:mt-0">

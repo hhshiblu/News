@@ -22,58 +22,51 @@ export default function NavbarClient({ initialCategories = [] }) {
   const sidebarRef = useRef(null);
   const headerRef = useRef(null);
   const searchInputRef = useRef(null);
-  const closeMegaTimer = useRef(null);
   const [user, setUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
   const [dynamicCategories, setDynamicCategories] = useState(initialCategories);
   const [portalReady, setPortalReady] = useState(false);
-  const [navBottom, setNavBottom] = useState(0);
-  const [megaCategory, setMegaCategory] = useState(null);
-
-  const updateNavBottom = useCallback(() => {
-    const el = headerRef.current;
-    if (el) setNavBottom(el.getBoundingClientRect().bottom);
-  }, []);
+  const [windowWidth, setWindowWidth] = useState(1200);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef(null);
+  const [tags, setTags] = useState([]);
 
   useEffect(() => {
     setPortalReady(true);
-  }, []);
-
-  useLayoutEffect(() => {
-    updateNavBottom();
-    const el = headerRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(updateNavBottom);
-    ro.observe(el);
-    window.addEventListener("scroll", updateNavBottom, { passive: true });
-    window.addEventListener("resize", updateNavBottom);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("scroll", updateNavBottom);
-      window.removeEventListener("resize", updateNavBottom);
+    const fetchTags = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/public/tags`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data)) {
+            setTags(json.data);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch tags", err);
+      }
     };
-  }, [updateNavBottom]);
+    fetchTags();
+  }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const mq = window.matchMedia("(min-width: 768px)");
-    const onChange = () => {
-      if (!mq.matches) setMegaCategory(null);
-    };
-    mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    handleResize(); // set initially
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Close "More" dropdown when clicking outside
   useEffect(() => {
-    if (mobileOpen) setMegaCategory(null);
-  }, [mobileOpen]);
-
-  useEffect(
-    () => () => {
-      if (closeMegaTimer.current) clearTimeout(closeMegaTimer.current);
-    },
-    []
-  );
+    const handleClickOutside = (event) => {
+      if (moreRef.current && !moreRef.current.contains(event.target)) {
+        setMoreOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     setDynamicCategories(Array.isArray(initialCategories) ? initialCategories : []);
@@ -146,37 +139,13 @@ export default function NavbarClient({ initialCategories = [] }) {
     setOpenAccordion(null);
   };
 
-  const openMega = (cat) => {
-    if (closeMegaTimer.current) {
-      clearTimeout(closeMegaTimer.current);
-      closeMegaTimer.current = null;
-    }
-    if (!cat?.children?.length) {
-      setMegaCategory(null);
-      return;
-    }
-    setMegaCategory(cat);
-    requestAnimationFrame(updateNavBottom);
-  };
-
-  const scheduleCloseMega = () => {
-    closeMegaTimer.current = setTimeout(() => {
-      setMegaCategory(null);
-      closeMegaTimer.current = null;
-    }, 140);
-  };
-
-  const cancelCloseMega = () => {
-    if (closeMegaTimer.current) {
-      clearTimeout(closeMegaTimer.current);
-      closeMegaTimer.current = null;
-    }
-  };
-
   /** Only categories returned by the API (no static fallback). */
   const allNavItems = Array.isArray(dynamicCategories) ? dynamicCategories : [];
-
-  const topCategories = allNavItems.slice(0, 4);
+  
+  // Calculate visible count
+  const visibleCount = windowWidth >= 1024 ? 6 : windowWidth >= 768 ? 3 : 0;
+  const visibleCategories = allNavItems.slice(0, visibleCount);
+  const moreCategories = allNavItems.slice(visibleCount);
 
   return (
     <>
@@ -184,7 +153,6 @@ export default function NavbarClient({ initialCategories = [] }) {
         ref={headerRef}
         className={`sticky top-0 z-50 bg-white border-b border-gray-200 transition-shadow duration-300 ${scrolled ? "shadow-md" : ""}`}
       >
-
         <div className="max-w-[1280px] mx-auto px-4 min-w-0">
           <div className="flex items-center h-[58px] gap-2 sm:gap-4 min-w-0">
             <button
@@ -206,36 +174,51 @@ export default function NavbarClient({ initialCategories = [] }) {
               </span>
             </Link>
 
-            <nav className="hidden md:flex items-center h-full flex-1 min-w-0 gap-2 ml-2 sm:ml-4">
-              <Link
-                href="/breaking"
-                className="h-full flex shrink-0 items-center px-3 text-[13px] font-bold text-breaking hover:text-primary transition-colors font-[Inter] whitespace-nowrap"
-              >
-                Breaking News
-              </Link>
-              <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto [scrollbar-width:thin]">
-              {topCategories.map((cat) => (
-                <div
-                  key={cat.slug}
-                  className="nav-item flex-shrink-0 group"
-                  onMouseEnter={() => openMega(cat)}
-                  onMouseLeave={scheduleCloseMega}
-                >
+            <nav className="hidden md:flex items-center h-full flex-1 gap-2 ml-2 sm:ml-4 overflow-visible">
+              <div className="flex items-center gap-2 overflow-visible">
+              {visibleCategories.map((cat) => (
+                <div key={cat.slug} className="nav-item flex-shrink-0 group">
                   <Link
                     href={`/${cat.slug}`}
-                    className="h-full flex items-center gap-1 text-[13px] font-bold text-gray-700 hover:text-primary px-3 transition-colors font-[Inter] whitespace-nowrap"
+                    className="h-full flex items-center gap-1 text-[11px] font-bold text-gray-700 hover:text-primary px-3 transition-colors font-[Inter] whitespace-nowrap uppercase"
                   >
                     {cat.label || cat.name}
-                    {cat.children?.length > 0 && (
-                      <ChevronDown
-                        size={12}
-                        strokeWidth={2.5}
-                        className={`transition-transform ${megaCategory?.slug === cat.slug ? "rotate-180" : "group-hover:rotate-180"}`}
-                      />
-                    )}
                   </Link>
                 </div>
               ))}
+              
+              {moreCategories.length > 0 && windowWidth >= 768 && (
+                <div className="relative nav-item flex-shrink-0 flex items-center h-full" ref={moreRef}>
+                  <button
+                    onClick={() => setMoreOpen(!moreOpen)}
+                    className="flex items-center gap-1 text-[11px] font-bold text-gray-700 hover:text-primary px-3 transition-colors font-[Inter]"
+                  >
+                    MORE
+                    <div className="relative flex items-center justify-center">
+                      <div className="absolute -top-3 -right-3 w-4 h-4 bg-primary text-white text-[9px] font-black rounded-full flex items-center justify-center border border-white shadow-sm z-10">
+                        {moreCategories.length}
+                      </div>
+                      <ChevronDown size={14} className={`transition-transform duration-300 ${moreOpen ? "rotate-180" : ""}`} />
+                    </div>
+                  </button>
+
+                  {moreOpen && (
+                    <div className="absolute top-full right-0 mt-2 w-56 bg-white border border-gray-200 shadow-xl rounded-xl py-2 z-[200] animate-in fade-in slide-in-from-top-2 duration-200">
+                      {moreCategories.map((cat) => (
+                        <Link
+                          key={cat.slug}
+                          href={`/${cat.slug}`}
+                          onClick={() => setMoreOpen(false)}
+                          className="flex items-center justify-between px-4 py-2.5 text-[11px] font-bold text-gray-700 hover:text-primary hover:bg-gray-50 transition-colors font-[Inter] uppercase group"
+                        >
+                          {cat.label || cat.name}
+                          <ChevronRight size={14} className="text-gray-300 group-hover:text-primary transition-colors" />
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
               </div>
             </nav>
 
@@ -306,98 +289,89 @@ export default function NavbarClient({ initialCategories = [] }) {
           <>
             <div className={`mobile-overlay ${mobileOpen ? "open" : ""}`} onClick={closeSidebar} aria-hidden="true" />
 
-            {megaCategory?.children?.length > 0 && !mobileOpen && navBottom > 0 && (
-              <div
-                className="hidden md:block fixed left-1/2 z-[140] w-[min(94vw,42rem)] -translate-x-1/2 animate-in fade-in slide-in-from-top-1 duration-200"
-                style={{ top: navBottom }}
-                onMouseEnter={cancelCloseMega}
-                onMouseLeave={scheduleCloseMega}
-              >
-                <div className="flex min-h-[min(480px,72vh)] flex-col rounded-b-2xl border border-gray-200 border-t-[3px] border-t-primary bg-white px-6 py-5 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.22)]">
-                  <p className="shrink-0 text-[10px] font-bold text-primary uppercase tracking-widest mb-3 font-[Inter] border-b border-gray-100 pb-2">
-                    Discover {megaCategory.label || megaCategory.name}
-                  </p>
-                  <div className="min-h-[min(380px,55vh)] max-h-[min(560px,62vh)] flex-1 overflow-y-auto [scrollbar-width:thin] grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-0.5 content-start">
-                    {megaCategory.children.map((child) => (
-                      <Link
-                        key={child.slug}
-                        href={`/${megaCategory.slug}/${child.slug}`}
-                        className="text-[13px] text-gray-600 hover:text-primary py-2.5 px-1 transition-colors font-[Inter] flex items-center justify-between gap-2 rounded-lg hover:bg-gray-50 group/link"
-                        onClick={() => setMegaCategory(null)}
-                      >
-                        <span className="truncate">{child.label || child.name}</span>
-                        <ArrowRight size={10} className="shrink-0 opacity-0 group-hover/link:opacity-100 -translate-x-2 group-hover/link:translate-x-0 transition-all" />
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
             <div ref={sidebarRef} className={`mobile-sidebar ${mobileOpen ? "open" : ""}`} aria-label="Navigation menu">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
-          <Link href="/" onClick={closeSidebar} className="flex items-center">
-            <span className="bg-primary text-white font-bold text-lg px-2.5 py-0.5" style={{ fontFamily: "'Playfair Display', serif" }}>The Labour</span>
-            <span className="font-bold text-lg pl-2 text-gray-900" style={{ fontFamily: "'Playfair Display', serif" }}>Pulse</span>
-          </Link>
-          <button onClick={closeSidebar} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors text-gray-600" aria-label="Close menu">
-            <X size={16} />
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto py-4">
-          <div className="flex flex-col">
-            <Link
-              href="/breaking"
-              onClick={closeSidebar}
-              className="mx-2 mb-2 px-4 py-3 rounded-xl text-[15px] font-bold text-breaking bg-red-50/80 hover:bg-red-100/80 transition-colors font-[Inter]"
-            >
-              Breaking News
-            </Link>
-            {allNavItems.map((cat) => (
-              <div key={cat.slug} className="border-b border-gray-50 last:border-0 px-2">
-                <div className="flex items-center justify-between group">
-                  {cat.children?.length > 0 ? (
-                    <button
-                      onClick={() => setOpenAccordion(openAccordion === cat.slug ? null : cat.slug)}
-                      className="flex-1 text-left px-4 py-4 text-[15px] font-bold text-gray-900 hover:text-primary transition-colors font-[Inter] flex items-center justify-between"
-                    >
-                      {cat.label || cat.name}
-                      <ChevronRight size={18} className={`transition-transform duration-300 ${openAccordion === cat.slug ? "rotate-90 text-primary" : ""}`} />
-                    </button>
-                  ) : (
-                    <Link
-                      href={`/${cat.slug}`}
-                      className="flex-1 px-4 py-4 text-[15px] font-bold text-gray-900 hover:text-primary transition-colors font-[Inter]"
-                      onClick={closeSidebar}
-                    >
-                      {cat.label || cat.name}
-                    </Link>
-                  )}
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
+                <Link href="/" onClick={closeSidebar} className="flex items-center">
+                  <span className="bg-primary text-white font-bold text-lg px-2.5 py-0.5" style={{ fontFamily: "'Playfair Display', serif" }}>The Labour</span>
+                  <span className="font-bold text-lg pl-2 text-gray-900" style={{ fontFamily: "'Playfair Display', serif" }}>Pulse</span>
+                </Link>
+                <button onClick={closeSidebar} className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors text-gray-600" aria-label="Close menu">
+                  <X size={16} />
+                </button>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto py-4 flex flex-col">
+                <div className="flex-1">
+                  <Link
+                    href="/breaking"
+                    onClick={closeSidebar}
+                    className="mx-2 mb-2 px-4 py-3 rounded-xl text-[12px] font-bold text-breaking bg-red-50/80 hover:bg-red-100/80 transition-colors font-[Inter] block"
+                  >
+                    Breaking News
+                  </Link>
+                  {allNavItems.map((cat) => (
+                    <div key={cat.slug} className="border-b border-gray-50 last:border-0 px-2">
+                      <div className="flex items-center justify-between group">
+                        {cat.children?.length > 0 ? (
+                          <button
+                            onClick={() => setOpenAccordion(openAccordion === cat.slug ? null : cat.slug)}
+                            className="flex-1 text-left px-4 py-4 text-[12px] font-bold text-gray-900 hover:text-primary transition-colors font-[Inter] flex items-center justify-between uppercase"
+                          >
+                            {cat.label || cat.name}
+                            <ChevronRight size={18} className={`transition-transform duration-300 ${openAccordion === cat.slug ? "rotate-90 text-primary" : ""}`} />
+                          </button>
+                        ) : (
+                          <Link
+                            href={`/${cat.slug}`}
+                            className="flex-1 px-4 py-4 text-[12px] font-bold text-gray-900 hover:text-primary transition-colors font-[Inter] block uppercase"
+                            onClick={closeSidebar}
+                          >
+                            {cat.label || cat.name}
+                          </Link>
+                        )}
+                      </div>
+                      {cat.children?.length > 0 && openAccordion === cat.slug && (
+                        <div className="bg-gray-50/50 rounded-xl mb-2 overflow-hidden animate-in slide-in-from-top-2 duration-300">
+                          {cat.children.map((child) => (
+                            <Link
+                              key={child.slug}
+                              href={`/${cat.slug}/${child.slug}`}
+                              onClick={closeSidebar}
+                              className="flex items-center gap-3 px-8 py-3.5 text-[12px] text-gray-600 hover:text-primary hover:bg-white transition-all font-[Inter] uppercase"
+                            >
+                              <div className="w-1.5 h-1.5 bg-primary rounded-full opacity-40"></div>
+                              {child.label || child.name}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
-                {cat.children?.length > 0 && openAccordion === cat.slug && (
-                  <div className="bg-gray-50/50 rounded-xl mb-2 overflow-hidden animate-in slide-in-from-top-2 duration-300">
-                    {cat.children.map((child) => (
-                      <Link
-                        key={child.slug}
-                        href={`/${cat.slug}/${child.slug}`}
-                        onClick={closeSidebar}
-                        className="flex items-center gap-3 px-8 py-3.5 text-[14px] text-gray-600 hover:text-primary hover:bg-white transition-all font-[Inter]"
-                      >
-                        <div className="w-1.5 h-1.5 bg-primary rounded-full opacity-40"></div>
-                        {child.label || child.name}
-                      </Link>
-                    ))}
+
+                {/* Tags Section */}
+                {tags.length > 0 && (
+                  <div className="px-5 mt-8 mb-4 border-t border-gray-100 pt-6">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-4 font-[Inter]">Popular Tags</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {tags.map(tag => (
+                        <Link 
+                          key={tag.slug} 
+                          href={`/tag/${tag.slug}`}
+                          onClick={closeSidebar}
+                          className="px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-600 text-[11px] font-bold rounded-lg hover:bg-primary hover:text-white hover:border-primary transition-colors font-[Inter]"
+                        >
+                          #{tag.name}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
-            ))}
-          </div>
-        </div>
             </div>
           </>,
           document.body
         )}
-
     </>
   );
 }
