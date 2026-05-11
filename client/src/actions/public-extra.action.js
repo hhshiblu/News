@@ -33,3 +33,24 @@ export async function getPublicCategoryBySlugAction(slug) {
     return null;
   }
 }
+export async function getPublicStoriesAction(query = "") {
+  try {
+    const q = query ? `?${query}` : "";
+    const res = await fetch(`${API_BASE}/public/stories${q}`, { cache: "no-store" });
+    if (!res.ok) return { stories: [], total: 0, totalPages: 1 };
+    return await res.json();
+  } catch (_) {
+    return { stories: [], total: 0, totalPages: 1 };
+  }
+}
+
+export async function getPublicStoryBySlugAction(slug) {
+  try {
+    const res = await fetch(`${API_BASE}/public/stories/${slug}`, { cache: "no-store" });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json?.data || null;
+  } catch (_) {
+    return null;
+  }
+}

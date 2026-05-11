@@ -13,6 +13,7 @@ const partnerRoutes = require("./partner.routes");
 const teamMemberRoutes = require("./teamMember.routes");
 const departmentRoutes = require("./department.routes");
 const siteRoutes = require("./site.routes");
+const storyRoutes = require("./story.routes");
 
 const router = express.Router();
 
@@ -30,5 +31,6 @@ router.use('/newsletter', newsletterRoutes);
 router.use("/partners", partnerRoutes);
 router.use("/team-members", teamMemberRoutes);
 router.use("/departments", departmentRoutes);
+router.use("/stories", storyRoutes);
 
 module.exports = router;

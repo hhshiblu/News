@@ -197,3 +197,35 @@ export async function patchSiteConfigAction(updates) {
     return { success: false, message: e.message };
   }
 }
+export async function getAdminStoriesAction(query = "") {
+  try {
+    const q = query ? `?${query}` : "";
+    const res = await authFetch(`/admin/stories${q}`);
+    if (!res.ok) return { stories: [], total: 0, totalPages: 1 };
+    return await res.json();
+  } catch (_) {
+    return { stories: [], total: 0, totalPages: 1 };
+  }
+}
+
+export async function toggleStoryStatusAction(id) {
+  try {
+    const res = await authFetch(`/admin/stories/${id}/toggle-status`, { method: "PATCH" });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) revalidatePath("/dashboard/stories");
+    return { success: res.ok, message: data?.message };
+  } catch (e) {
+    return { success: false, message: e.message };
+  }
+}
+
+export async function deleteStoryAction(id) {
+  try {
+    const res = await authFetch(`/admin/stories/${id}`, { method: "DELETE" });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) revalidatePath("/dashboard/stories");
+    return { success: res.ok, message: data?.message };
+  } catch (e) {
+    return { success: false, message: e.message };
+  }
+}

@@ -16,6 +16,7 @@ import {
   Activity,
   Megaphone,
   Mail,
+  SquarePen,
 } from "lucide-react";
 
 const getMenuGroups = (role) => {
@@ -42,6 +43,11 @@ const getMenuGroups = (role) => {
           title: "Articles",
           icon: FileText,
           children: articleChildren,
+        },
+        {
+          title: "Stories",
+          icon: SquarePen,
+          url: "/dashboard/stories",
         },
         ...(isAdmin
           ? [

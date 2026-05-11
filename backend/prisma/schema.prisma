@@ -32,6 +32,11 @@ enum PostStatus {
   BLOCKED
 }
 
+enum StoryStatus {
+  ACTIVE
+  BLOCKED
+}
+
 model User {
   id        String     @id @default(uuid())
   name      String
@@ -228,4 +233,17 @@ model TeamMember {
 
   @@index([active, priority])
   @@index([departmentId])
+}
+
+model Story {
+  id             String      @id @default(uuid())
+  title          String
+  slug           String      @unique
+  content        Json        // Using Json for React Quill content compatibility
+  thumbnailImage String?
+  status         StoryStatus @default(ACTIVE)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([slug])
 }

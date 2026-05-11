@@ -7,6 +7,7 @@ const tagRoutes = require('./tag.routes');
 const submissionRoutes = require('./submission.routes');
 const partnerRoutes = require("./partner.routes");
 const teamMemberRoutes = require("./teamMember.routes");
+const storyRoutes = require("./story.routes");
 const { getAdBySlot, getAdSlotPresets } = require('../../controller/public/ad.controller');
 const router = express.Router();
 
@@ -21,5 +22,6 @@ router.use('/tags', tagRoutes);
 router.use('/submissions', submissionRoutes);
 router.use("/partners", partnerRoutes);
 router.use("/team-members", teamMemberRoutes);
+router.use("/stories", storyRoutes);
 
 module.exports = router;
