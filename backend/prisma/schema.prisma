@@ -102,8 +102,8 @@ model Post {
   keyFacts              Json? // Array of { icon, label, value }
   pullQuote             Json? // { text, attribution }
   isPhotoStory          Boolean    @default(false)
-  authorId              String
-  author                User       @relation(fields: [authorId], references: [id])
+  reporterId            String
+  reporter              User       @relation(fields: [reporterId], references: [id])
   categoryId            String
   category              Category   @relation(fields: [categoryId], references: [id])
   status                PostStatus @default(DRAFT)
@@ -246,4 +246,16 @@ model Story {
   updatedAt      DateTime    @updatedAt
 
   @@index([slug])
+}
+
+model ContactMessage {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  subject   String
+  message   String   @db.Text
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([read, createdAt])
 }

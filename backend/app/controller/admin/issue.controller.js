@@ -30,7 +30,7 @@ const getIssues = async (req, res, next) => {
     try {
         const where = {};
         if (req.user.role === 'REPORTER') {
-            where.post = { authorId: req.user.id };
+            where.post = { reporterId: req.user.id };
         }
 
         const issues = await prisma.issue.findMany({

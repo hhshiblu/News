@@ -21,7 +21,7 @@ const getPostBySlugQuery = async (slug) => {
     return prisma.post.findUnique({
         where: { slug },
         include: {
-            author: { select: { id: true, name: true, avatar: true, bio: true } },
+            reporter: { select: { id: true, name: true, avatar: true, bio: true } },
             category: { include: { parent: true } },
             tags: { include: { tag: true } }
         }
@@ -35,7 +35,7 @@ const getAllPostsQuery = async (whereFilter = {}, skip = 0, take = 10, orderBy =
         take,
         orderBy,
         include: {
-            author: { select: { name: true, avatar: true, role: true } },
+            reporter: { select: { name: true, avatar: true, role: true } },
             category: { select: { name: true, slug: true, color: true } },
             tags: { include: { tag: { select: { id: true, name: true, slug: true } } } },
         }
@@ -57,7 +57,7 @@ const getPostByIdQuery = async (id) => {
     return prisma.post.findUnique({
         where: { id },
         include: {
-            author: { select: { id: true, name: true, role: true } },
+            reporter: { select: { id: true, name: true, role: true } },
             category: true
         }
     });

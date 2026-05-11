@@ -13,7 +13,7 @@ const getPublicFeed = async (req, res, next) => {
         
         // Dynamic filters based on query params
         if (req.query.categoryId) filter.categoryId = req.query.categoryId;
-        if (req.query.authorId) filter.authorId = req.query.authorId;
+        if (req.query.reporterId) filter.reporterId = req.query.reporterId;
         if (req.query.categorySlug) {
             filter.category = { slug: req.query.categorySlug };
         }

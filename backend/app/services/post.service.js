@@ -55,7 +55,7 @@ const updatePostService = async (id, postData, userId, userRole) => {
     if (userRole === 'REPORTER') {
         const existingPost = await postQueries.getPostByIdQuery(id);
         if (!existingPost) throw new Error("Post not found");
-        if (existingPost.authorId !== userId) {
+        if (existingPost.reporterId !== userId) {
             throw new Error("Unauthorized: You can only update your own articles.");
         }
     }
@@ -106,7 +106,7 @@ const deletePostService = async (id, userId, userRole) => {
     if (userRole === 'REPORTER') {
         const existingPost = await postQueries.getPostByIdQuery(id);
         if (!existingPost) throw new Error("Post not found");
-        if (existingPost.authorId !== userId) {
+        if (existingPost.reporterId !== userId) {
             throw new Error("Unauthorized: You can only delete your own articles.");
         }
     }
@@ -121,7 +121,7 @@ const getPaginatedPostsService = async (queryFilters, page = 1, limit = 10, offs
     const sanitizedOffset = Math.max(0, parseInt(offset, 10) || 0);
     const skip = sanitizedOffset + (page - 1) * limit;
     const scopedListing =
-        !!queryFilters.authorId ||
+        !!queryFilters.reporterId ||
         !!queryFilters.categoryId ||
         !!queryFilters.categorySlug ||
         !!queryFilters.parentCategorySlug ||
@@ -177,7 +177,7 @@ const updatePostTagsService = async (postId, tagIds = []) => {
     return prisma.post.findUnique({
         where: { id: postId },
         include: {
-            author: { select: { name: true, avatar: true, role: true } },
+            reporter: { select: { name: true, avatar: true, role: true } },
             category: { select: { name: true, slug: true, color: true } },
             tags: { include: { tag: { select: { id: true, name: true, slug: true } } } },
         },

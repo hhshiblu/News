@@ -8,7 +8,17 @@ const dirVideos = path.join(__dirname, '../../../uploads/news/videos');
 if (!fs.existsSync(dirImages)) fs.mkdirSync(dirImages, { recursive: true });
 if (!fs.existsSync(dirVideos)) fs.mkdirSync(dirVideos, { recursive: true });
 
-// Multer Disk Storage Configuration
+const ALLOWED_IMAGE_MIMES = new Set([
+    'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif',
+]);
+const ALLOWED_VIDEO_MIMES = new Set([
+    'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime',
+]);
+const ALLOWED_EXTS = new Set([
+    '.jpg', '.jpeg', '.png', '.webp', '.gif', '.avif',
+    '.mp4', '.webm', '.ogg', '.mov',
+]);
+
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         if (file.mimetype.startsWith('video/')) {
@@ -19,11 +29,25 @@ const storage = multer.diskStorage({
     },
     filename: function (req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
+        cb(null, uniqueSuffix + path.extname(file.originalname).toLowerCase());
     }
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({
+    storage,
+    limits: {
+        fileSize: 20 * 1024 * 1024, // 20 MB max for news images/videos
+    },
+    fileFilter: (_req, file, cb) => {
+        const ext = path.extname(file.originalname).toLowerCase();
+        const mimeOk = ALLOWED_IMAGE_MIMES.has(file.mimetype) || ALLOWED_VIDEO_MIMES.has(file.mimetype);
+        const extOk = ALLOWED_EXTS.has(ext);
+        if (!mimeOk || !extOk) {
+            return cb(new Error('Only image (JPEG/PNG/WebP/GIF/AVIF) and video (MP4/WebM/OGG/MOV) files are allowed.'), false);
+        }
+        cb(null, true);
+    },
+});
 
 const uploadFile = async (req, res, next) => {
     try {
@@ -31,7 +55,6 @@ const uploadFile = async (req, res, next) => {
             return res.status(400).json({ success: false, message: 'No file provided.' });
         }
 
-        // Return relative path for db storage
         const type = req.file.mimetype.startsWith('video/') ? 'videos' : 'images';
         const fileUrl = `/uploads/news/${type}/${req.file.filename}`;
 

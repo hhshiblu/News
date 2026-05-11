@@ -12,6 +12,10 @@ const loginUser = async (email, password) => {
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) throw new Error('Invalid credentials');
 
+  if (user.status !== 'ACTIVE') {
+    throw new Error(`Your account is ${user.status.toLowerCase()}. Please contact an administrator.`);
+  }
+
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) throw new Error('Invalid credentials');
 

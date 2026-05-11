@@ -12,7 +12,7 @@ const createPost = async (req, res, next) => {
 
         const postData = req.body;
         // Securely mapping the logged-in user as the author
-        postData.authorId = req.user.id;
+        postData.reporterId = req.user.id;
         postData.status = 'PENDING';
 
         const result = await postService.createPostService(postData);
@@ -62,13 +62,13 @@ const getAdminPosts = async (req, res, next) => {
         if (req.query.status) {
              filter.status = req.query.status;
         }
-        if (req.query.authorId) {
-             filter.authorId = req.query.authorId;
+        if (req.query.reporterId) {
+             filter.reporterId = req.query.reporterId;
         }
 
         // Role-based filtering: Reporters only see their own posts
         if (req.user.role === 'REPORTER') {
-            filter.authorId = req.user.id;
+            filter.reporterId = req.user.id;
         }
         
         const result = await postService.getPaginatedPostsService(filter, page, limit);

@@ -39,9 +39,18 @@ const createUserService = async (userData) => {
             userData.socials = undefined;
         }
     }
-    const user = await userQueries.createUserQuery(userData);
-    const { password: _, ...sanitizedUser } = user;
-    return sanitizedUser;
+    try {
+        const user = await userQueries.createUserQuery(userData);
+        const { password: _, ...sanitizedUser } = user;
+        return sanitizedUser;
+    } catch (error) {
+        if (error.code === 'P2002') {
+            const err = new Error("email already used");
+            err.statusCode = 400;
+            throw err;
+        }
+        throw error;
+    }
 };
 
 const verifyMyPasswordService = async (userId, oldPassword) => {
@@ -62,7 +71,7 @@ const verifyMyPasswordService = async (userId, oldPassword) => {
 
 const updateSelfUserService = async (userId, body) => {
     const data = {};
-    const allow = ["name", "bio", "avatar", "position", "socials", "password"];
+    const allow = ["name", "email", "bio", "avatar", "position", "socials", "password"];
     for (const k of allow) {
         if (body[k] !== undefined) data[k] = body[k];
     }
@@ -99,7 +108,17 @@ const updateSelfUserService = async (userId, body) => {
     if (Object.keys(data).length === 0) {
         return userQueries.getUserByIdQuery(userId);
     }
-    return userQueries.updateUserQuery(userId, data);
+    
+    try {
+        return await userQueries.updateUserQuery(userId, data);
+    } catch (error) {
+        if (error.code === 'P2002') {
+            const err = new Error("email already used");
+            err.statusCode = 400;
+            throw err;
+        }
+        throw error;
+    }
 };
 
 const updateUserService = async (id, userData) => {
@@ -107,7 +126,16 @@ const updateUserService = async (id, userData) => {
     if(userData.password) {
         userData.password = await bcrypt.hash(userData.password, 10);
     }
-    return await userQueries.updateUserQuery(id, userData);
+    try {
+        return await userQueries.updateUserQuery(id, userData);
+    } catch (error) {
+        if (error.code === 'P2002') {
+            const err = new Error("email already used");
+            err.statusCode = 400;
+            throw err;
+        }
+        throw error;
+    }
 };
 
 const deleteUserService = async (id) => {

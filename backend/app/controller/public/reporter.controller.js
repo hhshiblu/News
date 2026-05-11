@@ -82,7 +82,7 @@ const getReporterProfile = async (req, res, next) => {
         const limit = Math.min(Math.max(1, parseInt(req.query.limit, 10) || 12), 48);
         const skip = (page - 1) * limit;
 
-        const wherePosts = { authorId: reporter.id, status: 'PUBLISHED' };
+        const wherePosts = { reporterId: reporter.id, status: 'PUBLISHED' };
         const includePosts = {
             category: { include: { parent: true } },
             tags: { include: { tag: true } },

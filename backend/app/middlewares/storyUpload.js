@@ -16,13 +16,18 @@ const storage = multer.diskStorage({
     }
 });
 
+const ALLOWED_IMAGE_MIMES = new Set([
+    'image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/avif',
+]);
+
 const storyUpload = multer({ 
     storage: storage,
-    fileFilter: (req, file, cb) => {
-        if (file.mimetype.startsWith('image/')) {
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+    fileFilter: (_req, file, cb) => {
+        if (ALLOWED_IMAGE_MIMES.has(file.mimetype)) {
             cb(null, true);
         } else {
-            cb(new Error('Only images are allowed for story thumbnails!'), false);
+            cb(new Error('Only JPEG, PNG, WebP, GIF, or AVIF images are allowed for story thumbnails.'), false);
         }
     }
 });

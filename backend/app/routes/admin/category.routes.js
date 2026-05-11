@@ -6,7 +6,7 @@ const { protect, authorize } = require('../../middlewares/auth.middleware');
 const router = express.Router();
 
 // Only ADMIN can manage categories
-// router.use(protect, authorize('ADMIN')); // Auth bypassed for current dev tests
+router.use(protect, authorize('ADMIN'));
 
 router.get('/', getCategoryTree);
 router.post('/', uploadCategoryImage.single('image'), createCategory);
