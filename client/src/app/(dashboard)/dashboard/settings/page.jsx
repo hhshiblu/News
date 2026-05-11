@@ -10,5 +10,5 @@ export default async function SettingsPage() {
   if (!user) redirect("/login");
   if (user.role !== "ADMIN") redirect("/dashboard/account");
   const site = (await getSiteConfigAction()) || {};
-  return <AdminSettingsClient initialSite={site} />;
+  return <AdminSettingsClient initialSite={site} user={user} />;
 }

@@ -15,7 +15,7 @@ const FEED_SIZE = 10;
 const normalizePost = (post) => ({
   ...post,
   image: post.featuredImage || "/placeholder.jpg",
-  author: post.author?.name || "Staff Reporter",
+  reporter: post.reporter?.name || "Staff Reporter",
   category: post.category?.name || "News",
   categorySlug: post.category?.slug,
   timestamp: post.publishedAt

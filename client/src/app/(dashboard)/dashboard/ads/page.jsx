@@ -1,12 +1,21 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
-import { Megaphone, Plus, Pencil, Trash2, X, Ban, CircleCheck } from "lucide-react";
+import {
+  Megaphone,
+  Plus,
+  Pencil,
+  Trash2,
+  X,
+  Ban,
+  CircleCheck,
+} from "lucide-react";
 import { toast } from "sonner";
 import { AD_SLOT_PRESETS } from "@/lib/adSlots";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 
 function mediaOrigin() {
   return API_BASE.replace(/\/api\/v1\/?$/, "");
@@ -39,7 +48,9 @@ export default function AdsManagementPage() {
   const loadAds = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/admin/ads`, { credentials: "include" });
+      const res = await fetch(`${API_BASE}/admin/ads`, {
+        credentials: "include",
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to load");
       setAds(data.data || []);
@@ -81,7 +92,12 @@ export default function AdsManagementPage() {
       priority: ad.priority,
       active: ad.active,
     });
-    setModalSlot(AD_SLOT_PRESETS.find((p) => p.key === ad.slotKey) || { key: ad.slotKey, label: ad.slotKey });
+    setModalSlot(
+      AD_SLOT_PRESETS.find((p) => p.key === ad.slotKey) || {
+        key: ad.slotKey,
+        label: ad.slotKey,
+      },
+    );
   };
 
   const closeModal = () => {
@@ -177,7 +193,10 @@ export default function AdsManagementPage() {
   const deleteAd = async (id) => {
     if (!confirm("Delete this creative and its image file?")) return;
     try {
-      const res = await fetch(`${API_BASE}/admin/ads/${id}`, { method: "DELETE", credentials: "include" });
+      const res = await fetch(`${API_BASE}/admin/ads/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
       if (!res.ok) throw new Error("Delete failed");
       toast.success("Removed");
       loadAds();
@@ -186,7 +205,10 @@ export default function AdsManagementPage() {
     }
   };
 
-  const adsBySlot = (key) => ads.filter((a) => a.slotKey === key).sort((a, b) => b.priority - a.priority);
+  const adsBySlot = (key) =>
+    ads
+      .filter((a) => a.slotKey === key)
+      .sort((a, b) => b.priority - a.priority);
 
   const previewSrc = editingId
     ? ads.find((x) => x.id === editingId)?.imageUrl
@@ -200,21 +222,20 @@ export default function AdsManagementPage() {
   return (
     <div className="max-w-6xl mx-auto pb-20">
       <div className="flex items-start gap-4 mb-8">
-        <div className="p-3 bg-amber-100 text-amber-800 rounded-2xl">
+        <div className=" bg-amber-100 text-amber-800 rounded-2xl">
           <Megaphone className="w-7 h-7" />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-gray-900 tracking-tight">Global ads & layouts</h1>
-          <p className="text-sm text-gray-500 font-[Inter] mt-1 max-w-2xl">
-            Images are stored on this server under <code className="text-[11px] bg-gray-100 px-1 rounded">/uploads/ads</code>{" "}
-            (one file per ad). Replacing the image deletes the previous file. Use <strong>Active</strong> so the slot shows on
-            the site, or <strong>Block</strong> to hide it without deleting.
-          </p>
+          <h1 className=" text-lg md:text-xl font-black text-gray-900 tracking-tight">
+            Global ads & layouts
+          </h1>
         </div>
       </div>
 
       {loading ? (
-        <p className="text-sm text-gray-400 animate-pulse">Loading inventory…</p>
+        <p className="text-sm text-gray-400 animate-pulse">
+          Loading inventory…
+        </p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {AD_SLOT_PRESETS.map((preset) => {
@@ -226,22 +247,27 @@ export default function AdsManagementPage() {
               >
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <div>
-                    <h2 className="font-bold text-gray-900 text-sm">{preset.label}</h2>
+                    <h2 className="font-bold text-gray-900 text-sm">
+                      {preset.label}
+                    </h2>
                     <p className="text-[11px] text-gray-400 font-mono mt-0.5">
-                      {preset.defaultWidth} × {preset.defaultHeight} px · <code className="text-[10px]">{preset.key}</code>
+                      {preset.defaultWidth} × {preset.defaultHeight} px ·{" "}
+                      <code className="text-[10px]">{preset.key}</code>
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => openCreate(preset)}
-                    className="shrink-0 flex items-center gap-1 px-3 py-1.5 bg-primary text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-primary-dark"
+                    className="shrink-0 flex items-center gap-1 px-3 py-1.5 bg-primary !text-white text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-primary-dark"
                   >
-                    <Plus className="w-3.5 h-3.5" /> Add
+                    <Plus className="w-3.5 h-3.5 text-white" /> Add
                   </button>
                 </div>
                 <ul className="space-y-2 mt-auto border-t border-gray-100 pt-3">
                   {slotAds.length === 0 ? (
-                    <li className="text-[12px] text-gray-400 italic">No creatives — public sees a dashed placeholder.</li>
+                    <li className="text-[12px] text-gray-400 italic">
+                      No creatives — public sees a dashed placeholder.
+                    </li>
                   ) : (
                     slotAds.map((a) => (
                       <li
@@ -259,7 +285,9 @@ export default function AdsManagementPage() {
                                 className="object-contain"
                               />
                             ) : (
-                              <span className="text-[8px] text-gray-400 p-1">No img</span>
+                              <span className="text-[8px] text-gray-400 p-1">
+                                No img
+                              </span>
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
@@ -267,9 +295,13 @@ export default function AdsManagementPage() {
                               {a.companyName || "Sponsor"} · pri {a.priority}
                             </span>
                             {a.active ? (
-                              <span className="text-[10px] font-bold text-emerald-600 uppercase">Active</span>
+                              <span className="text-[10px] font-bold text-emerald-600 uppercase">
+                                Active
+                              </span>
                             ) : (
-                              <span className="text-[10px] font-bold text-rose-600 uppercase">Blocked</span>
+                              <span className="text-[10px] font-bold text-rose-600 uppercase">
+                                Blocked
+                              </span>
                             )}
                           </div>
                         </div>
@@ -281,7 +313,8 @@ export default function AdsManagementPage() {
                             className="flex items-center gap-0.5 px-2 py-1 rounded-md text-[10px] font-bold uppercase bg-emerald-100 text-emerald-800 disabled:opacity-40 hover:bg-emerald-200"
                             title="Show on site"
                           >
-                            <CircleCheck className="w-3 h-3" /> Active
+                            <CircleCheck className="w-3 h-3 text-emerald-600" />{" "}
+                            Active
                           </button>
                           <button
                             type="button"
@@ -290,7 +323,7 @@ export default function AdsManagementPage() {
                             className="flex items-center gap-0.5 px-2 py-1 rounded-md text-[10px] font-bold uppercase bg-rose-100 text-rose-800 disabled:opacity-40 hover:bg-rose-200"
                             title="Hide from site"
                           >
-                            <Ban className="w-3 h-3" /> Block
+                            <Ban className="w-3 h-3 text-rose-600" /> Block
                           </button>
                           <button
                             type="button"
@@ -326,7 +359,11 @@ export default function AdsManagementPage() {
               <h3 className="font-black text-sm uppercase tracking-widest text-gray-900">
                 {editingId ? "Edit creative" : "New creative"}
               </h3>
-              <button type="button" onClick={closeModal} className="p-1 rounded-lg hover:bg-gray-100 text-gray-500">
+              <button
+                type="button"
+                onClick={closeModal}
+                className="p-1 rounded-lg hover:bg-gray-100 text-gray-500"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -340,12 +377,21 @@ export default function AdsManagementPage() {
                   className="relative w-full rounded-lg border border-gray-200 overflow-hidden bg-gray-50 min-h-[100px] max-h-48"
                   style={{ aspectRatio: `${form.width} / ${form.height}` }}
                 >
-                  <Image src={showPreview} alt="Preview" fill unoptimized sizes="400px" className="object-contain" />
+                  <Image
+                    src={showPreview}
+                    alt="Preview"
+                    fill
+                    unoptimized
+                    sizes="400px"
+                    className="object-contain"
+                  />
                 </div>
               )}
 
               <div>
-                <label className="text-[10px] font-bold text-gray-500 uppercase">Ad image (required for new ads)</label>
+                <label className="text-[10px] font-bold text-gray-500 uppercase">
+                  Ad image (required for new ads)
+                </label>
                 <div className="mt-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <label className="sm:col-span-2 relative block rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 hover:bg-gray-100/60 transition-colors cursor-pointer overflow-hidden">
                     <input
@@ -354,79 +400,111 @@ export default function AdsManagementPage() {
                       accept="image/*"
                       className="sr-only"
                       required={!editingId}
-                      onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                      onChange={(e) =>
+                        setImageFile(e.target.files?.[0] || null)
+                      }
                     />
                     <div className="p-6 sm:p-8 flex items-center justify-center min-h-[170px]">
                       {showPreview ? (
                         <div className="relative w-full h-[170px] rounded-xl overflow-hidden bg-white border border-gray-200">
-                          <Image src={showPreview} alt="Preview" fill unoptimized sizes="600px" className="object-contain" />
+                          <Image
+                            src={showPreview}
+                            alt="Preview"
+                            fill
+                            unoptimized
+                            sizes="600px"
+                            className="object-contain"
+                          />
                         </div>
                       ) : (
                         <div className="text-center">
-                          <p className="text-sm font-bold text-gray-800">Click to upload</p>
-                          <p className="text-[11px] text-gray-500 mt-1">PNG/JPG/WebP · max 5MB</p>
-                          {editingId && <p className="text-[11px] text-gray-400 mt-1">Leave empty to keep current image</p>}
+                          <p className="text-sm font-bold text-gray-800">
+                            Click to upload
+                          </p>
+                          <p className="text-[11px] text-gray-500 mt-1">
+                            PNG/JPG/WebP · max 5MB
+                          </p>
+                          {editingId && (
+                            <p className="text-[11px] text-gray-400 mt-1">
+                              Leave empty to keep current image
+                            </p>
+                          )}
                         </div>
                       )}
                     </div>
                   </label>
-
-                  <div className="sm:col-span-1 rounded-2xl border border-gray-200 bg-white p-4">
-                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Selected file</p>
-                    <p className="mt-2 text-[12px] font-mono text-gray-700 break-all">{imageFile?.name || "—"}</p>
-                    <p className="mt-2 text-[11px] text-gray-500">{imageFile ? `${Math.round(imageFile.size / 1024)} KB` : ""}</p>
-                  </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] font-bold text-gray-500 uppercase">Width (px)</label>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase">
+                    Width (px)
+                  </label>
+
                   <input
                     type="number"
-                    className="mt-1 w-full border border-gray-200 rounded-lg px-2 py-2 text-sm"
+                    readOnly
+                    className="mt-1 w-full border border-gray-200 rounded-lg px-2 py-2 text-sm bg-gray-100 cursor-not-allowed"
                     value={form.width}
-                    onChange={(e) => setForm((f) => ({ ...f, width: +e.target.value || 1 }))}
                   />
                 </div>
+
                 <div>
-                  <label className="text-[10px] font-bold text-gray-500 uppercase">Height (px)</label>
+                  <label className="text-[10px] font-bold text-gray-500 uppercase">
+                    Height (px)
+                  </label>
+
                   <input
                     type="number"
-                    className="mt-1 w-full border border-gray-200 rounded-lg px-2 py-2 text-sm"
+                    readOnly
+                    className="mt-1 w-full border border-gray-200 rounded-lg px-2 py-2 text-sm bg-gray-100 cursor-not-allowed"
                     value={form.height}
-                    onChange={(e) => setForm((f) => ({ ...f, height: +e.target.value || 1 }))}
                   />
                 </div>
               </div>
               <div>
-                <label className="text-[10px] font-bold text-gray-500 uppercase">Company / sponsor name</label>
+                <label className="text-[10px] font-bold text-gray-500 uppercase">
+                  Company / sponsor name
+                </label>
                 <input
                   className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
                   value={form.companyName}
-                  onChange={(e) => setForm((f) => ({ ...f, companyName: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, companyName: e.target.value }))
+                  }
                 />
               </div>
               <div>
-                <label className="text-[10px] font-bold text-gray-500 uppercase">Click URL</label>
+                <label className="text-[10px] font-bold text-gray-500 uppercase">
+                  Click URL
+                </label>
                 <input
                   className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
                   value={form.targetUrl}
-                  onChange={(e) => setForm((f) => ({ ...f, targetUrl: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, targetUrl: e.target.value }))
+                  }
                   placeholder="https://advertiser.com/…"
                 />
               </div>
               <div>
-                <label className="text-[10px] font-bold text-gray-500 uppercase">Priority (higher wins among active)</label>
+                <label className="text-[10px] font-bold text-gray-500 uppercase">
+                  Priority (higher wins among active)
+                </label>
                 <input
                   type="number"
                   className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
                   value={form.priority}
-                  onChange={(e) => setForm((f) => ({ ...f, priority: +e.target.value || 0 }))}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, priority: +e.target.value || 0 }))
+                  }
                 />
               </div>
               <fieldset>
-                <legend className="text-[10px] font-bold text-gray-500 uppercase mb-2">Visibility</legend>
+                <legend className="text-[10px] font-bold text-gray-500 uppercase mb-2">
+                  Visibility
+                </legend>
                 <div className="flex gap-4">
                   <label className="flex items-center gap-2 text-sm cursor-pointer">
                     <input
@@ -435,7 +513,7 @@ export default function AdsManagementPage() {
                       checked={form.active}
                       onChange={() => setForm((f) => ({ ...f, active: true }))}
                     />
-                    Active (live when it wins priority)
+                    Active
                   </label>
                   <label className="flex items-center gap-2 text-sm cursor-pointer">
                     <input
@@ -444,15 +522,22 @@ export default function AdsManagementPage() {
                       checked={!form.active}
                       onChange={() => setForm((f) => ({ ...f, active: false }))}
                     />
-                    Blocked (hidden on site)
+                    Blocked
                   </label>
                 </div>
               </fieldset>
               <div className="flex gap-2 pt-2">
-                <button type="submit" className="flex-1 py-2.5 bg-emerald-700 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-emerald-800">
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 bg-primary !text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-primary-dark"
+                >
                   {editingId ? "Update" : "Publish creative"}
                 </button>
-                <button type="button" onClick={closeModal} className="px-4 py-2.5 border border-gray-200 rounded-xl text-xs font-bold text-gray-600">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="px-4 py-2.5 border border-gray-200 rounded-xl text-xs font-bold text-gray-600"
+                >
                   Cancel
                 </button>
               </div>

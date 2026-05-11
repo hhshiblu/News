@@ -117,7 +117,7 @@ export default function PostActionButtons({ post, userRole = 'AUTHOR' }) {
       
       const res = await createIssueAction(post.id, issueDescription, issueSeverity);
       if(res.success) {
-          toast.success("Editorial issue registered and sent to author!");
+          toast.success("Editorial issue registered and sent to reporter!");
           setCurrentStatus("PENDING");
           setShowIssueModal(false);
           setIssueDescription("");

@@ -9,7 +9,7 @@ import { fetchPublicPosts } from "@/lib/api";
 const normalizePost = (post) => ({
   ...post,
   image: post.featuredImage || "/placeholder.jpg",
-  author: post.author?.name || "Staff Reporter",
+  reporter: post.reporter?.name || "Staff Reporter",
   category: post.category?.name || "News",
   timestamp: post.publishedAt
     ? new Date(post.publishedAt).toLocaleDateString()

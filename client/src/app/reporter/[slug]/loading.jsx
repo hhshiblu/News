@@ -1,4 +1,4 @@
-export default function AuthorLoading() {
+export default function ReporterLoading() {
   return (
     <div className="max-w-[1200px] mx-auto px-4 py-8 animate-pulse">
       <div className="h-28 bg-gray-200 rounded-2xl mb-6" />

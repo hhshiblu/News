@@ -34,7 +34,7 @@ export default function CategoryGrid({ articles }) {
                 </p>
               )}
               <div className="flex items-center gap-3 text-[11px] text-gray-400 font-[Inter]">
-                {article.author && <span className="flex items-center gap-1"><User size={10} /> {article.author}</span>}
+                {article.reporter && <span className="flex items-center gap-1"><User size={10} /> {article.reporter}</span>}
                 <span className="flex items-center gap-1"><Clock size={10} /> {article.timestamp}</span>
               </div>
             </div>

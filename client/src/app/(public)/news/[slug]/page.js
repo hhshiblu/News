@@ -60,7 +60,7 @@ const formatTimeAgo = (dateString) => {
 const normalizePost = (post) => ({
   ...post,
   image: getImageUrl(post.featuredImage) || "/placeholder.jpg",
-  author: post.author?.name || "Staff Reporter",
+  reporter: post.reporter?.name || "Staff Reporter",
   category: post.category?.name || "News",
   categorySlug: post.category?.slug,
   timestamp: formatTimeAgo(post.publishedAt),
@@ -116,15 +116,15 @@ async function ArticlePageContent({ params }) {
   const parentCategoryName =
     rawCategory?.parent?.name || rawCategory?.name || "General";
 
-  const authorId = article.author?.id;
-  const [categoryNewsRes, breakingA, breakingB, latestRes, authorFeedRes] =
+  const reporterId = article.reporter?.id;
+  const [categoryNewsRes, breakingA, breakingB, latestRes, reporterFeedRes] =
     await Promise.all([
       getNewsFeed({ parentCategorySlug, limit: 20 }),
       getNewsFeed({ tagSlug: "breaking-news", limit: 12 }),
       getNewsFeed({ tagSlug: "breaking", limit: 12 }),
       getNewsFeed({ limit: 10 }),
-      authorId
-        ? getNewsFeed({ authorId, limit: 12 })
+      reporterId
+        ? getNewsFeed({ reporterId, limit: 12 })
         : Promise.resolve({ posts: [] }),
     ]);
 
@@ -154,22 +154,22 @@ async function ArticlePageContent({ params }) {
       .map(normalizePost);
   }
 
-  const authorBylinePosts = (authorFeedRes?.posts || [])
+  const reporterBylinePosts = (reporterFeedRes?.posts || [])
     .filter((p) => p.slug !== slug)
     .slice(0, 7)
     .map((p) => ({ id: p.id, slug: p.slug, title: p.title, featuredImage: p.featuredImage, image: p.featuredImage || "/placeholder.jpg" }));
 
   article = {
     ...article,
-    authorData: article.author || {},
+    reporterData: article.reporter || {},
     category: rawCategory?.name || "General",
     category_slug: rawCategory?.slug || "general",
     timeAgo: formatTimeAgo(article.publishedAt),
     tags: article.tags?.map((t) => t.tag?.name) || [],
   };
 
-  const authorName = article.authorData?.name || "Staff";
-  const authorAvatar = getImageUrl(article.authorData?.avatar || article.authorData?.image);
+  const reporterName = article.reporterData?.name || "Staff";
+  const reporterAvatar = getImageUrl(article.reporterData?.avatar || article.reporterData?.image);
   const frontendUrl = getFrontendUrl();
 
   return (
@@ -208,11 +208,11 @@ async function ArticlePageContent({ params }) {
                 </h1>
                 <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mt-2 text-[11px] text-gray-600 font-[Inter]">
                   <img
-                    src={authorAvatar}
+                    src={reporterAvatar}
                     alt=""
                     className="w-7 h-7 rounded-full object-cover border border-gray-100 shrink-0"
                   />
-                  <span className="font-semibold text-gray-900">{authorName}</span>
+                  <span className="font-semibold text-gray-900">{reporterName}</span>
                   <span className="text-gray-300 select-none">·</span>
                   <time className="text-gray-500">{article.timeAgo}</time>
                   <span className="text-gray-300 select-none">·</span>
@@ -361,7 +361,7 @@ async function ArticlePageContent({ params }) {
                     <div className="flex flex-col md:flex-row gap-3 items-start">
                       <div className="w-14 h-14 rounded-full overflow-hidden shrink-0 border-2 border-primary/20 shadow-md">
                         <img
-                          src={authorAvatar}
+                          src={reporterAvatar}
                           alt=""
                           className="w-full h-full object-cover"
                         />
@@ -371,13 +371,13 @@ async function ArticlePageContent({ params }) {
                           Editorial Voice
                         </div>
                         <h3 className="text-base font-bold text-gray-950 font-[Playfair_Display] mb-1">
-                          {authorName}
+                          {reporterName}
                         </h3>
                         <p className="text-gray-600 text-[13px] font-[Inter] leading-relaxed mb-3">
-                          {article.authorData?.bio}
+                          {article.reporterData?.bio}
                         </p>
                         <Link
-                          href={`/reporter/${reporterSlugFromName(authorName)}`}
+                          href={`/reporter/${reporterSlugFromName(reporterName)}`}
                           className="text-[10px] font-black uppercase tracking-widest text-gray-950 border-b-2 border-primary pb-0.5 inline-flex items-center gap-1.5 hover:text-primary transition-colors"
                         >
                           Full portfolio <ArrowRightIcon className="w-3 h-3" />
@@ -421,9 +421,9 @@ async function ArticlePageContent({ params }) {
             <div className="sticky top-24">
               <ArticleSidebar
                 breakingNews={breakingNews}
-                authorPosts={authorBylinePosts}
-                authorName={authorName}
-                authorHref={`/reporter/${reporterSlugFromName(authorName)}`}
+                reporterPosts={reporterBylinePosts}
+                reporterName={reporterName}
+                reporterHref={`/reporter/${reporterSlugFromName(reporterName)}`}
               />
             </div>
           </aside>

@@ -80,7 +80,7 @@ export default function TermsPage() {
               <p className="text-[13px] md:text-[14px] text-gray-600 leading-relaxed font-[Inter]">You agree not to use the site for any purpose that is unlawful or prohibited by these Terms. You may not:</p>
               <ul className="text-[13px] md:text-[14px] text-gray-600 space-y-2 mt-3 list-disc pl-5">
                 <li>Engage in any "scraping" or automated data collection.</li>
-                <li>Attempt to gain unauthorized access to any portion of the site.</li>
+                <li>Attempt to gain unreporterized access to any portion of the site.</li>
                 <li>Post or transmit any content that is defamatory, offensive, or infringing.</li>
                 <li>Use the site in any manner that could disable, overburden, or impair the site's functionality.</li>
               </ul>

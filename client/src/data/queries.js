@@ -1,15 +1,15 @@
-import { ARTICLES, AUTHORS, CATEGORIES, BREAKING_NEWS, MARKET_DATA, PHOTO_STORIES } from "./db";
+import { ARTICLES, REPORTERS, CATEGORIES, BREAKING_NEWS, MARKET_DATA, PHOTO_STORIES } from "./db";
 
-// Helper to populate author and category for an article
+// Helper to populate reporter and category for an article
 function populateArticle(article) {
   if (!article) return null;
-  const author = AUTHORS.find((a) => a.id === article.author_id);
+  const reporter = REPORTERS.find((a) => a.id === article.reporter_id);
   const category = CATEGORIES.find((c) => c.slug === article.category_slug);
   
   return {
     ...article,
-    author: author ? author.name : "Unknown",
-    authorData: author,
+    reporter: reporter ? reporter.name : "Unknown",
+    reporterData: reporter,
     category: category ? category.label : "General",
     categoryClass: category ? `cat-${category.slug}` : "",
     timestamp: article.publishedAt
@@ -88,12 +88,12 @@ export function getCategoryBySlug(slug) {
   return CATEGORIES.find(c => c.slug === slug);
 }
 
-export function getAuthorById(id) {
-  return AUTHORS.find(a => a.id === id);
+export function getReporterById(id) {
+  return REPORTERS.find(a => a.id === id);
 }
 
-export function getArticlesByAuthor(authorId) {
-  return ARTICLES.filter(a => a.author_id === authorId).map(populateArticle);
+export function getArticlesByReporter(reporterId) {
+  return ARTICLES.filter(a => a.reporter_id === reporterId).map(populateArticle);
 }
 
 export function searchArticles(query) {

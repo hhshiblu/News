@@ -1,18 +1,27 @@
-import { CircleCheckBig, Image as ImageIcon, Clock, FileText, ChevronLeft, ChevronRight, MousePointerClick } from "lucide-react";
+import {
+  CircleCheckBig,
+  Image as ImageIcon,
+  Clock,
+  FileText,
+  ChevronLeft,
+  ChevronRight,
+  MousePointerClick,
+} from "lucide-react";
 import Link from "next/link";
 import PostActionButtons from "../../../../components/admin/PostActionButtons";
 import { getAdminPostsAction } from "@/actions/admin-data.action";
 import { getMe } from "@/lib/server-auth";
 import PostsStatusFilter from "@/components/dashboard/posts/PostsStatusFilter";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 15;
 
 function postsListHref(resolvedParams, pageNum) {
   const statusFilter = resolvedParams?.status || "all";
-  const authorIdFilter = resolvedParams?.authorId;
+  const reporterIdFilter = resolvedParams?.reporterId;
   const q = new URLSearchParams();
-  if (statusFilter !== "all") q.set("status", String(statusFilter).toUpperCase());
-  if (authorIdFilter) q.set("authorId", String(authorIdFilter));
+  if (statusFilter !== "all")
+    q.set("status", String(statusFilter).toUpperCase());
+  if (reporterIdFilter) q.set("reporterId", String(reporterIdFilter));
   if (pageNum > 1) q.set("page", String(pageNum));
   const s = q.toString();
   return s ? `/dashboard/posts?${s}` : "/dashboard/posts";
@@ -21,16 +30,19 @@ function postsListHref(resolvedParams, pageNum) {
 export default async function AllNewsPage({ searchParams }) {
   const resolvedParams = await searchParams;
   const statusFilter = resolvedParams?.status || "all";
-  const authorIdFilter = resolvedParams?.authorId;
-  const pageNum = Math.max(1, parseInt(String(resolvedParams?.page ?? "1"), 10) || 1);
+  const reporterIdFilter = resolvedParams?.reporterId;
+  const pageNum = Math.max(
+    1,
+    parseInt(String(resolvedParams?.page ?? "1"), 10) || 1,
+  );
   const user = await getMe();
 
   const queryParams = new URLSearchParams();
   if (statusFilter !== "all") {
     queryParams.append("status", statusFilter.toUpperCase());
   }
-  if (authorIdFilter) {
-    queryParams.append("authorId", authorIdFilter);
+  if (reporterIdFilter) {
+    queryParams.append("reporterId", reporterIdFilter);
   }
   queryParams.append("page", String(pageNum));
   queryParams.append("limit", String(PAGE_SIZE));
@@ -57,12 +69,11 @@ export default async function AllNewsPage({ searchParams }) {
               ({count})
             </span>
           </div>
-          <p className="text-[12px] text-gray-500 mt-1">Filter · clicks = public opens (queued).</p>
         </div>
         {user?.role !== "ADMIN" && (
           <Link
             href="/dashboard/posts/create"
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-[12px] font-bold uppercase tracking-wide text-white! shadow-md shadow-primary/20 transition-colors hover:bg-primary-dark"
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-[12px] font-bold uppercase tracking-wide !text-white shadow-md shadow-primary/20 transition-colors hover:bg-primary-dark"
           >
             + New article
           </Link>
@@ -70,14 +81,17 @@ export default async function AllNewsPage({ searchParams }) {
       </div>
 
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
-        <PostsStatusFilter statusFilter={statusFilter} authorId={authorIdFilter} />
+        <PostsStatusFilter
+          statusFilter={statusFilter}
+          reporterId={reporterIdFilter}
+        />
         <div className="overflow-x-auto custom-scrollbar rounded-b-xl">
           <table className="w-full text-left text-[13px] text-gray-600 border-collapse min-w-[720px]">
             <thead className="bg-[#fcfdfd] border-b border-gray-200 text-[9px] uppercase font-semibold text-gray-500 tracking-wider">
               <tr>
                 <th className="px-3 sm:px-4 py-2.5">Visual</th>
                 <th className="px-3 sm:px-4 py-2.5">Article</th>
-                <th className="px-3 sm:px-4 py-2.5">Author</th>
+                <th className="px-3 sm:px-4 py-2.5">Reporter</th>
                 <th className="px-3 sm:px-4 py-2.5">Category</th>
                 <th className="px-3 sm:px-4 py-2.5 text-center">
                   <span className="inline-flex items-center justify-center gap-1">
@@ -93,18 +107,30 @@ export default async function AllNewsPage({ searchParams }) {
                 let loadedImage = post.featuredImage;
                 if (!loadedImage && post.content) {
                   try {
-                    const contentArr = typeof post.content === "object" ? post.content : JSON.parse(post.content);
-                    const firstImage = contentArr.find((c) => c.type === "image");
+                    const contentArr =
+                      typeof post.content === "object"
+                        ? post.content
+                        : JSON.parse(post.content);
+                    const firstImage = contentArr.find(
+                      (c) => c.type === "image",
+                    );
                     if (firstImage) loadedImage = firstImage.content;
                   } catch (_) {}
                 }
 
                 return (
-                  <tr key={post.id} className="hover:bg-gray-50/70 transition-colors group">
+                  <tr
+                    key={post.id}
+                    className="hover:bg-gray-50/70 transition-colors group"
+                  >
                     <td className="px-3 sm:px-4 py-2.5">
                       {loadedImage ? (
                         <div className="w-11 h-11 rounded-xl border border-gray-100 overflow-hidden shadow-sm group-hover:scale-105 transition-transform">
-                          <img src={loadedImage} alt="" className="w-full h-full object-cover" />
+                          <img
+                            src={loadedImage}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
                         </div>
                       ) : (
                         <div className="w-11 h-11 rounded-xl border border-dashed border-gray-200 bg-gray-50 flex items-center justify-center text-gray-300">
@@ -118,16 +144,19 @@ export default async function AllNewsPage({ searchParams }) {
                           {post.title}
                         </span>
                         <div className="flex items-center gap-3 text-[10px] font-medium text-gray-400 uppercase tracking-wide">
-                          <Clock size={12} /> {new Date(post.createdAt).toLocaleDateString()}
+                          <Clock size={12} />{" "}
+                          {new Date(post.createdAt).toLocaleDateString()}
                         </div>
                       </div>
                     </td>
                     <td className="px-3 sm:px-4 py-2.5">
                       <div className="flex items-center gap-3">
                         <div className="w-6 h-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-[10px] font-bold border border-emerald-100 uppercase">
-                          {post.author?.name?.charAt(0)}
+                          {post.reporter?.name?.charAt(0)}
                         </div>
-                        <span className="text-[13px] font-semibold text-gray-700">{post.author?.name || "—"}</span>
+                        <span className="text-[13px] font-semibold text-gray-700">
+                          {post.reporter?.name || "—"}
+                        </span>
                       </div>
                     </td>
                     <td className="px-3 sm:px-4 py-2.5">
@@ -145,7 +174,8 @@ export default async function AllNewsPage({ searchParams }) {
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-orange-600 bg-orange-50 px-2.5 py-1 rounded-lg border border-orange-100">
-                          <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" /> {post.status}
+                          <span className="w-2 h-2 bg-orange-500 rounded-full animate-pulse" />{" "}
+                          {post.status}
                         </span>
                       )}
                     </td>
@@ -157,7 +187,10 @@ export default async function AllNewsPage({ searchParams }) {
               })}
               {posts.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-16 text-center text-gray-400 text-sm font-semibold">
+                  <td
+                    colSpan={7}
+                    className="px-4 py-16 text-center text-gray-400 text-sm font-semibold"
+                  >
                     No articles match this filter.
                   </td>
                 </tr>
@@ -168,9 +201,15 @@ export default async function AllNewsPage({ searchParams }) {
         {count > PAGE_SIZE && (
           <div className="flex flex-col gap-2 border-t border-gray-200 bg-gray-50/90 px-3 py-3 text-[12px] text-gray-600 sm:flex-row sm:items-center sm:justify-between sm:px-4">
             <span className="tabular-nums">
-              Showing <strong className="text-gray-900">{(safePage - 1) * PAGE_SIZE + 1}</strong>–
-              <strong className="text-gray-900">{Math.min(safePage * PAGE_SIZE, count)}</strong> of{" "}
-              <strong className="text-gray-900">{count}</strong>
+              Showing{" "}
+              <strong className="text-gray-900">
+                {(safePage - 1) * PAGE_SIZE + 1}
+              </strong>
+              –
+              <strong className="text-gray-900">
+                {Math.min(safePage * PAGE_SIZE, count)}
+              </strong>{" "}
+              of <strong className="text-gray-900">{count}</strong>
             </span>
             <div className="flex items-center gap-2">
               <Link

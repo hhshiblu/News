@@ -15,7 +15,7 @@ function fmt(s) {
 /**
  * MustReadSection v2 — Opinion / Must Read
  * Dark background (#0f172a), 3 horizontal image cards.
- * Each card: image on top, author avatar + name + title below.
+ * Each card: image on top, reporter avatar + name + title below.
  * CNN Opinion bar style.
  */
 export default function MustReadSection({ posts = [] }) {
@@ -60,19 +60,19 @@ export default function MustReadSection({ posts = [] }) {
                 </span>
               </div>
 
-              {/* Author row */}
+              {/* Reporter row */}
               <div className={`flex items-center gap-2 px-4 pt-4 mb-2`}>
                 <div className="relative w-7 h-7 rounded-full overflow-hidden bg-gray-200 shrink-0">
                   <Image
-                    src={getImageUrl(post.author?.avatar || post.author?.image)}
-                    alt={typeof post.author === "object" ? post.author?.name : "Author"}
+                    src={getImageUrl(post.reporter?.avatar || post.reporter?.image)}
+                    alt={typeof post.reporter === "object" ? post.reporter?.name : "Reporter"}
                     fill unoptimized sizes="28px"
                     className="object-cover"
                   />
                 </div>
                 <div>
                   <p className="text-[11px] font-bold text-gray-900 font-[Inter] leading-none">
-                    {typeof post.author === "object" ? post.author?.name : post.author || "Editorial"}
+                    {typeof post.reporter === "object" ? post.reporter?.name : post.reporter || "Editorial"}
                   </p>
                   <p className="text-[9px] text-gray-400 font-[Inter]">Columnist</p>
                 </div>

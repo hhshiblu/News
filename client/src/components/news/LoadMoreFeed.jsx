@@ -33,9 +33,9 @@ function catName(story) {
   return story?.category || "News";
 }
 
-function authorName(story) {
-  if (typeof story?.author === "object") return story.author?.name || "";
-  return story?.author || "";
+function reporterName(story) {
+  if (typeof story?.reporter === "object") return story.reporter?.name || "";
+  return story?.reporter || "";
 }
 
 /* ──────────────────────────────────────────────────────────────────────
@@ -70,8 +70,8 @@ function CategoryGrid({ posts }) {
               </h3>
             </div>
             <div className="flex items-center gap-2 text-[10px] text-gray-400 font-[Inter] mt-1">
-              {authorName(story) && <span>By {authorName(story)}</span>}
-              {authorName(story) && <span>·</span>}
+              {reporterName(story) && <span>By {reporterName(story)}</span>}
+              {reporterName(story) && <span>·</span>}
               <span>{story.timestamp || fmtDate(story)}</span>
             </div>
           </div>
@@ -115,8 +115,8 @@ function SubcategoryGrid({ posts }) {
               )}
             </div>
             <div className="flex items-center gap-2 text-[11px] text-gray-400 font-[Inter] mt-2">
-              {authorName(story) && <span>By {authorName(story)}</span>}
-              {authorName(story) && <span>·</span>}
+              {reporterName(story) && <span>By {reporterName(story)}</span>}
+              {reporterName(story) && <span>·</span>}
               <span>{story.timestamp || fmtDate(story)}</span>
             </div>
           </div>

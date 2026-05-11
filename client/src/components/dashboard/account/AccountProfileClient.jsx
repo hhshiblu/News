@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { User, Save, Loader2, Edit3, Lock, ShieldCheck, Mail, Globe, AtSign, Link, X, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { patchMyProfileAction, verifyMyPasswordAction } from "@/actions/admin-data.action";
-import { getApiV1Base, getApiStaticOrigin } from "@/lib/apiBaseUrl";
+import { getApiV1Base } from "@/lib/apiBaseUrl";
 import { useRouter } from "next/navigation";
 
 function safeSocials(s) {
@@ -29,7 +29,7 @@ export default function AccountProfileClient({ initialUser }) {
   const [position, setPosition] = useState(initialUser?.position || "");
   const [socials, setSocials] = useState(() => safeSocials(initialUser?.socials));
   const [avatarPreview, setAvatarPreview] = useState(
-    initialUser?.avatar ? `${getApiStaticOrigin()}${initialUser.avatar}` : ""
+    initialUser?.avatar ? (initialUser.avatar.startsWith("http") ? initialUser.avatar : (initialUser.avatar.startsWith("/") ? initialUser.avatar : "/" + initialUser.avatar)) : ""
   );
   const fileRef = useRef(null);
   const [loading, setLoading] = useState(false);

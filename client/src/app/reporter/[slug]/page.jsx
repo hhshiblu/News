@@ -29,7 +29,7 @@ export async function generateMetadata({ params, searchParams }) {
   const base = name ? `${name} — LabourPulse` : "Reporter";
   return {
     title: page > 1 ? `${base} (Page ${page})` : base,
-    description: res?.data?.author?.bio || "",
+    description: res?.data?.reporter?.bio || "",
   };
 }
 
@@ -70,7 +70,7 @@ async function ReporterSlugPageContent({ params, searchParams }) {
 
   let tagLanes = [];
   if (page === 1 && reporter.id) {
-    const feed = await getNewsFeed({ authorId: reporter.id, limit: LANE_SAMPLE });
+    const feed = await getNewsFeed({ reporterId: reporter.id, limit: LANE_SAMPLE });
     const sample = feed.posts || [];
     tagLanes = buildTagLanes(sample, 4, 5);
   }
@@ -175,13 +175,13 @@ async function ReporterSlugPageContent({ params, searchParams }) {
               <CategoryTagRails
                 lanes={tagLanes}
                 heading="Top tags on this byline"
-                variant="author"
+                variant="reporter"
               />
             )}
 
             {page === 1 && (
               <div className="mb-6 flex justify-center">
-                <AdSlot slotKey="author_page_leaderboard" />
+                <AdSlot slotKey="reporter_page_leaderboard" />
               </div>
             )}
 

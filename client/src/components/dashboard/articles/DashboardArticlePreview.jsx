@@ -5,12 +5,12 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import ShareButtons from "@/components/article/ShareButtons";
 import PullQuote from "@/components/article/PullQuote";
-import { getApiStaticOrigin, getFrontendUrl } from "@/lib/apiBaseUrl";
+import { getFrontendUrl } from "@/lib/apiBaseUrl";
 
 const getAvatarUrl = (url) => {
   if (!url) return "/placeholder.jpg";
   if (url.startsWith("http")) return url;
-  return `${getApiStaticOrigin()}${url.startsWith("/") ? url : "/" + url}`;
+  return url.startsWith("/") ? url : "/" + url;
 };
 
 const ARTICLE_COL = "w-full max-w-[min(100%,52rem)] xl:max-w-[56rem]";
@@ -51,8 +51,8 @@ const normalizeRichTextHtml = (html) => {
 export default function DashboardArticlePreview({ post }) {
   const rawCategory = post.category;
   const categoryName = rawCategory?.name || "General";
-  const authorName = post.author?.name || "Unknown Author";
-  const authorAvatar = getAvatarUrl(post.author?.avatar);
+  const reporterName = post.reporter?.name || "Unknown Reporter";
+  const reporterAvatar = getAvatarUrl(post.reporter?.avatar);
   const timeRef = post.publishedAt || post.createdAt;
   const timeAgo = formatTimeAgo(timeRef);
   const shareUrl = post.slug ? `${getFrontendUrl()}/news/${post.slug}` : "";
@@ -102,11 +102,11 @@ export default function DashboardArticlePreview({ post }) {
               </h1>
               <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mt-2 text-[11px] text-gray-600 font-[Inter]">
                 <img
-                  src={authorAvatar}
+                  src={reporterAvatar}
                   alt=""
                   className="w-7 h-7 rounded-full object-cover border border-gray-100 shrink-0"
                 />
-                <span className="font-semibold text-gray-900">{authorName}</span>
+                <span className="font-semibold text-gray-900">{reporterName}</span>
                 <span className="text-gray-300 select-none">·</span>
                 <time className="text-gray-500">{timeAgo}</time>
                 <span className="text-gray-300 select-none">·</span>

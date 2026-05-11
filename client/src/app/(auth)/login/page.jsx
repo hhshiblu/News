@@ -4,7 +4,7 @@ import LoginForm from "./LoginForm";
 
 export const metadata = {
   title: "Sign in — LabourPulse",
-  description: "Editorial dashboard sign-in for LabourPulse authors and administrators.",
+  description: "Editorial dashboard sign-in for LabourPulse reporters and administrators.",
 };
 
 export default async function LoginPage() {

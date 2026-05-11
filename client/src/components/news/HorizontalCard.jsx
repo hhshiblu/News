@@ -44,8 +44,8 @@ export default function HorizontalCard({ story, compact = false }) {
           )}
         </div>
         <div className={`flex items-center gap-2 text-gray-400 font-[Inter] ${compact ? "mt-2 text-[10px]" : "mt-2.5 text-[11px]"}`}>
-          {story.author && <span>By {typeof story.author === 'object' ? story.author.name : story.author}</span>}
-          {story.author && <span>·</span>}
+          {story.reporter && <span>By {typeof story.reporter === 'object' ? story.reporter.name : story.reporter}</span>}
+          {story.reporter && <span>·</span>}
           <span>{story.timestamp || new Date(story.createdAt).toLocaleDateString()}</span>
         </div>
       </div>

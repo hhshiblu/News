@@ -11,17 +11,17 @@ const DOTS = [
 
 /**
  * Tag-based lanes: small “magazine tape” cards + list rows with circle bullets.
- * variant="author" — only top tags, compact type, rank + total count.
+ * variant="reporter" — only top tags, compact type, rank + total count.
  * variant="compact" — tighter desk (e.g. category hub) without rank badges.
  */
 export function CategoryTagRails({ lanes, heading = "By tag", variant = "default" }) {
   if (!lanes?.length) return null;
-  const isAuthor = variant === "author";
-  const isCompact = variant === "compact" || isAuthor;
-  const list = isAuthor ? lanes.slice(0, 4) : lanes;
+  const isReporter = variant === "reporter";
+  const isCompact = variant === "compact" || isReporter;
+  const list = isReporter ? lanes.slice(0, 4) : lanes;
 
   return (
-    <section className={`relative ${isAuthor ? "mb-7" : isCompact ? "mb-8" : "mb-10"}`}>
+    <section className={`relative ${isReporter ? "mb-7" : isCompact ? "mb-8" : "mb-10"}`}>
       <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.04] via-transparent to-gray-900/[0.03] rounded-xl pointer-events-none" />
       <div
         className={`relative border border-gray-200/80 rounded-xl bg-white overflow-hidden shadow-sm ${
@@ -41,10 +41,10 @@ export function CategoryTagRails({ lanes, heading = "By tag", variant = "default
           >
             {heading}
           </h2>
-          {isAuthor && (
+          {isReporter && (
             <span className="text-[9px] font-semibold text-white/60 ml-auto font-[Inter]">Top 4 by use</span>
           )}
-          {variant === "compact" && !isAuthor && (
+          {variant === "compact" && !isReporter && (
             <span className="text-[9px] font-semibold text-white/60 ml-auto font-[Inter] shrink-0">
               Top 4 tags · 5 stories each
             </span>
@@ -62,8 +62,8 @@ export function CategoryTagRails({ lanes, heading = "By tag", variant = "default
                 isCompact ? "p-3" : "p-4"
               }`}
             >
-              <div className={`flex items-center gap-2 ${variant === "author" ? "mb-2" : "mb-3"}`}>
-                {isAuthor && (
+              <div className={`flex items-center gap-2 ${variant === "reporter" ? "mb-2" : "mb-3"}`}>
+                {isReporter && (
                   <span className="text-[9px] font-black tabular-nums text-gray-500 font-[Inter] w-5 h-5 rounded-full border border-gray-200 flex items-center justify-center shrink-0 bg-white">
                     {li + 1}
                   </span>
@@ -72,7 +72,7 @@ export function CategoryTagRails({ lanes, heading = "By tag", variant = "default
                   href={`/tag/${lane.slug}`}
                   className="inline-flex items-center gap-1.5 group/tag min-w-0 flex-1"
                 >
-                  {!isAuthor && (
+                  {!isReporter && (
                     <span
                       className={`w-2 h-2 rounded-full shrink-0 ring-2 ${DOTS[li % DOTS.length]}`}
                       aria-hidden
@@ -87,7 +87,7 @@ export function CategoryTagRails({ lanes, heading = "By tag", variant = "default
                   </span>
                 </Link>
               </div>
-              {isAuthor && lane.totalCount != null && (
+              {isReporter && lane.totalCount != null && (
                 <p className="text-[9px] font-bold text-gray-400 font-[Inter] mb-2">{lane.totalCount} stories tagged</p>
               )}
               <ul className={isCompact ? "space-y-1.5" : "space-y-2.5"}>
@@ -118,8 +118,8 @@ export function CategoryTagRails({ lanes, heading = "By tag", variant = "default
   );
 }
 
-/** Category-name lanes (e.g. author portfolio). */
-export function AuthorDeskRails({ categoryLanes, tagLanes }) {
+/** Category-name lanes (e.g. reporter portfolio). */
+export function ReporterDeskRails({ categoryLanes, tagLanes }) {
   const hasCat = categoryLanes?.length > 0;
   const hasTag = tagLanes?.length > 0;
   if (!hasCat && !hasTag) return null;

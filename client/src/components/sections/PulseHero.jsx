@@ -67,7 +67,7 @@ export default function PulseHero({ featuredPosts = [], latestPosts = [] }) {
               )}
               <p className="text-[11.5px] text-gray-500 font-[Inter] flex items-center gap-2">
                 <span className="font-semibold text-gray-700">
-                  {typeof lead.author === "object" ? lead.author?.name : lead.author || "LabourPulse Staff"}
+                  {typeof lead.reporter === "object" ? lead.reporter?.name : lead.reporter || "LabourPulse Staff"}
                 </span>
                 <span>·</span>
                 <span className="flex items-center gap-1"><Clock size={10} /> {fmt(lead)}</span>

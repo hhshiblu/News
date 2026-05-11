@@ -1,0 +1,7 @@
+# Root .env (contains real secrets — never commit)
+.env
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp

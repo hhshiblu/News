@@ -3,6 +3,8 @@ import { Mail } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+
 export default function NewsletterSection() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -12,7 +14,7 @@ export default function NewsletterSection() {
     if(!email) return;
     setLoading(true);
     try {
-        const res = await fetch("http://localhost:5000/api/v1/public/newsletter/subscribe", {
+        const res = await fetch(`${API_BASE}/public/newsletter/subscribe`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email })
@@ -40,7 +42,7 @@ export default function NewsletterSection() {
             LabourPulse Daily Digest
           </p>
         </div>
-        <h2 className="text-white text-3xl md:text-4xl font-bold font-[Playfair_Display] mb-3 leading-tight">
+        <h2 className="!text-white text-3xl md:text-4xl font-bold font-[Playfair_Display] mb-3 leading-tight">
           Stay Informed.
         </h2>
         <p className="text-white/75 text-[14px] mb-8 font-[Inter] leading-relaxed max-w-[420px] mx-auto">
@@ -58,7 +60,7 @@ export default function NewsletterSection() {
             className="flex-1 px-5 py-3.5 text-[14px] text-gray-800 placeholder:text-gray-400 bg-white outline-none font-[Inter] border-0 rounded-none disabled:opacity-50"
             required
           />
-          <button type="submit" disabled={loading} className="bg-gray-900 hover:bg-black text-white px-7 py-3.5 text-[11px] font-black tracking-[0.2em] uppercase transition-colors font-[Inter] whitespace-nowrap border-0 disabled:opacity-50">
+          <button type="submit" disabled={loading} className="bg-gray-900 hover:bg-black !text-white px-7 py-3.5 text-[11px] font-black tracking-[0.2em] uppercase transition-colors font-[Inter] whitespace-nowrap border-0 disabled:opacity-50">
             {loading ? "Please Wait..." : "Subscribe →"}
           </button>
         </form>

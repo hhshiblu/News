@@ -63,6 +63,20 @@ a, button, [role="button"], .nav-item, .cursor-pointer {
 .ticker-track:hover,
 .ticker-track-rtl:hover { animation-play-state: paused; }
 
+/* ── Partners marquee ── */
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.partners-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 30s linear infinite;
+}
+.partners-marquee:hover {
+  animation-play-state: paused;
+}
+
 /* ── Market ticker ── */
 @keyframes market-scroll {
   0%   { transform: translateX(0); }

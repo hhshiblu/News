@@ -22,7 +22,7 @@ export default function SignupPage() {
         
         if (res.success) {
             toast.success("Account created successfully! Welcome to the team.");
-            router.push("/admin");
+            router.push("/dashboard");
         } else {
             toast.error(res.message || "Failed to create account.");
         }
@@ -47,7 +47,7 @@ export default function SignupPage() {
                 </div>
 
                 {/* Signup Card */}
-                <div className="bg-white/[0.03] backdrop-blur-2xl border border-white/10 p-10 rounded-[40px] shadow-2xl shadow-black/40">
+                <div className="bg-white/3 backdrop-blur-2xl border border-white/10 p-10 rounded-[40px] shadow-2xl shadow-black/40">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         
                         <div className="space-y-4">
@@ -61,7 +61,7 @@ export default function SignupPage() {
                                         onChange={(e) => setName(e.target.value)}
                                         placeholder="Journalist Name"
                                         required
-                                        className="w-full bg-white/[0.04] border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-white text-sm font-medium outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/30 transition-all placeholder:text-emerald-500/10"
+                                        className="w-full bg-white/4 border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-white text-sm font-medium outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/30 transition-all placeholder:text-emerald-500/10"
                                     />
                                 </div>
                             </div>
@@ -76,7 +76,7 @@ export default function SignupPage() {
                                         onChange={(e) => setEmail(e.target.value)}
                                         placeholder="reporter@pulse.com"
                                         required
-                                        className="w-full bg-white/[0.04] border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-white text-sm font-medium outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/30 transition-all placeholder:text-emerald-500/10"
+                                        className="w-full bg-white/4 border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-white text-sm font-medium outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/30 transition-all placeholder:text-emerald-500/10"
                                     />
                                 </div>
                             </div>
@@ -91,7 +91,7 @@ export default function SignupPage() {
                                         onChange={(e) => setPassword(e.target.value)}
                                         placeholder="••••••••••••"
                                         required
-                                        className="w-full bg-white/[0.04] border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-white text-sm font-medium outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/30 transition-all placeholder:text-emerald-500/10"
+                                        className="w-full bg-white/4 border border-white/5 rounded-2xl py-4 pl-12 pr-4 text-white text-sm font-medium outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/30 transition-all placeholder:text-emerald-500/10"
                                     />
                                 </div>
                             </div>
@@ -99,7 +99,7 @@ export default function SignupPage() {
 
                         <button 
                             disabled={loading}
-                            className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-black py-4 rounded-2xl text-xs uppercase tracking-[0.2em] shadow-xl shadow-emerald-900/40 hover:shadow-emerald-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group cursor-pointer"
+                            className="w-full bg-linear-to-r from-emerald-600 to-emerald-500 text-white font-black py-4 rounded-2xl text-xs uppercase tracking-[0.2em] shadow-xl shadow-emerald-900/40 hover:shadow-emerald-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group cursor-pointer"
                         >
                             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
                                 <>

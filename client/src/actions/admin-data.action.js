@@ -85,7 +85,7 @@ export async function deleteAdminSubmissionAction(id) {
 export async function listAdminReportersAction(statusFilter = "ALL") {
   try {
     const queryParams = new URLSearchParams();
-    queryParams.append("roleIn", "AUTHOR,REPORTER,RESEARCH_AUTHOR");
+    queryParams.append("roleIn", "REPORTER,RESEARCH_AUTHOR");
     if (statusFilter && statusFilter !== "ALL") {
       queryParams.append("status", statusFilter);
     }

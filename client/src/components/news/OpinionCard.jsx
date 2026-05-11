@@ -9,11 +9,11 @@ export default function OpinionCard({ story }) {
       <div className="text-5xl leading-none text-primary/30 font-[Playfair_Display] -mb-1">"</div>
       {/* Avatar */}
       <div className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 border-[3px] border-primary relative mb-3 bg-gray-100">
-        <Image src={getImageUrl(story.author?.avatar || story.author?.image || story.authorData?.avatar)} alt={typeof story.author === 'object' ? story.author.name : story.author} fill unoptimized className="object-cover" sizes="64px" />
+        <Image src={getImageUrl(story.reporter?.avatar || story.reporter?.image || story.reporterData?.avatar)} alt={typeof story.reporter === 'object' ? story.reporter.name : story.reporter} fill unoptimized className="object-cover" sizes="64px" />
       </div>
-      {/* Author */}
-      <p className="text-[13px] font-bold text-gray-900 font-[Inter]">{typeof story.author === 'object' ? story.author.name : (story.author || 'Editorial Staff')}</p>
-      <p className="text-[11px] text-gray-500 leading-snug mb-3 font-[Inter]">{story.authorData?.role || story.author?.role || "Columnist"}</p>
+      {/* Reporter */}
+      <p className="text-[13px] font-bold text-gray-900 font-[Inter]">{typeof story.reporter === 'object' ? story.reporter.name : (story.reporter || 'Editorial Staff')}</p>
+      <p className="text-[11px] text-gray-500 leading-snug mb-3 font-[Inter]">{story.reporterData?.role || story.reporter?.role || "Columnist"}</p>
       {/* Title */}
       <h3 className="text-[14px] font-bold text-gray-800 line-clamp-3 leading-snug font-[Playfair_Display] group-hover:text-primary transition-colors flex-1">
         {story.title}

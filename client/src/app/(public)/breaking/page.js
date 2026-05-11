@@ -260,7 +260,7 @@ export default async function BreakingNewsPage({ searchParams }) {
                         story={{
                           ...post,
                           image: imgSrc(post),
-                          author: post.author?.name || "Staff Reporter",
+                          reporter: post.reporter?.name || "Staff Reporter",
                           category: catLabel(post),
                           timestamp: fmtDate(post.publishedAt || post.createdAt),
                         }}

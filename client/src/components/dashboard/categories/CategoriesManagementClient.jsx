@@ -2,8 +2,19 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { X, Folder, Image as ImageIcon, Edit, Trash2, PlusCircle, AlertTriangle } from "lucide-react";
-import { createCategoryAction, deleteCategoryAction } from "@/actions/category.action";
+import {
+  X,
+  Folder,
+  Image as ImageIcon,
+  Edit,
+  Trash2,
+  PlusCircle,
+  AlertTriangle,
+} from "lucide-react";
+import {
+  createCategoryAction,
+  deleteCategoryAction,
+} from "@/actions/category.action";
 import { toast } from "sonner";
 import DashboardSelect from "@/components/ui/DashboardSelect";
 import ImageUploadPreview from "@/components/ui/ImageUploadPreview";
@@ -92,8 +103,12 @@ export default function CategoriesManagementClient({ initialCategories = [] }) {
     <div className="relative space-y-6 text-gray-800">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-gray-900">Categories Tree</h1>
-          <p className="mt-1 text-xs text-gray-500">Hierarchical distribution of the news vertical.</p>
+          <h1 className="text-xl font-bold tracking-tight text-gray-900">
+            Categories Tree
+          </h1>
+          <p className="mt-1 text-xs text-gray-500">
+            Hierarchical distribution of the news vertical.
+          </p>
         </div>
         <button
           type="button"
@@ -119,12 +134,20 @@ export default function CategoriesManagementClient({ initialCategories = [] }) {
               <div className="group grid grid-cols-12 items-center rounded-lg border border-gray-200 bg-white p-2.5 shadow-sm transition-colors hover:bg-gray-50">
                 <div className="col-span-6 flex items-center gap-3">
                   <div className="flex items-center justify-center rounded border border-emerald-200 bg-emerald-50 p-1.5 font-medium text-emerald-800">
-                    {parent.imageUrl ? <ImageIcon className="h-4 w-4" /> : <Folder className="h-4 w-4" />}
+                    {parent.imageUrl ? (
+                      <ImageIcon className="h-4 w-4" />
+                    ) : (
+                      <Folder className="h-4 w-4" />
+                    )}
                   </div>
-                  <span className="text-sm font-semibold text-gray-800">{parent.name}</span>
+                  <span className="text-sm font-semibold text-gray-800">
+                    {parent.name}
+                  </span>
                 </div>
                 <div className="col-span-3 flex items-center text-xs font-medium text-gray-600">
-                  <span className="rounded-full border border-gray-200 bg-gray-100 px-3 py-0.5">0 posts</span>
+                  <span className="rounded-full border border-gray-200 bg-gray-100 px-3 py-0.5">
+                    0 posts
+                  </span>
                 </div>
                 <div className="col-span-3 flex items-center justify-end gap-1 opacity-100 sm:opacity-0 transition-opacity sm:group-hover:opacity-100">
                   <button
@@ -133,14 +156,14 @@ export default function CategoriesManagementClient({ initialCategories = [] }) {
                     className="cursor-pointer rounded border border-transparent p-1 sm:p-1.5 bg-primary text-white transition-colors hover:bg-primary-dark"
                     title="Add nested category"
                   >
-                    <PlusCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <PlusCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" />
                   </button>
                   <button
                     type="button"
                     className="cursor-pointer rounded border border-transparent p-1 sm:p-1.5 bg-primary text-white transition-colors hover:bg-primary-dark"
                     title="Edit category"
                   >
-                    <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" />
                   </button>
                   <button
                     type="button"
@@ -148,7 +171,7 @@ export default function CategoriesManagementClient({ initialCategories = [] }) {
                     className="cursor-pointer rounded border border-transparent p-1 sm:p-1.5 bg-primary text-white transition-colors hover:bg-primary-dark"
                     title="Delete category"
                   >
-                    <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                    <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" />
                   </button>
                 </div>
               </div>
@@ -165,10 +188,14 @@ export default function CategoriesManagementClient({ initialCategories = [] }) {
                         <div className="flex items-center justify-center rounded border border-gray-300 bg-white p-1 text-gray-500">
                           <Folder className="h-3.5 w-3.5" />
                         </div>
-                        <span className="text-[13px] font-medium text-gray-700">{child.name}</span>
+                        <span className="text-[13px] font-medium text-gray-700">
+                          {child.name}
+                        </span>
                       </div>
                       <div className="col-span-3 flex items-center text-[11px] font-medium text-gray-600">
-                        <span className="rounded-full border border-gray-200 bg-white px-2 py-0.5">0 posts</span>
+                        <span className="rounded-full border border-gray-200 bg-white px-2 py-0.5">
+                          0 posts
+                        </span>
                       </div>
                       <div className="col-span-3 flex items-center justify-end gap-1 opacity-100 sm:opacity-0 transition-opacity sm:group-hover:opacity-100">
                         <button
@@ -200,7 +227,9 @@ export default function CategoriesManagementClient({ initialCategories = [] }) {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 p-4 backdrop-blur-sm">
           <div className="animate-in fade-in zoom-in-95 relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-xl duration-200">
             <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 p-4">
-              <h2 className="text-[15px] font-semibold text-gray-800">Add New Category</h2>
+              <h2 className="text-[15px] font-semibold text-gray-800">
+                Add New Category
+              </h2>
               <button
                 type="button"
                 onClick={() => {
@@ -234,17 +263,24 @@ export default function CategoriesManagementClient({ initialCategories = [] }) {
                 <DashboardSelect
                   aria-label="Parent category"
                   value={modalParentId}
-                  onChange={(v) => setModalParentId(typeof v === "string" ? v : String(v))}
+                  onChange={(v) =>
+                    setModalParentId(typeof v === "string" ? v : String(v))
+                  }
                   options={parentSelectOptions}
                 />
                 {modalParentId ? (
-                  <p className="mt-1 text-[10px] font-medium text-emerald-600">Nesting under selected parent</p>
+                  <p className="mt-1 text-[10px] font-medium text-emerald-600">
+                    Nesting under selected parent
+                  </p>
                 ) : null}
               </div>
 
               <div>
                 <label className="mb-1.5 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest text-gray-700">
-                  Category image <span className="text-[10px] font-normal normal-case tracking-normal text-gray-400">(optional)</span>
+                  Category image{" "}
+                  <span className="text-[10px] font-normal normal-case tracking-normal text-gray-400">
+                    (optional)
+                  </span>
                 </label>
                 <ImageUploadPreview
                   fullWidth
@@ -285,11 +321,15 @@ export default function CategoriesManagementClient({ initialCategories = [] }) {
             <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-red-200 bg-red-100 text-red-600">
               <AlertTriangle className="h-6 w-6" />
             </div>
-            <h3 className="mb-2 text-lg font-bold text-gray-900">Are you sure?</h3>
+            <h3 className="mb-2 text-lg font-bold text-gray-900">
+              Are you sure?
+            </h3>
             <p className="mb-6 text-sm font-medium text-gray-500">
               You are about to permanently delete{" "}
-              <strong className="font-semibold text-gray-800">{categoryToDelete?.name}</strong>. This act is absolutely
-              irreversible.
+              <strong className="font-semibold text-gray-800">
+                {categoryToDelete?.name}
+              </strong>
+              . This act is absolutely irreversible.
             </p>
             <div className="flex w-full justify-center gap-3">
               <button

@@ -3,10 +3,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Mail, Calendar, Trash2, Send } from "lucide-react";
+import { Mail, Calendar, Trash2, Send, Download } from "lucide-react";
 import { deleteNewsletterSubscriberAction } from "@/actions/admin-data.action";
 import { formatAdminDateTime } from "@/lib/formatAdminDateTime";
-import AdminTablePagination, { ADMIN_PAGE_SIZE } from "@/components/dashboard/AdminTablePagination";
+import AdminTablePagination, {
+  ADMIN_PAGE_SIZE,
+} from "@/components/dashboard/AdminTablePagination";
 
 const MAIL_SUBJECT = "LabourPulse";
 
@@ -31,7 +33,7 @@ export default function SubscribersClient({ initialSubscribers = [] }) {
 
   const displayRows = useMemo(
     () => rows.slice((page - 1) * ADMIN_PAGE_SIZE, page * ADMIN_PAGE_SIZE),
-    [rows, page]
+    [rows, page],
   );
 
   useEffect(() => {
@@ -55,7 +57,7 @@ export default function SubscribersClient({ initialSubscribers = [] }) {
 
   const selectedEmails = useMemo(
     () => rows.filter((r) => selected.has(r.id)).map((r) => r.email),
-    [rows, selected]
+    [rows, selected],
   );
 
   const toggleOne = (id) => {
@@ -99,7 +101,9 @@ export default function SubscribersClient({ initialSubscribers = [] }) {
     if (selected.size === 0) return;
     if (!confirm(`Remove ${selected.size} subscriber(s)?`)) return;
     const ids = [...selected];
-    const results = await Promise.all(ids.map((id) => deleteNewsletterSubscriberAction(id)));
+    const results = await Promise.all(
+      ids.map((id) => deleteNewsletterSubscriberAction(id)),
+    );
     const failed = results.filter((r) => !r.success).length;
     if (failed) toast.error(`${failed} delete(s) failed`);
     else toast.success("Selected subscribers removed");
@@ -116,24 +120,56 @@ export default function SubscribersClient({ initialSubscribers = [] }) {
     window.location.href = mailtoBulk(selectedEmails);
   };
 
-  const allOnPageSelected = displayRows.length > 0 && displayRows.every((r) => selected.has(r.id));
+  const allOnPageSelected =
+    displayRows.length > 0 && displayRows.every((r) => selected.has(r.id));
+
+  const onExportCSV = () => {
+    if (displayRows.length === 0) {
+      toast.error("No subscribers to export on this page");
+      return;
+    }
+    
+    const header = "Email,Subscribed Date\n";
+    const csvContent = displayRows.map(sub => {
+      const emailStr = `"${sub.email.replace(/"/g, '""')}"`;
+      const dateStr = `"${formatAdminDateTime(sub.createdAt).replace(/"/g, '""')}"`;
+      return `${emailStr},${dateStr}`;
+    }).join("\n");
+    
+    const blob = new Blob([header + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `subscribers_page_${page}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="animate-in fade-in space-y-5 pb-20 duration-700">
-      <div>
+      <div className="flex items-center justify-between">
         <h1 className="flex items-center gap-2 text-xl font-bold tracking-tight text-gray-900">
           <Mail className="h-5 w-5 shrink-0 text-primary" />
-          Newsletter subscribers
+          Subscribers
         </h1>
-        <p className="mt-1 text-[13px] font-medium text-gray-500">
-          Export selections to your mail app, or remove addresses from the list.
-        </p>
+        <button
+          type="button"
+          onClick={onExportCSV}
+          className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-[12px] font-bold !text-white shadow-sm hover:bg-primary-dark transition-colors"
+        >
+          <Download className="h-4 w-4" />
+          Export Page
+        </button>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         {selected.size > 0 && (
           <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 bg-gray-50/80 px-3 py-2.5 sm:px-4">
-            <span className="mr-1 text-[12px] font-semibold text-gray-600">{selected.size} selected</span>
+            <span className="mr-1 text-[12px] font-semibold text-gray-600">
+              {selected.size} selected
+            </span>
             <button
               type="button"
               onClick={onSendEmailSelected}
@@ -154,7 +190,9 @@ export default function SubscribersClient({ initialSubscribers = [] }) {
         )}
 
         {rows.length === 0 ? (
-          <div className="py-16 text-center text-sm font-semibold text-gray-400">No subscribers yet</div>
+          <div className="py-16 text-center text-sm font-semibold text-gray-400">
+            No subscribers yet
+          </div>
         ) : (
           <>
             <div className="custom-scrollbar overflow-x-auto">
@@ -178,7 +216,10 @@ export default function SubscribersClient({ initialSubscribers = [] }) {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {displayRows.map((sub) => (
-                    <tr key={sub.id} className="transition-colors hover:bg-gray-50/70">
+                    <tr
+                      key={sub.id}
+                      className="transition-colors hover:bg-gray-50/70"
+                    >
                       <td className="px-3 py-3">
                         <input
                           type="checkbox"
@@ -187,10 +228,15 @@ export default function SubscribersClient({ initialSubscribers = [] }) {
                           className="rounded border-gray-300 text-primary focus:ring-primary"
                         />
                       </td>
-                      <td className="px-3 py-3 font-semibold text-gray-900">{sub.email}</td>
+                      <td className="px-3 py-3 font-semibold text-gray-900">
+                        {sub.email}
+                      </td>
                       <td className="px-3 py-3 font-medium text-gray-600">
                         <span className="inline-flex items-center gap-2">
-                          <Calendar size={14} className="shrink-0 text-primary" />
+                          <Calendar
+                            size={14}
+                            className="shrink-0 text-primary"
+                          />
                           {formatAdminDateTime(sub.createdAt)}
                         </span>
                       </td>
@@ -198,6 +244,8 @@ export default function SubscribersClient({ initialSubscribers = [] }) {
                         <div className="inline-flex items-center justify-end gap-1">
                           <a
                             href={mailtoSingle(sub.email)}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="inline-flex rounded-lg bg-primary p-2 !text-white transition-colors hover:bg-primary-dark"
                             title="Send email"
                             aria-label={`Send email to ${sub.email}`}
@@ -220,7 +268,11 @@ export default function SubscribersClient({ initialSubscribers = [] }) {
                 </tbody>
               </table>
             </div>
-            <AdminTablePagination page={page} totalItems={rows.length} onPageChange={setPage} />
+            <AdminTablePagination
+              page={page}
+              totalItems={rows.length}
+              onPageChange={setPage}
+            />
           </>
         )}
       </div>

@@ -5,7 +5,7 @@ export const AD_SLOT_PRESETS = [
   { key: "category_hub_leaderboard", label: "Parent category hub", defaultWidth: 728, defaultHeight: 90 },
   { key: "child_category_leaderboard", label: "Subcategory page", defaultWidth: 728, defaultHeight: 90 },
   { key: "article_in_feed", label: "Article — in-feed", defaultWidth: 728, defaultHeight: 90 },
-  { key: "author_page_leaderboard", label: "Author profile", defaultWidth: 728, defaultHeight: 90 },
+  { key: "reporter_page_leaderboard", label: "Reporter profile", defaultWidth: 728, defaultHeight: 90 },
   { key: "category_grid_inline", label: "Category grid — inline", defaultWidth: 728, defaultHeight: 90 },
 ];
 

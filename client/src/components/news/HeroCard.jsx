@@ -29,7 +29,7 @@ export default function HeroCard({ story }) {
             {story.excerpt}
           </p>
           <div className="flex items-center gap-3 text-[11px] text-white/65 font-[Inter]">
-            <span>By {typeof story.author === 'object' ? story.author.name : (story.author || 'Editorial Staff')}</span>
+            <span>By {typeof story.reporter === 'object' ? story.reporter.name : (story.reporter || 'Editorial Staff')}</span>
             <span>·</span>
             <span>{story.timestamp || new Date(story.createdAt).toLocaleDateString()}</span>
             <span>·</span>

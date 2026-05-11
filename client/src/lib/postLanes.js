@@ -1,4 +1,4 @@
-/** Build “lanes” of latest stories per category (for desks / author pages). */
+/** Build “lanes” of latest stories per category (for desks / reporter pages). */
 export function buildCategoryLanes(posts, maxLanes = 4, perLane = 5) {
   const map = new Map();
   for (const p of posts) {

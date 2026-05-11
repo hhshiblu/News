@@ -28,7 +28,10 @@ const getMenuGroups = (role) => {
     { title: "Published", url: "/dashboard/posts?status=PUBLISHED" },
   ];
   if (!isAdmin) {
-    articleChildren.push({ title: "Create New", url: "/dashboard/posts/create" });
+    articleChildren.push({
+      title: "Create New",
+      url: "/dashboard/posts/create",
+    });
   }
 
   return [
@@ -44,11 +47,15 @@ const getMenuGroups = (role) => {
           icon: FileText,
           children: articleChildren,
         },
-        {
-          title: "Stories",
-          icon: SquarePen,
-          url: "/dashboard/stories",
-        },
+        ...(isAdmin
+          ? [
+              {
+                title: "Stories",
+                icon: SquarePen,
+                url: "/dashboard/stories",
+              },
+            ]
+          : []),
         ...(isAdmin
           ? [
               {
@@ -88,7 +95,7 @@ const getMenuGroups = (role) => {
                   { title: "Our Team", url: "/dashboard/team-members" },
                   { title: "Departments", url: "/dashboard/departments" },
                   { title: "Partners", url: "/dashboard/partners" },
-                  { title: "Admin Panel", url: "/dashboard/users" },
+                  { title: "Administrators", url: "/dashboard/admins" },
                 ],
               },
               {
@@ -100,6 +107,11 @@ const getMenuGroups = (role) => {
                 title: "Subscribers",
                 icon: Mail,
                 url: "/dashboard/subscribers",
+              },
+              {
+                title: "Contact Messages",
+                icon: Mail,
+                url: "/dashboard/contact-messages",
               },
             ],
           },
@@ -123,11 +135,17 @@ function childLinkIsActive(pathname, searchParams, childUrl) {
     if (path === "/dashboard/posts") return !currentStatus;
     return true;
   }
-  const wanted = (new URLSearchParams(queryPart).get("status") || "").toUpperCase();
+  const wanted = (
+    new URLSearchParams(queryPart).get("status") || ""
+  ).toUpperCase();
   return currentStatus === wanted;
 }
 
-export function AdminSidebar({ isOpen: propIsOpen, setIsOpen: propSetIsOpen, user = { role: "REPORTER" } }) {
+export function AdminSidebar({
+  isOpen: propIsOpen,
+  setIsOpen: propSetIsOpen,
+  user = { role: "REPORTER" },
+}) {
   const ctx = useContext(SidebarContext);
   const isOpen = ctx ? ctx.isOpen : propIsOpen;
   const setIsOpen = ctx ? ctx.setIsOpen : propSetIsOpen;
@@ -224,7 +242,11 @@ export function AdminSidebar({ isOpen: propIsOpen, setIsOpen: propSetIsOpen, use
                       className={`mt-1 flex flex-col pl-9 space-y-1 overflow-hidden transition-all duration-300 ease-in-out ${openMenus[item.title] ? "max-h-[22rem] opacity-100 mb-4" : "max-h-0 opacity-0"}`}
                     >
                       {item.children.map((child) => {
-                        const isActive = childLinkIsActive(pathname, searchParams, child.url);
+                        const isActive = childLinkIsActive(
+                          pathname,
+                          searchParams,
+                          child.url,
+                        );
                         return (
                           <Link
                             key={child.title}

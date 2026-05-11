@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import { Type, Video, Trash2, Upload, Tag, Quote, Activity, Shield, X, ChevronDown, MousePointer2, FileText, SquarePen, Image as ImageIcon } from "lucide-react";
 import "react-quill-new/dist/quill.snow.css";
@@ -16,6 +16,53 @@ const makeBlockId = () => typeof crypto !== "undefined" && crypto.randomUUID ? c
 const normalizeEditorHtml = (value) => {
   if (typeof value !== "string") return value;
   return value.replace(/&nbsp;|&#160;|\u00A0/g, " ").replace(/white-space\s*:\s*nowrap;?/gi, "");
+};
+
+const CustomSelect = ({ value, onChange, options, placeholder, disabled }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setIsOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find(o => o.value === value);
+
+  return (
+    <div className={`relative w-full ${disabled ? 'opacity-60 pointer-events-none' : ''}`} ref={dropdownRef}>
+      <div 
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full border ${isOpen ? 'border-[#8B0000] ring-4 ring-[#8B0000]/10' : 'border-gray-200'} ${disabled ? 'bg-gray-50 text-gray-400' : 'bg-white text-gray-700'} pl-3 py-3 pr-10 text-[13px] font-bold rounded-xl outline-none transition-all cursor-pointer shadow-sm truncate flex items-center justify-between`}
+      >
+        <span className="truncate">{selectedOption ? selectedOption.label : placeholder}</span>
+        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''} absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none`} />
+      </div>
+      
+      {isOpen && (
+        <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto overflow-x-hidden">
+          <div 
+            onClick={() => { onChange(""); setIsOpen(false); }}
+            className="px-4 py-2.5 text-[13px] font-medium text-gray-500 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
+          >
+            {placeholder}
+          </div>
+          {options.map(opt => (
+            <div 
+              key={opt.value}
+              onClick={() => { onChange(opt.value); setIsOpen(false); }}
+              className={`px-4 py-2.5 text-[13px] font-medium cursor-pointer hover:bg-gray-50 transition-colors truncate ${value === opt.value ? 'bg-[#8B0000]/5 text-[#8B0000] font-bold' : 'text-gray-700'}`}
+            >
+              {opt.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default function CreatePostPage() {
@@ -72,7 +119,7 @@ export default function CreatePostPage() {
 
   useEffect(() => {
      const fetchCategories = fetch(`${API_BASE}/public/categories`).then(res => res.json());
-     const fetchTags = fetch(`${API_BASE}/admin/tags`, { credentials: "include" }).then(res => res.json());
+     const fetchTags = fetch(`${API_BASE}/public/tags`).then(res => res.json());
      const fetchMe = fetch(`${API_BASE}/admin/auth/me`, { credentials: "include" }).then(res => res.json());
 
      Promise.all([fetchCategories, fetchTags, fetchMe]).then(([catsData, tagsData, meData]) => {
@@ -213,8 +260,8 @@ export default function CreatePostPage() {
             <h1 className="text-[14px] font-black text-gray-900 tracking-tight uppercase">News Creation Engine</h1>
             <p className="text-[12px] text-gray-500 mt-1 font-medium tracking-wide">Premium Editorial Suite</p>
           </div>
-          <button onClick={handleSubmit} className="px-6 py-2.5 bg-[#8B0000] text-white font-bold text-[12px] rounded-lg hover:bg-[#6b0000] transition-colors shadow-sm uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer">
-            <MousePointer2 size={14} /> Create news
+          <button onClick={handleSubmit} className="px-6 py-2.5 bg-[#8B0000] !text-white font-bold text-[12px] rounded-lg hover:bg-[#6b0000] transition-colors shadow-sm uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer">
+            <MousePointer2 size={14} className="text-white"/> Create news
           </button>
         </div>
 
@@ -224,7 +271,7 @@ export default function CreatePostPage() {
           <div className="lg:col-span-8 space-y-4 md:space-y-6">
               
               {/* Core Metadata */}
-              <div className="bg-white p-5 md:p-8 rounded-2xl border border-gray-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] space-y-8">
+              <div className="bg-white p-2 md:p-8 rounded-2xl border border-gray-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] space-y-8">
                   <div className="relative">
                      <label className="flex items-center text-[12px] font-black text-gray-500 uppercase tracking-wider mb-2 px-1">
                         Headline <span className="text-rose-500 ml-1 leading-none">*</span>
@@ -256,46 +303,37 @@ export default function CreatePostPage() {
                          <label className="flex items-center text-[12px] font-black text-gray-500 uppercase tracking-wider mb-2 px-1">
                             Primary Category <span className="text-rose-500 ml-1 leading-none">*</span>
                          </label>
-                         <div className="relative">
-                           <select value={parentCategoryId} onChange={e => { setParentCategoryId(e.target.value); setChildCategoryId(""); }} className="w-full border border-gray-200 bg-white p-3 text-[13px] font-bold text-gray-700 rounded-xl focus:ring-4 focus:ring-[#8B0000]/10 focus:border-[#8B0000] outline-none transition-all cursor-pointer appearance-none shadow-sm">
-                              <option value="">Select Category...</option>
-                              {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                           </select>
-                           <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                         </div>
+                           <CustomSelect 
+                             value={parentCategoryId} 
+                             onChange={(val) => { setParentCategoryId(val); setChildCategoryId(""); }}
+                             placeholder="Select Category..."
+                             options={categories.map(c => ({ value: c.id, label: c.name }))}
+                           />
                       </div>
                       <div>
                          <label className="flex items-center text-[12px] font-black text-gray-500 uppercase tracking-wider mb-2 px-1">Subcategory</label>
-                         <div className="relative">
-                           <select 
+                           <CustomSelect 
                             value={childCategoryId} 
-                            onChange={e => {
-                                const selectedId = e.target.value;
-                                setChildCategoryId(selectedId);
-                                if (selectedId) {
+                            onChange={(val) => {
+                                setChildCategoryId(val);
+                                if (val) {
                                     const parent = categories.find(c => c.id === parentCategoryId);
-                                    const child = parent?.children?.find(ch => ch.id === selectedId);
+                                    const child = parent?.children?.find(ch => ch.id === val);
                                     if (child) setSubcategory(child.name);
                                 } else {
                                     setSubcategory("");
                                 }
                             }} 
                             disabled={!parentCategoryId}
-                            className={`w-full p-3 text-[13px] font-bold rounded-xl outline-none transition-all cursor-pointer appearance-none shadow-sm border ${!parentCategoryId ? 'bg-gray-50 border-gray-100 text-gray-400 opacity-60' : 'bg-white border-gray-200 text-gray-700 focus:ring-4 focus:ring-[#8B0000]/10 focus:border-[#8B0000]'}`}
-                           >
-                              <option value="">Select Subcategory...</option>
-                              {parentCategoryId && categories.find(c => c.id === parentCategoryId)?.children?.map(child => (
-                                  <option key={child.id} value={child.id}>{child.name}</option>
-                              ))}
-                           </select>
-                           <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                         </div>
+                            placeholder="Select Subcategory..."
+                            options={parentCategoryId && categories.find(c => c.id === parentCategoryId)?.children ? categories.find(c => c.id === parentCategoryId).children.map(child => ({ value: child.id, label: child.name })) : []}
+                           />
                       </div>
                   </div>
               </div>
 
               {/* Block Builder */}
-              <div className="bg-white p-5 md:p-8 rounded-2xl border border-gray-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] space-y-6">
+              <div className="bg-white p-2 md:p-8 rounded-2xl border border-gray-100 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] space-y-6">
                   <div className="flex items-center justify-between pb-4 border-b border-gray-100/60">
                       <h2 className="text-[13px] font-black text-gray-800 uppercase tracking-wider flex items-center gap-2">
                           <Activity className="w-4 h-4 text-[#8B0000]" /> Narrative Content
@@ -304,7 +342,7 @@ export default function CreatePostPage() {
 
                   <div className="space-y-6">
                       {blocks.map((block, idx) => (
-                          <div key={block.id} className="group relative bg-white border border-gray-100 p-4 rounded-xl hover:border-[#8B0000]/30 hover:shadow-md transition-all duration-300">
+                          <div key={block.id} className="group relative bg-white border border-gray-100 p-[2px] rounded-xl hover:border-[#8B0000]/30 hover:shadow-md transition-all duration-300">
                               
                               <div className="absolute -left-2 -top-2 w-6 h-6 bg-gray-900 text-white rounded-full flex items-center justify-center text-[10px] font-black shadow-sm z-10 border-2 border-white">
                                 {idx + 1}
@@ -316,7 +354,7 @@ export default function CreatePostPage() {
                                       value={block.content}
                                       onChange={(v) => updateBlockContent(block.id, v)}
                                       modules={modules}
-                                      className="bg-transparent [&_.ql-toolbar]:border-none [&_.ql-toolbar]:bg-gray-50 [&_.ql-toolbar]:rounded-t-lg [&_.ql-container]:border-none [&_.ql-container]:bg-transparent [&_.ql-editor]:min-h-[150px] [&_.ql-editor]:text-[14px] [&_.ql-editor]:leading-relaxed [&_.ql-editor]:text-gray-800"
+                                      className="bg-transparent [&_.ql-toolbar]:border-none [&_.ql-toolbar]:bg-gray-50 [&_.ql-toolbar]:rounded-t-lg [&_.ql-container]:border-none [&_.ql-container]:bg-transparent [&_.ql-editor]:min-h-[150px] [&_.ql-editor]:p-2 [&_.ql-editor]:text-[14px] [&_.ql-editor]:leading-relaxed [&_.ql-editor]:text-gray-800"
                                   />
                               )}
 
@@ -399,7 +437,7 @@ export default function CreatePostPage() {
                                   </div>
                               )}
 
-                              <button onClick={() => removeBlock(block.id)} className="absolute top-2 right-2 p-1.5 bg-white text-gray-400 hover:text-white hover:bg-rose-500 rounded-md opacity-0 group-hover:opacity-100 transition-all shadow-sm border border-gray-200 z-10">
+                              <button onClick={() => removeBlock(block.id)} className="absolute -top-2 -right-2 md:top-2 md:right-2 p-1.5 bg-white text-gray-400 hover:text-white hover:bg-rose-500 rounded-md opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all shadow-sm border border-gray-200 z-20">
                                   <Trash2 size={14} />
                               </button>
                           </div>
@@ -469,25 +507,17 @@ export default function CreatePostPage() {
                           <label className="flex items-center text-[12px] font-bold text-gray-600 mb-2 px-1">
                               Tags <span className="text-rose-500 ml-1 leading-none">*</span>
                           </label>
-                          <select 
+                          <CustomSelect 
                               value=""
-                              onChange={e => {
-                                  if (e.target.value && !selectedTags.includes(e.target.value)) {
-                                      setSelectedTags([...selectedTags, e.target.value]);
+                              onChange={(val) => {
+                                  if (val && !selectedTags.includes(val)) {
+                                      setSelectedTags([...selectedTags, val]);
                                   }
                               }}
-                              className="w-full bg-white border border-gray-200 rounded-lg px-4 py-2.5 text-[13px] font-medium text-gray-700 outline-none focus:ring-2 focus:ring-[#8B0000]/10 focus:border-[#8B0000] transition-all cursor-pointer appearance-none shadow-sm"
-                          >
-                              <option value="">{tagsList.length === 0 ? 'Synchronizing tags...' : 'Select Tags...'}</option>
-                              {tagsList.map((tag) => (
-                                  <option key={tag.id} value={tag.id}>
-                                    {tag.name}
-                                  </option>
-                                ))}
-                          </select>
-                          <div className="absolute right-4 bottom-3 pointer-events-none text-gray-400 group-focus-within:text-[#8B0000] transition-colors">
-                              <ChevronDown className="w-4 h-4" />
-                          </div>
+                              placeholder={tagsList.length === 0 ? 'Synchronizing tags...' : 'Select Tags...'}
+                              options={tagsList.map(t => ({ value: t.id, label: t.name }))}
+                          />
+
                       </div>
 
                       <div className="flex flex-wrap gap-2">

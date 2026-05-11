@@ -11,7 +11,7 @@ export default function IssuesPage() {
     const [filter, setFilter] = useState("ALL");
 
     useEffect(() => {
-        fetch("http://localhost:5000/api/v1/admin/issues", { credentials: 'include' })
+        fetch("/api/v1/admin/issues", { credentials: 'include' })
             .then(res => res.json())
             .then(data => {
                 if (data.success) setIssues(data.data);
@@ -25,7 +25,7 @@ export default function IssuesPage() {
 
     const handleResolve = async (id) => {
         try {
-            const res = await fetch(`http://localhost:5000/api/v1/admin/issues/${id}/resolve`, {
+            const res = await fetch(`/api/v1/admin/issues/${id}/resolve`, {
                 method: 'PATCH',
                 credentials: 'include'
             });

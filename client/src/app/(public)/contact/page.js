@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Mail, Phone, MapPin, Send, MessageSquare, Briefcase, Info, Camera, X, UploadCloud } from "lucide-react";
+import { Mail, Phone, MapPin, Send, MessageSquare, Info, Camera, X, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 
@@ -9,6 +9,37 @@ export default function ContactPage() {
   const [newsData, setNewsData] = useState({ name: "", email: "", title: "", content: "" });
   const [newsImages, setNewsImages] = useState([]);
   const [submittingNews, setSubmittingNews] = useState(false);
+
+  // Contact form state
+  const [contactData, setContactData] = useState({ name: "", email: "", subject: "", message: "" });
+  const [submittingContact, setSubmittingContact] = useState(false);
+
+  const handleContactSubmit = async (e) => {
+    e.preventDefault();
+    if (!contactData.name || !contactData.email || !contactData.message) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
+    setSubmittingContact(true);
+    try {
+      const res = await fetch(`${API_BASE}/public/contact`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(contactData),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        toast.success("Your message has been sent successfully!");
+        setContactData({ name: "", email: "", subject: "", message: "" });
+      } else {
+        toast.error(data?.message || "Failed to send message.");
+      }
+    } catch (err) {
+      toast.error("Network error. Please try again.");
+    } finally {
+      setSubmittingContact(false);
+    }
+  };
 
   const handleNewsImageChange = (e) => {
     const files = Array.from(e.target.files);
@@ -79,29 +110,35 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <section className="py-10 md:py-16 px-4">
+      <section className="py-6 md:py-10 px-4">
         <div className="max-w-[1280px] mx-auto">
-          <div className="flex flex-col lg:flex-row gap-8 md:gap-12">
+          <div className="flex flex-col lg:flex-row gap-6 md:gap-10">
             {/* Contact Form */}
-            <div className="lg:w-2/3 bg-white p-4 rounded-xl border border-gray-100 shadow-xl shadow-gray-200/50">
+            <div className="lg:w-2/3 bg-white p-[2px] rounded-xl border border-gray-100 shadow-xl shadow-gray-200/50">
               <h2 className="text-lg md:text-xl font-bold text-gray-900 font-[Playfair_Display] mb-6 flex items-center gap-2">
                 <MessageSquare size={18} className="text-[#00a651]" />
                 Send us a Message
               </h2>
-              <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+              <form className="space-y-4" onSubmit={handleContactSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[12px] font-bold text-gray-700 font-[Inter] ml-1">Full Name</label>
+                    <label className="text-[12px] font-bold text-gray-700 font-[Inter] ml-1">Full Name *</label>
                     <input 
                       type="text" 
+                      required
+                      value={contactData.name}
+                      onChange={e => setContactData({...contactData, name: e.target.value})}
                       placeholder="Your name"
                       className="w-full px-4 py-2.5 text-[13px] bg-gray-50 border border-transparent rounded-lg focus:bg-white focus:border-[#00a651]/30 focus:ring-4 focus:ring-[#00a651]/5 transition-all outline-none font-[Inter]"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[12px] font-bold text-gray-700 font-[Inter] ml-1">Email Address</label>
+                    <label className="text-[12px] font-bold text-gray-700 font-[Inter] ml-1">Email Address *</label>
                     <input 
                       type="email" 
+                      required
+                      value={contactData.email}
+                      onChange={e => setContactData({...contactData, email: e.target.value})}
                       placeholder="your@email.com"
                       className="w-full px-4 py-2.5 text-[13px] bg-gray-50 border border-transparent rounded-lg focus:bg-white focus:border-[#00a651]/30 focus:ring-4 focus:ring-[#00a651]/5 transition-all outline-none font-[Inter]"
                     />
@@ -110,27 +147,34 @@ export default function ContactPage() {
 
                 <div className="space-y-1.5">
                   <label className="text-[12px] font-bold text-gray-700 font-[Inter] ml-1">Subject</label>
-                  <select className="w-full px-4 py-2.5 text-[13px] bg-gray-50 border border-transparent rounded-lg focus:bg-white focus:border-[#00a651]/30 focus:ring-4 focus:ring-[#00a651]/5 transition-all outline-none font-[Inter] appearance-none">
-                    <option>General Inquiry</option>
-                    <option>News Tip / Press Release</option>
-                    <option>Subscription Support</option>
-                    <option>Advertising & Sponsorship</option>
-                    <option>Careers</option>
-                  </select>
+                  <input 
+                    type="text"
+                    value={contactData.subject}
+                    onChange={e => setContactData({...contactData, subject: e.target.value})}
+                    placeholder="e.g. General Inquiry, Advertising..."
+                    className="w-full px-4 py-2.5 text-[13px] bg-gray-50 border border-transparent rounded-lg focus:bg-white focus:border-[#00a651]/30 focus:ring-4 focus:ring-[#00a651]/5 transition-all outline-none font-[Inter]"
+                  />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[12px] font-bold text-gray-700 font-[Inter] ml-1">Your Message</label>
+                  <label className="text-[12px] font-bold text-gray-700 font-[Inter] ml-1">Your Message *</label>
                   <textarea 
                     rows={5}
+                    required
+                    value={contactData.message}
+                    onChange={e => setContactData({...contactData, message: e.target.value})}
                     placeholder="Tell us what's on your mind..."
                     className="w-full px-4 py-2.5 text-[13px] bg-gray-50 border border-transparent rounded-lg focus:bg-white focus:border-[#00a651]/30 focus:ring-4 focus:ring-[#00a651]/5 transition-all outline-none font-[Inter] resize-none"
                   />
                 </div>
 
-                <button className="w-full md:w-auto bg-[#00a651] hover:bg-[#008c44] text-white px-8 py-3 text-[13px] rounded-lg font-bold flex items-center justify-center gap-2 transition-all shadow-lg font-[Inter]">
+                <button 
+                  type="submit"
+                  disabled={submittingContact}
+                  className="w-full md:w-auto bg-[#00a651] hover:bg-[#008c44] disabled:opacity-50 text-white px-8 py-3 text-[13px] rounded-lg font-bold flex items-center justify-center gap-2 transition-all shadow-lg font-[Inter]"
+                >
                   <Send size={16} />
-                  Submit Message
+                  {submittingContact ? "Sending..." : "Submit Message"}
                 </button>
               </form>
             </div>
@@ -174,23 +218,6 @@ export default function ContactPage() {
                   </div>
                 </div>
               </div>
-
-              {/* Departments */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-bold text-gray-900 font-[Playfair_Display]">Department Contacts</h3>
-                <div className="grid gap-3">
-                  {departments.map((dept, i) => (
-                    <div key={i} className="p-3 bg-gray-50 hover:bg-gray-100/80 transition-colors rounded-lg group">
-                      <div className="flex items-center justify-between mb-0.5">
-                        <span className="font-bold text-gray-900 text-[12px]">{dept.name}</span>
-                        <Info size={13} className="text-gray-300 group-hover:text-[#00a651] transition-colors" />
-                      </div>
-                      <p className="text-[11px] text-gray-500 mb-1.5 font-[Inter]">{dept.info}</p>
-                      <a href={`mailto:${dept.email}`} className="text-[#00a651] text-[11px] font-bold hover:underline">{dept.email}</a>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -218,7 +245,7 @@ export default function ContactPage() {
       </section>
 
       {/* Map Section Placeholder */}
-      <section className="py-12 md:py-16 bg-gray-900 text-white px-4">
+      {/* <section className="py-12 md:py-16 bg-gray-900 text-white px-4">
         <div className="max-w-[1280px] mx-auto">
           <div className="text-center mb-10">
             <h2 className="text-xl md:text-2xl font-bold font-[Playfair_Display] mb-3">Our Global Presence</h2>
@@ -233,7 +260,7 @@ export default function ContactPage() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* News Submission Modal */}
       {showNewsModal && (

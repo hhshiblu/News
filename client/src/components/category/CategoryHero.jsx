@@ -9,14 +9,14 @@ export default function CategoryHero({ story, hClass = "", layout = "split", com
     typeof story.category === "object"
       ? story.category?.name
       : story.category || "World";
-  const authorLine = story.author
-    ? typeof story.author === "object"
-      ? story.author?.name
-      : story.author
-    : story.authorData
-      ? typeof story.authorData === "object"
-        ? story.authorData?.name
-        : story.authorData
+  const reporterLine = story.reporter
+    ? typeof story.reporter === "object"
+      ? story.reporter?.name
+      : story.reporter
+    : story.reporterData
+      ? typeof story.reporterData === "object"
+        ? story.reporterData?.name
+        : story.reporterData
       : null;
 
   if (layout === "stacked") {
@@ -66,10 +66,10 @@ export default function CategoryHero({ story, hClass = "", layout = "split", com
             </p>
           ) : null}
           <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 text-gray-500 font-[Inter] ${compact ? "text-[11px]" : "text-[12px]"}`}>
-            {authorLine ? (
+            {reporterLine ? (
               <span className="flex items-center gap-1.5 text-gray-900 font-semibold">
                 <User size={14} className="text-primary shrink-0" />
-                {authorLine}
+                {reporterLine}
               </span>
             ) : null}
             <span className="flex items-center gap-1.5 text-gray-500">
@@ -119,9 +119,9 @@ export default function CategoryHero({ story, hClass = "", layout = "split", com
           </p>
 
           <div className="flex flex-wrap items-center gap-3 md:gap-4 text-[12px] text-gray-400 font-[Inter]">
-            {authorLine ? (
+            {reporterLine ? (
               <span className="flex items-center gap-1.5 text-gray-900 font-bold">
-                <User size={12} /> By {authorLine}
+                <User size={12} /> By {reporterLine}
               </span>
             ) : null}
             <span className="flex items-center gap-1.5">

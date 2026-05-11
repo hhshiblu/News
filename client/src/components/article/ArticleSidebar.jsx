@@ -17,11 +17,11 @@ function FlameIcon({ className = "w-4 h-4" }) {
 
 export default function ArticleSidebar({
   breakingNews = [],
-  authorPosts = [],
-  authorName = "",
-  authorHref = "",
+  reporterPosts = [],
+  reporterName = "",
+  reporterHref = "",
 }) {
-  const showAuthor = authorName && authorPosts.length > 0 && authorHref;
+  const showReporter = reporterName && reporterPosts.length > 0 && reporterHref;
 
   return (
     <aside className="space-y-3">
@@ -76,17 +76,17 @@ export default function ArticleSidebar({
         </ul>
       </div>
 
-      {/* ── From Author ── */}
-      {showAuthor && (
+      {/* ── From Reporter ── */}
+      {showReporter && (
         <div className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
           <div className="bg-gradient-to-r from-gray-900/[0.06] to-transparent px-3 py-2.5 border-b border-gray-100 flex items-center justify-between gap-2">
             <h3 className="text-[11px] font-black uppercase tracking-[0.12em] text-gray-900 font-[Inter]">
-              From {authorName}
+              From {reporterName}
             </h3>
             <span className="w-1.5 h-1.5 rounded-full bg-gray-900 shrink-0" aria-hidden />
           </div>
           <ul className="divide-y divide-gray-50">
-            {authorPosts.map((item) => (
+            {reporterPosts.map((item) => (
               <li key={item.id}>
                 <Link
                   href={`/news/${item.slug}`}
@@ -112,7 +112,7 @@ export default function ArticleSidebar({
           </ul>
           <div className="px-3 py-2 border-t border-gray-50">
             <Link
-              href={authorHref}
+              href={reporterHref}
               className="inline-flex items-center justify-center w-full py-2 rounded-lg bg-primary text-white text-[10px] font-black uppercase tracking-widest hover:bg-primary-dark transition-colors font-[Inter]"
             >
               View all

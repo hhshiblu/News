@@ -1,15 +1,27 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Folder, Calendar, Download, UserCircle, Eye, Trash2, X } from "lucide-react";
+import {
+  Folder,
+  Calendar,
+  Download,
+  UserCircle,
+  Eye,
+  Trash2,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { deleteAdminSubmissionAction } from "@/actions/admin-data.action";
 import { formatAdminDateTime } from "@/lib/formatAdminDateTime";
-import AdminTablePagination, { ADMIN_PAGE_SIZE } from "@/components/dashboard/AdminTablePagination";
+import AdminTablePagination, {
+  ADMIN_PAGE_SIZE,
+} from "@/components/dashboard/AdminTablePagination";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
-const API_ORIGIN = API_BASE.replace(/\/api\/v1\/?$/, "") || "http://localhost:5000";
+const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+const API_ORIGIN =
+  API_BASE.replace(/\/api\/v1\/?$/, "") || "http://localhost:5000";
 
 export default function SubmissionsClient({ initialSubmissions }) {
   const [submissions, setSubmissions] = useState(initialSubmissions);
@@ -20,8 +32,9 @@ export default function SubmissionsClient({ initialSubmissions }) {
   const router = useRouter();
 
   const displayRows = useMemo(
-    () => submissions.slice((page - 1) * ADMIN_PAGE_SIZE, page * ADMIN_PAGE_SIZE),
-    [submissions, page]
+    () =>
+      submissions.slice((page - 1) * ADMIN_PAGE_SIZE, page * ADMIN_PAGE_SIZE),
+    [submissions, page],
   );
 
   useEffect(() => {
@@ -85,7 +98,9 @@ export default function SubmissionsClient({ initialSubmissions }) {
     if (selected.size === 0) return;
     if (!confirm(`Delete ${selected.size} submission(s)?`)) return;
     const ids = [...selected];
-    const results = await Promise.all(ids.map((id) => deleteAdminSubmissionAction(id)));
+    const results = await Promise.all(
+      ids.map((id) => deleteAdminSubmissionAction(id)),
+    );
     const failed = results.filter((r) => !r.success).length;
     if (failed) toast.error(`${failed} could not be deleted`);
     else toast.success("Selected submissions removed");
@@ -96,7 +111,8 @@ export default function SubmissionsClient({ initialSubmissions }) {
     router.refresh();
   };
 
-  const allOnPageSelected = displayRows.length > 0 && displayRows.every((r) => selected.has(r.id));
+  const allOnPageSelected =
+    displayRows.length > 0 && displayRows.every((r) => selected.has(r.id));
 
   return (
     <div className="animate-in fade-in space-y-5 pb-20 duration-700">
@@ -105,15 +121,14 @@ export default function SubmissionsClient({ initialSubmissions }) {
           <Folder className="h-5 w-5 shrink-0 text-primary" />
           Public submissions
         </h1>
-        <p className="mt-1 text-[13px] font-medium text-gray-500">
-          Tips and story leads sent from the public contact flow.
-        </p>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
         {selected.size > 0 && (
           <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 bg-gray-50/80 px-3 py-2.5 sm:px-4">
-            <span className="mr-1 text-[12px] font-semibold text-gray-600">{selected.size} selected</span>
+            <span className="mr-1 text-[12px] font-semibold text-gray-600">
+              {selected.size} selected
+            </span>
             <button
               type="button"
               onClick={handleBulkDelete}
@@ -126,7 +141,9 @@ export default function SubmissionsClient({ initialSubmissions }) {
         )}
 
         {submissions.length === 0 ? (
-          <div className="py-16 text-center text-sm font-semibold text-gray-400">No submissions yet</div>
+          <div className="py-16 text-center text-sm font-semibold text-gray-400">
+            No submissions yet
+          </div>
         ) : (
           <>
             <div className="custom-scrollbar overflow-x-auto">
@@ -152,7 +169,10 @@ export default function SubmissionsClient({ initialSubmissions }) {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {displayRows.map((sub) => (
-                    <tr key={sub.id} className="transition-colors hover:bg-gray-50/70">
+                    <tr
+                      key={sub.id}
+                      className="transition-colors hover:bg-gray-50/70"
+                    >
                       <td className="px-3 py-3">
                         <input
                           type="checkbox"
@@ -169,7 +189,10 @@ export default function SubmissionsClient({ initialSubmissions }) {
                       </td>
                       <td className="max-w-[150px] truncate px-3 py-3 font-medium text-gray-700">
                         <span className="inline-flex items-center gap-2">
-                          <UserCircle size={14} className="shrink-0 text-primary" />
+                          <UserCircle
+                            size={14}
+                            className="shrink-0 text-primary"
+                          />
                           {sub.senderName || "Anonymous"}
                         </span>
                       </td>
@@ -209,7 +232,11 @@ export default function SubmissionsClient({ initialSubmissions }) {
                 </tbody>
               </table>
             </div>
-            <AdminTablePagination page={page} totalItems={submissions.length} onPageChange={setPage} />
+            <AdminTablePagination
+              page={page}
+              totalItems={submissions.length}
+              onPageChange={setPage}
+            />
           </>
         )}
       </div>
@@ -219,10 +246,13 @@ export default function SubmissionsClient({ initialSubmissions }) {
           <div className="relative my-8 flex max-h-[90vh] w-full max-w-3xl flex-col rounded-2xl bg-white shadow-2xl animate-in fade-in zoom-in-95">
             <div className="flex shrink-0 items-center justify-between border-b border-gray-100 p-5 md:p-6">
               <div className="min-w-0 pr-4">
-                <h2 className="truncate text-lg font-bold text-gray-900">{viewModalData.title || "Submission"}</h2>
+                <h2 className="truncate text-lg font-bold text-gray-900">
+                  {viewModalData.title || "Submission"}
+                </h2>
                 <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
                   Sender: {viewModalData.senderName || "Anonymous"}{" "}
-                  {viewModalData.senderEmail && `(${viewModalData.senderEmail})`}
+                  {viewModalData.senderEmail &&
+                    `(${viewModalData.senderEmail})`}
                 </p>
               </div>
               <button
@@ -264,7 +294,9 @@ export default function SubmissionsClient({ initialSubmissions }) {
                         >
                           <div className="flex flex-col items-center gap-2">
                             <Download className="h-10 w-10 rounded-full bg-white/20 p-2 text-white" />
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-white">Download</span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-white">
+                              Download
+                            </span>
                           </div>
                         </a>
                       </div>
