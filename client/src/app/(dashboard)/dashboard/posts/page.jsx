@@ -10,7 +10,7 @@ import {
 import Link from "next/link";
 import PostActionButtons from "../../../../components/admin/PostActionButtons";
 import { getAdminPostsAction } from "@/actions/admin-data.action";
-import { getMe } from "@/lib/server-auth";
+import { getMe } from "@/actions/me.action";
 import PostsStatusFilter from "@/components/dashboard/posts/PostsStatusFilter";
 
 const PAGE_SIZE = 15;

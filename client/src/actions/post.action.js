@@ -1,18 +1,18 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+import { getApiV1Base } from "@/lib/apiBaseUrl";
+import { cookieStoreToHeader } from "@/lib/cookieHeader";
 
 export async function updatePostStatusAction(postId, status) {
     try {
         const cookieStore = await cookies();
-        const res = await fetch(`${BACKEND_URL}/admin/posts/${postId}`, {
+        const res = await fetch(`${getApiV1Base()}/admin/posts/${postId}`, {
             method: 'PATCH',
             body: JSON.stringify({ status }),
             headers: { 
                 'Content-Type': 'application/json',
-                'Cookie': cookieStore.toString()
+                'Cookie': cookieStoreToHeader(cookieStore)
             },
             credentials: 'include'
         });
@@ -31,9 +31,9 @@ export async function updatePostStatusAction(postId, status) {
 export async function deletePostAction(postId) {
     try {
         const cookieStore = await cookies();
-        const res = await fetch(`${BACKEND_URL}/admin/posts/${postId}`, {
+        const res = await fetch(`${getApiV1Base()}/admin/posts/${postId}`, {
             method: 'DELETE',
-            headers: { 'Cookie': cookieStore.toString() }
+            headers: { 'Cookie': cookieStoreToHeader(cookieStore) }
         });
         
         if(res.ok) {

@@ -6,11 +6,10 @@ import { Type, Video, Trash2, Upload, Tag, Quote, Activity, Shield, X, ChevronDo
 import "react-quill-new/dist/quill.snow.css";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { getApiV1Base, getClientSiteOrigin } from "@/lib/apiBaseUrl";
 
 // Drop-in React 19 replacement component 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false, loading: () => <p className="text-[12px] text-gray-500 font-medium">Loading Editor...</p> });
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
-const API_ORIGIN = API_BASE.replace(/\/api\/v1\/?$/, "");
 const makeBlockId = () => typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
 
 const normalizeEditorHtml = (value) => {
@@ -118,9 +117,9 @@ export default function CreatePostPage() {
   };
 
   useEffect(() => {
-     const fetchCategories = fetch(`${API_BASE}/public/categories`).then(res => res.json());
-     const fetchTags = fetch(`${API_BASE}/public/tags`).then(res => res.json());
-     const fetchMe = fetch(`${API_BASE}/admin/auth/me`, { credentials: "include" }).then(res => res.json());
+     const fetchCategories = fetch(`${getApiV1Base()}/public/categories`).then(res => res.json());
+     const fetchTags = fetch(`${getApiV1Base()}/public/tags`).then(res => res.json());
+     const fetchMe = fetch(`${getApiV1Base()}/admin/auth/me`, { credentials: "include" }).then(res => res.json());
 
      Promise.all([fetchCategories, fetchTags, fetchMe]).then(([catsData, tagsData, meData]) => {
          if (meData?.success && meData.data) setCurrentUser(meData.data);
@@ -169,14 +168,14 @@ export default function CreatePostPage() {
         if (featuredImageFile) {
             const formData = new FormData();
             formData.append('media', featuredImageFile);
-            const uploadRes = await fetch(`${API_BASE}/admin/upload`, { 
+            const uploadRes = await fetch(`${getApiV1Base()}/admin/upload`, { 
                 method: 'POST', 
                 body: formData,
                 credentials: 'include'
             });
             const uploadData = await uploadRes.json();
             if (uploadData.success && uploadData.url) {
-                uploadedFeaturedImage = API_ORIGIN + uploadData.url;
+                uploadedFeaturedImage = getClientSiteOrigin() + uploadData.url;
             }
         }
 
@@ -185,14 +184,14 @@ export default function CreatePostPage() {
             if ((b.type === 'image' || b.type === 'video') && b.file) {
                 const formData = new FormData();
                 formData.append('media', b.file);
-                const uploadRes = await fetch(`${API_BASE}/admin/upload`, { 
+                const uploadRes = await fetch(`${getApiV1Base()}/admin/upload`, { 
                     method: 'POST', 
                     body: formData,
                     credentials: 'include'
                 });
                 const uploadData = await uploadRes.json();
                 if (uploadData.success && uploadData.url) {
-                    parsedBlocks.push({ type: b.type, content: API_ORIGIN + uploadData.url, metaInfo: b.metaInfo });
+                    parsedBlocks.push({ type: b.type, content: getClientSiteOrigin() + uploadData.url, metaInfo: b.metaInfo });
                 }
             } else {
                 parsedBlocks.push({
@@ -221,7 +220,7 @@ export default function CreatePostPage() {
           payload.feedPriority = Number(feedPriority) || 0;
         }
         
-        const res = await fetch(`${API_BASE}/admin/posts`, { 
+        const res = await fetch(`${getApiV1Base()}/admin/posts`, { 
             method: 'POST', 
             body: JSON.stringify(payload), 
             headers: { 'Content-Type': 'application/json' },

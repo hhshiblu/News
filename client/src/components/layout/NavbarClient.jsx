@@ -7,8 +7,7 @@ import { Search, X, ChevronDown, ChevronRight, ArrowRight, Loader2, Menu } from 
 import { useRouter } from "next/navigation";
 import { searchArticles } from "@/data/queries";
 import Image from "next/image";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+import { getApiV1Base } from "@/lib/apiBaseUrl";
 
 export default function NavbarClient({ initialCategories = [] }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -35,7 +34,7 @@ export default function NavbarClient({ initialCategories = [] }) {
     setPortalReady(true);
     const fetchTags = async () => {
       try {
-        const res = await fetch(`${API_BASE}/public/tags`);
+        const res = await fetch(`${getApiV1Base()}/public/tags`);
         if (res.ok) {
           const json = await res.json();
           if (json.success && Array.isArray(json.data)) {
@@ -75,7 +74,7 @@ export default function NavbarClient({ initialCategories = [] }) {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch(`${API_BASE}/admin/auth/me`, { credentials: "include" });
+        const res = await fetch(`${getApiV1Base()}/admin/auth/me`, { credentials: "include" });
         if (res.ok) {
           const data = await res.json();
           setUser(data.data);

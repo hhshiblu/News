@@ -2,6 +2,29 @@ const authService = require('../../services/auth.service');
 const prisma = require('../../db_query/prisma');
 const { publicUserSelect } = require('../../db_query/user.query');
 
+/** HttpOnly auth cookie `accessToken` (name is unchanged on IP — browsers still send it on matching requests).
+ *  - `Secure` must be false on plain HTTP (IP:3000 without TLS), or the cookie is dropped.
+ *  - Override: COOKIE_SECURE=true | false. If unset: secure only when NODE_ENV=production AND FRONTEND_URL starts with https://
+ */
+const accessTokenCookieOptions = () => {
+  const explicit = process.env.COOKIE_SECURE;
+  let secure = false;
+  if (explicit === 'true') secure = true;
+  else if (explicit === 'false') secure = false;
+  else {
+    const front = String(process.env.FRONTEND_URL || '').trim();
+    const frontendHttps = /^https:\/\//i.test(front);
+    secure = process.env.NODE_ENV === 'production' && frontendHttps;
+  }
+  return {
+    httpOnly: true,
+    secure,
+    maxAge: 24 * 60 * 60 * 1000,
+    sameSite: 'lax',
+    path: '/',
+  };
+};
+
 const login = async (req, res, next) => {
   try {
     const { email, password } = req.body
@@ -13,14 +36,7 @@ const login = async (req, res, next) => {
 
     const { user, token } = await authService.loginUser(email, password);
     
-    // Setting Cookie for JWT
-    res.cookie('accessToken', token, {
-      httpOnly: true, // Prevents client-side JS from accessing the cookie
-      secure: process.env.NODE_ENV === 'production', // Use secure in production
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      sameSite: 'lax', // Protect against CSRF while allowing some cross-site context
-      path: '/'
-    });
+    res.cookie('accessToken', token, accessTokenCookieOptions());
 
     res.status(200).json({
       success: true,
@@ -35,7 +51,13 @@ const login = async (req, res, next) => {
 };
 
 const logout = async (req, res) => {
-    res.clearCookie('accessToken');
+    const opts = accessTokenCookieOptions();
+    res.clearCookie('accessToken', {
+      path: opts.path,
+      httpOnly: opts.httpOnly,
+      sameSite: opts.sameSite,
+      secure: opts.secure,
+    });
     res.status(200).json({ success: true, message: 'Logged out successfully' });
 };
 
@@ -73,14 +95,7 @@ const register = async (req, res, next) => {
 
         const { user, token } = await authService.registerUser({ name, email, password, role, bio });
         
-        // Setting Cookie for JWT
-        res.cookie('accessToken', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            maxAge: 24 * 60 * 60 * 1000,
-            sameSite: 'lax',
-            path: '/'
-        });
+        res.cookie('accessToken', token, accessTokenCookieOptions());
 
         res.status(201).json({
             success: true,

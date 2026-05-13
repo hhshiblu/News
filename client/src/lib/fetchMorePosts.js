@@ -1,5 +1,3 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
-
 /**
  * Client-side fetch helper for the "Load More" / "See More" button.
  * Called from client components — NOT a server action.
@@ -20,7 +18,11 @@ export async function fetchMorePosts({
   offset,
 }) {
   try {
-    const url = new URL(`${API_BASE_URL}${endpoint}`);
+    if (typeof window === "undefined") {
+      return { posts: [], totalPages: 0, total: 0 };
+    }
+    const base = `${window.location.origin}/api/v1`;
+    const url = new URL(`${base}${endpoint}`);
 
     Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined && v !== null && v !== "") {

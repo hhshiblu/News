@@ -6,6 +6,7 @@ import { deletePostAction, updatePostStatusAction } from "../../actions/post.act
 import { createIssueAction } from "../../actions/issue.action";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { getApiV1Base } from "@/lib/apiBaseUrl";
 
 export default function PostActionButtons({ post, userRole = 'AUTHOR' }) {
   const isAdmin = userRole === 'ADMIN';
@@ -26,8 +27,6 @@ export default function PostActionButtons({ post, userRole = 'AUTHOR' }) {
   const [postIssues, setPostIssues] = useState([]);
   const [issueListLoading, setIssueListLoading] = useState(false);
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
-
   useEffect(() => {
     setCurrentStatus(post.status);
   }, [post.status, post.id]);
@@ -40,7 +39,7 @@ export default function PostActionButtons({ post, userRole = 'AUTHOR' }) {
       .filter(Boolean);
     setSelectedTagIds(Array.from(new Set(init)));
 
-    fetch(`${API_BASE}/admin/tags`, { credentials: "include" })
+    fetch(`${getApiV1Base()}/admin/tags`, { credentials: "include" })
       .then((r) => r.json())
       .then((d) => {
         if (d?.success) setAllTags(d.data || []);
@@ -67,7 +66,7 @@ export default function PostActionButtons({ post, userRole = 'AUTHOR' }) {
   const saveTags = async () => {
     try {
       setSavingTags(true);
-      const res = await fetch(`${API_BASE}/admin/posts/${post.id}/tags`, {
+      const res = await fetch(`${getApiV1Base()}/admin/posts/${post.id}/tags`, {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -130,7 +129,7 @@ export default function PostActionButtons({ post, userRole = 'AUTHOR' }) {
     setShowIssueListModal(true);
     setIssueListLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/admin/issues`, { credentials: "include" });
+      const res = await fetch(`${getApiV1Base()}/admin/issues`, { credentials: "include" });
       const data = await res.json();
       const all = Array.isArray(data?.data) ? data.data : [];
       const filtered = all.filter((issue) => {

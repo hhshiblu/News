@@ -2,6 +2,7 @@
 import { Mail, Check } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { getPublicApiBase } from "@/lib/apiBaseUrl";
 
 export default function NewsletterBox({ variant = "sidebar" }) {
   const [email, setEmail] = useState("");
@@ -12,7 +13,7 @@ export default function NewsletterBox({ variant = "sidebar" }) {
     if(!email) return;
     setLoading(true);
     try {
-        const res = await fetch("http://localhost:5000/api/v1/public/newsletter/subscribe", {
+        const res = await fetch(`${getPublicApiBase()}/newsletter/subscribe`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email })

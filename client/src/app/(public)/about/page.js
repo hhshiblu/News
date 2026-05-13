@@ -276,7 +276,7 @@ export default async function AboutPage() {
       {/* ━━━ TRUSTED PARTNERS MARQUEE ━━━ */}
       {partners.length > 0 && (
         <section className="bg-[#f8f9fa] py-10 md:py-14 border-t border-gray-100">
-          <div className="max-w-[1280px] mx-auto mb-6 text-center px-4">
+          <div className="max-w-[1000px] mx-auto px-2 mb-6 text-center">
             <div className="flex items-center justify-center gap-3 mb-3">
               <div className="h-1 w-10 bg-[#00a651] rounded-full" />
               <h2 className="text-[11px] font-black uppercase tracking-[0.25em] text-[#00a651] font-[Inter]">
@@ -289,52 +289,33 @@ export default async function AboutPage() {
             </h3>
           </div>
 
-          {/* Full-width ticker strip */}
-          <div className="relative overflow-hidden" style={{ width: '100vw', marginLeft: 'calc(-50vw + 50%)' }}>
-            {/* Fade edges */}
-            <div className="absolute left-0 top-0 bottom-0 w-12 md:w-24 bg-gradient-to-r from-[#f8f9fa] to-transparent z-10 pointer-events-none" />
-            <div className="absolute right-0 top-0 bottom-0 w-12 md:w-24 bg-gradient-to-l from-[#f8f9fa] to-transparent z-10 pointer-events-none" />
+          <div className="w-full max-w-[1000px] mx-auto px-2">
+            <div className="relative overflow-hidden rounded-xl bg-white/40">
+              <div className="absolute left-0 top-0 bottom-0 w-10 sm:w-16 bg-gradient-to-r from-[#f8f9fa] to-transparent z-10 pointer-events-none" />
+              <div className="absolute right-0 top-0 bottom-0 w-10 sm:w-16 bg-gradient-to-l from-[#f8f9fa] to-transparent z-10 pointer-events-none" />
 
-            {/* Scrolling track */}
-            <div className="partners-marquee gap-3">
-              {/* First copy */}
-              {partners.map((p) => (
-                <a
-                  key={`a-${p.id}`}
-                  href={p.websiteUrl || "#"}
-                  target={p.websiteUrl ? "_blank" : undefined}
-                  rel={p.websiteUrl ? "noopener noreferrer" : undefined}
-                  className="shrink-0 w-[140px] h-[80px] rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-md hover:border-[#00a651]/40 transition-all block"
-                  title={p.name}
-                >
-                  <img
-                    src={p.logoUrl}
-                    alt={p.name}
-                    className="w-full h-full object-cover"
-                  />
-                </a>
-              ))}
-              {/* Second copy (seamless loop) */}
-              {partners.map((p) => (
-                <a
-                  key={`b-${p.id}`}
-                  href={p.websiteUrl || "#"}
-                  target={p.websiteUrl ? "_blank" : undefined}
-                  rel={p.websiteUrl ? "noopener noreferrer" : undefined}
-                  className="shrink-0 w-[140px] h-[80px] rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm hover:shadow-md hover:border-[#00a651]/40 transition-all block"
-                  title={p.name}
-                >
-                  <img
-                    src={p.logoUrl}
-                    alt={p.name}
-                    className="w-full h-full object-cover"
-                  />
-                </a>
-              ))}
+              <div className="partners-marquee about-partners-ticker gap-4 py-3 [direction:ltr]">
+                {[...partners, ...partners].map((p, i) => (
+                  <a
+                    key={`marq-${i}-${p.id}`}
+                    href={p.websiteUrl || "#"}
+                    target={p.websiteUrl ? "_blank" : undefined}
+                    rel={p.websiteUrl ? "noopener noreferrer" : undefined}
+                    className="shrink-0 flex h-16 w-[min(100%,11rem)] sm:h-20 sm:w-44 md:w-52 items-center justify-center rounded-lg border border-gray-200 bg-white px-2 shadow-sm hover:shadow-md hover:border-[#00a651]/40 transition-all"
+                    title={p.name}
+                  >
+                    <img
+                      src={p.logoUrl}
+                      alt={p.name}
+                      className="max-h-full w-full object-contain"
+                    />
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
 
-          <div className="text-center mt-6 px-4">
+          <div className="max-w-[1000px] mx-auto px-2 text-center mt-6">
             <Link
               href="/partners"
               className="inline-flex items-center gap-2 px-5 py-2 border-2 border-gray-900 text-gray-900 text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-gray-900 hover:text-white transition-all font-[Inter]"

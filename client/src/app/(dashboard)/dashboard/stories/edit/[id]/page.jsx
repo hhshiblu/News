@@ -7,10 +7,9 @@ import "react-quill-new/dist/quill.snow.css";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { getApiV1Base, getClientSiteOrigin } from "@/lib/apiBaseUrl";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false, loading: () => <p className="text-[12px] text-gray-500 font-medium">Loading Editor...</p> });
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
-const API_ORIGIN = API_BASE.replace(/\/api\/v1\/?$/, "");
 const makeBlockId = () => typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
 
 const normalizeEditorHtml = (value) => {
@@ -30,7 +29,7 @@ export default function EditStoryPage({ params }) {
   useEffect(() => {
     const fetchStory = async () => {
       try {
-        const res = await fetch(`${API_BASE}/admin/stories/${id}`, { credentials: 'include' });
+        const res = await fetch(`${getApiV1Base()}/admin/stories/${id}`, { credentials: 'include' });
         const result = await res.json();
         if (result.success && result.data) {
           setTitle(result.data.title);
@@ -100,14 +99,14 @@ export default function EditStoryPage({ params }) {
             if (b.type === 'image' && b.file) {
                 const imgFormData = new FormData();
                 imgFormData.append('media', b.file);
-                const uploadRes = await fetch(`${API_BASE}/admin/upload`, { 
+                const uploadRes = await fetch(`${getApiV1Base()}/admin/upload`, { 
                     method: 'POST', 
                     body: imgFormData,
                     credentials: 'include'
                 });
                 const uploadData = await uploadRes.json();
                 if (uploadData.success && uploadData.url) {
-                    parsedBlocks.push({ type: b.type, content: API_ORIGIN + uploadData.url });
+                    parsedBlocks.push({ type: b.type, content: getClientSiteOrigin() + uploadData.url });
                 }
             } else {
                 parsedBlocks.push({
@@ -119,7 +118,7 @@ export default function EditStoryPage({ params }) {
         
         formData.append('content', JSON.stringify(parsedBlocks));
 
-        const res = await fetch(`${API_BASE}/admin/stories/${id}`, { 
+        const res = await fetch(`${getApiV1Base()}/admin/stories/${id}`, { 
             method: 'PATCH', 
             body: formData, 
             credentials: 'include'

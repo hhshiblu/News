@@ -2,17 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+import { getApiV1Base } from "@/lib/apiBaseUrl";
+import { cookieStoreToHeader } from "@/lib/cookieHeader";
 
 export async function createIssueAction(postId, description, severity = 'MEDIUM') {
     try {
         const cookieStore = await cookies();
-        const res = await fetch(`${BACKEND_URL}/admin/issues`, {
+        const res = await fetch(`${getApiV1Base()}/admin/issues`, {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
-                'Cookie': cookieStore.toString()
+                'Cookie': cookieStoreToHeader(cookieStore)
             },
             body: JSON.stringify({ postId, description, severity })
         });
@@ -33,9 +33,9 @@ export async function createIssueAction(postId, description, severity = 'MEDIUM'
 export async function resolveIssueAction(issueId) {
     try {
         const cookieStore = await cookies();
-        const res = await fetch(`${BACKEND_URL}/admin/issues/${issueId}/resolve`, {
+        const res = await fetch(`${getApiV1Base()}/admin/issues/${issueId}/resolve`, {
             method: 'PATCH',
-            headers: { 'Cookie': cookieStore.toString() }
+            headers: { 'Cookie': cookieStoreToHeader(cookieStore) }
         });
         const data = await res.json();
         revalidatePath("/admin/issues");

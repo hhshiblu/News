@@ -17,11 +17,7 @@ import { formatAdminDateTime } from "@/lib/formatAdminDateTime";
 import AdminTablePagination, {
   ADMIN_PAGE_SIZE,
 } from "@/components/dashboard/AdminTablePagination";
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
-const API_ORIGIN =
-  API_BASE.replace(/\/api\/v1\/?$/, "") || "http://localhost:5000";
+import { getApiV1Base, getClientSiteOrigin } from "@/lib/apiBaseUrl";
 
 export default function SubmissionsClient({ initialSubmissions }) {
   const [submissions, setSubmissions] = useState(initialSubmissions);
@@ -282,12 +278,12 @@ export default function SubmissionsClient({ initialSubmissions }) {
                         className="group relative aspect-square overflow-hidden rounded-xl border border-gray-200 bg-gray-100 shadow-sm"
                       >
                         <img
-                          src={`${API_ORIGIN}${imgUrl.startsWith("/") ? "" : "/"}${imgUrl}`}
+                          src={`${getClientSiteOrigin()}${imgUrl.startsWith("/") ? "" : "/"}${imgUrl}`}
                           alt=""
                           className="h-full w-full object-cover"
                         />
                         <a
-                          href={`${API_BASE}/admin/submissions/download?file=${encodeURIComponent(imgUrl)}`}
+                          href={`${getApiV1Base()}/admin/submissions/download?file=${encodeURIComponent(imgUrl)}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="absolute inset-0 flex items-center justify-center bg-gray-900/60 opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100"

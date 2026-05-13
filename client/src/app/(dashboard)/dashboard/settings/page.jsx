@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getMe } from "@/lib/server-auth";
+import { getMe } from "@/actions/me.action";
 import { getSiteConfigAction } from "@/actions/admin-data.action";
 import AdminSettingsClient from "@/components/dashboard/settings/AdminSettingsClient";
 

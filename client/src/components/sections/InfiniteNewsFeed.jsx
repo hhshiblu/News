@@ -4,8 +4,8 @@ import { useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Loader2 } from "lucide-react";
+import { getApiV1Base } from "@/lib/apiBaseUrl";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 const BATCH = 10;
 
 function imgSrc(p) {
@@ -70,7 +70,7 @@ function SkeletonCard() {
 async function fetchMorePosts(offset, seenIds = new Set()) {
   try {
     const qs = new URLSearchParams({ limit: String(BATCH), offset: String(offset) });
-    const res = await fetch(`${API_URL}/public/posts?${qs.toString()}`);
+    const res = await fetch(`${getApiV1Base()}/public/posts?${qs.toString()}`);
     if (!res.ok) return [];
     const data = await res.json();
     const posts = data?.posts || [];

@@ -77,6 +77,11 @@ a, button, [role="button"], .nav-item, .cursor-pointer {
   animation-play-state: paused;
 }
 
+/* About page: smoother loop, same direction (content moves right → left) */
+.about-partners-ticker {
+  animation-duration: 42s;
+}
+
 /* ── Market ticker ── */
 @keyframes market-scroll {
   0%   { transform: translateX(0); }

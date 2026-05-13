@@ -1,6 +1,4 @@
 require("dotenv").config();
-// Redis/BullMQ click worker is temporarily disabled.
-// require("./app/services/queue.service");
 const http = require("http");
 const app = require("./app/app");
 

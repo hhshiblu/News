@@ -13,19 +13,19 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { AD_SLOT_PRESETS } from "@/lib/adSlots";
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+import { getApiV1Base, getClientSiteOrigin } from "@/lib/apiBaseUrl";
 
 function mediaOrigin() {
-  return API_BASE.replace(/\/api\/v1\/?$/, "");
+  return getClientSiteOrigin();
 }
 
 function resolveMediaUrl(pathOrUrl) {
   if (!pathOrUrl) return "";
   if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
   const p = pathOrUrl.startsWith("/") ? pathOrUrl : `/${pathOrUrl}`;
-  return `${mediaOrigin()}${p}`;
+  const base = mediaOrigin();
+  if (!base) return p;
+  return `${base}${p}`;
 }
 
 export default function AdsManagementPage() {
@@ -48,7 +48,7 @@ export default function AdsManagementPage() {
   const loadAds = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/admin/ads`, {
+      const res = await fetch(`${getApiV1Base()}/admin/ads`, {
         credentials: "include",
       });
       const data = await res.json();
@@ -128,7 +128,7 @@ export default function AdsManagementPage() {
           const fd = new FormData();
           fd.append("image", imageFile);
           appendFormFields(fd);
-          const res = await fetch(`${API_BASE}/admin/ads/${editingId}`, {
+          const res = await fetch(`${getApiV1Base()}/admin/ads/${editingId}`, {
             method: "PATCH",
             body: fd,
             credentials: "include",
@@ -136,7 +136,7 @@ export default function AdsManagementPage() {
           const data = await res.json();
           if (!res.ok) throw new Error(data.message || "Update failed");
         } else {
-          const res = await fetch(`${API_BASE}/admin/ads/${editingId}`, {
+          const res = await fetch(`${getApiV1Base()}/admin/ads/${editingId}`, {
             method: "PATCH",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
@@ -157,7 +157,7 @@ export default function AdsManagementPage() {
         const fd = new FormData();
         fd.append("image", imageFile);
         appendFormFields(fd);
-        const res = await fetch(`${API_BASE}/admin/ads`, {
+        const res = await fetch(`${getApiV1Base()}/admin/ads`, {
           method: "POST",
           body: fd,
           credentials: "include",
@@ -175,7 +175,7 @@ export default function AdsManagementPage() {
 
   const setAdActive = async (id, active) => {
     try {
-      const res = await fetch(`${API_BASE}/admin/ads/${id}`, {
+      const res = await fetch(`${getApiV1Base()}/admin/ads/${id}`, {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -193,7 +193,7 @@ export default function AdsManagementPage() {
   const deleteAd = async (id) => {
     if (!confirm("Delete this creative and its image file?")) return;
     try {
-      const res = await fetch(`${API_BASE}/admin/ads/${id}`, {
+      const res = await fetch(`${getApiV1Base()}/admin/ads/${id}`, {
         method: "DELETE",
         credentials: "include",
       });

@@ -1,6 +1,6 @@
 "use server";
 
-const BACKEND_URL = process.env.BACKEND_INTERNAL_URL ? `${process.env.BACKEND_INTERNAL_URL}/api/v1` : (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1");
+import { getApiV1Base } from "@/lib/apiBaseUrl";
 
 /**
  * Fetches the public news feed with various filters
@@ -16,7 +16,7 @@ export async function getNewsFeed(filters = {}) {
             }
         });
 
-        const res = await fetch(`${BACKEND_URL}/public/posts?${queryParams.toString()}`, {
+        const res = await fetch(`${getApiV1Base()}/public/posts?${queryParams.toString()}`, {
             next: { revalidate: 60 } // Revalidate every minute
         });
 
@@ -36,7 +36,7 @@ export async function getNewsFeed(filters = {}) {
  */
 export async function getPostDetail(slug) {
     try {
-        const res = await fetch(`${BACKEND_URL}/public/posts/${slug}`, {
+        const res = await fetch(`${getApiV1Base()}/public/posts/${slug}`, {
             next: { revalidate: 30 }
         });
 
@@ -55,7 +55,7 @@ export async function getPostDetail(slug) {
  */
 export async function getCategories() {
     try {
-        const res = await fetch(`${BACKEND_URL}/public/categories`, {
+        const res = await fetch(`${getApiV1Base()}/public/categories`, {
             cache: "no-store"
         });
         if (!res.ok) {
@@ -77,7 +77,7 @@ export async function getReporterBySlug(slug, { page = 1, limit = 12 } = {}) {
         if (page != null) qs.set("page", String(page));
         if (limit != null) qs.set("limit", String(limit));
         const q = qs.toString();
-        const res = await fetch(`${BACKEND_URL}/public/reporters/${enc}${q ? `?${q}` : ""}`, {
+        const res = await fetch(`${getApiV1Base()}/public/reporters/${enc}${q ? `?${q}` : ""}`, {
             cache: "no-store",
         });
         if (!res.ok) {

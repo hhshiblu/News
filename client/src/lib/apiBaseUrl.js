@@ -16,6 +16,15 @@ export function getApiStaticOrigin() {
   return base.replace(/\/api\/v1\/?$/, "");
 }
 
+/** Public REST base (`/api/v1/public/...`) — SSR must use internal Docker URL, not localhost. */
+export function getPublicApiBase() {
+  if (typeof window !== "undefined") {
+    return "/api/v1/public";
+  }
+  const origin = getApiStaticOrigin();
+  return origin ? `${origin}/api/v1/public` : "/api/v1/public";
+}
+
 /** Safely resolve image URLs, turning relative paths into absolute backend URLs. */
 export function getImageUrl(path) {
   if (!path) return "/placeholder.jpg";
@@ -33,4 +42,10 @@ export function getFrontendUrl() {
     return window.location.origin;
   }
   return process.env.NEXT_PUBLIC_FRONTEND_URL || process.env.FRONTEND_URL || "http://localhost:3000";
+}
+
+/** Browser-only: current site origin (e.g. saved media URLs after upload). */
+export function getClientSiteOrigin() {
+  if (typeof window === "undefined") return "";
+  return window.location.origin;
 }

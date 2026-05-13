@@ -2,15 +2,15 @@
 
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
-
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1").replace(/\/$/, "");
+import { getApiV1Base } from "@/lib/apiBaseUrl";
+import { cookieStoreToHeader } from "@/lib/cookieHeader";
 
 /** Server-only: category tree for dashboard (pass to client as props). */
 export async function listAdminCategoriesTreeAction() {
   const cookieStore = await cookies();
   try {
-    const res = await fetch(`${API_BASE}/admin/categories`, {
-      headers: { Cookie: cookieStore.toString() },
+    const res = await fetch(`${getApiV1Base()}/admin/categories`, {
+      headers: { Cookie: cookieStoreToHeader(cookieStore) },
       cache: "no-store",
     });
     if (!res.ok) return [];
@@ -24,10 +24,10 @@ export async function listAdminCategoriesTreeAction() {
 export async function createCategoryAction(formData) {
   const cookieStore = await cookies();
   try {
-    const res = await fetch(`${API_BASE}/admin/categories`, {
+    const res = await fetch(`${getApiV1Base()}/admin/categories`, {
       method: "POST",
       body: formData,
-      headers: { Cookie: cookieStore.toString() },
+      headers: { Cookie: cookieStoreToHeader(cookieStore) },
     });
     const data = await res.json().catch(() => ({}));
     if (res.ok && data.success) {
@@ -43,9 +43,9 @@ export async function createCategoryAction(formData) {
 export async function deleteCategoryAction(categoryId) {
   const cookieStore = await cookies();
   try {
-    const res = await fetch(`${API_BASE}/admin/categories/${categoryId}`, {
+    const res = await fetch(`${getApiV1Base()}/admin/categories/${categoryId}`, {
       method: "DELETE",
-      headers: { Cookie: cookieStore.toString() },
+      headers: { Cookie: cookieStoreToHeader(cookieStore) },
     });
     const data = await res.json().catch(() => ({}));
     if (res.ok && data.success) {

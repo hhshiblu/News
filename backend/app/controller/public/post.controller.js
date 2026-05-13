@@ -1,6 +1,4 @@
 const postService = require('../../services/post.service');
-// Redis/BullMQ click queue temporarily disabled.
-// const { addPostClickJob } = require('../../services/queue.service');
 
 const getPublicFeed = async (req, res, next) => {
     try {

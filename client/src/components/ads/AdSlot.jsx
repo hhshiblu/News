@@ -3,18 +3,18 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { presetForKey } from "@/lib/adSlots";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+import { getApiV1Base, getClientSiteOrigin } from "@/lib/apiBaseUrl";
 
 function mediaOrigin() {
-  return API_BASE.replace(/\/api\/v1\/?$/, "");
+  return getClientSiteOrigin();
 }
 
 function resolveAdImageSrc(url) {
   if (!url) return url;
   if (/^https?:\/\//i.test(url)) return url;
-  const base = mediaOrigin();
   const path = url.startsWith("/") ? url : `/${url}`;
+  const base = mediaOrigin();
+  if (!base) return path;
   return `${base}${path}`;
 }
 
@@ -29,7 +29,7 @@ export default function AdSlot({ slotKey, className = "", hideLabel = false }) {
 
   useEffect(() => {
     let cancelled = false;
-    fetch(`${API_BASE}/public/ads?slotKey=${encodeURIComponent(slotKey)}`, { cache: "no-store" })
+    fetch(`${getApiV1Base()}/public/ads?slotKey=${encodeURIComponent(slotKey)}`, { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => {
         if (!cancelled && d.success) setAd(d.data);

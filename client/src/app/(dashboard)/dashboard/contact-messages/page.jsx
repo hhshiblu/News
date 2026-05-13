@@ -2,8 +2,7 @@
 import { useState, useEffect } from "react";
 import { Mail, Trash2, Eye, EyeOff, AlertTriangle, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+import { getApiV1Base } from "@/lib/apiBaseUrl";
 
 export default function ContactMessagesPage() {
   const [messages, setMessages] = useState([]);
@@ -16,7 +15,7 @@ export default function ContactMessagesPage() {
 
   const fetchMessages = async (p = 1) => {
     try {
-      const res = await fetch(`${API_BASE}/admin/contact-messages?page=${p}&limit=${limit}`, { credentials: "include" });
+      const res = await fetch(`${getApiV1Base()}/admin/contact-messages?page=${p}&limit=${limit}`, { credentials: "include" });
       if (res.ok) {
         const data = await res.json();
         setMessages(data.data || []);
@@ -33,7 +32,7 @@ export default function ContactMessagesPage() {
 
   const markAsRead = async (id) => {
     try {
-      const res = await fetch(`${API_BASE}/admin/contact-messages/${id}/read`, { method: "PATCH", credentials: "include" });
+      const res = await fetch(`${getApiV1Base()}/admin/contact-messages/${id}/read`, { method: "PATCH", credentials: "include" });
       if (res.ok) {
         setMessages(msgs => msgs.map(m => m.id === id ? { ...m, read: true } : m));
         if (selectedMessage?.id === id) setSelectedMessage(prev => ({ ...prev, read: true }));
@@ -46,7 +45,7 @@ export default function ContactMessagesPage() {
   const confirmDelete = async () => {
     if (!deleteTarget) return;
     try {
-      const res = await fetch(`${API_BASE}/admin/contact-messages/${deleteTarget.id}`, { method: "DELETE", credentials: "include" });
+      const res = await fetch(`${getApiV1Base()}/admin/contact-messages/${deleteTarget.id}`, { method: "DELETE", credentials: "include" });
       if (res.ok) {
         toast.success("Message deleted.");
         setDeleteTarget(null);

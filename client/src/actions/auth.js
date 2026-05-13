@@ -1,12 +1,11 @@
-// This file intentionally omits "use server" to ensure that the browser handles 
-// the HttpOnly cookie returned by the backend directly, avoiding server-to-server 
-// cookie stripping issues in Next.js Server Actions.
+// This file intentionally omits "use server" so the browser receives Set-Cookie.
+// Same-origin `/api/v1` → Next rewrites to the backend; HttpOnly cookie is stored for this site.
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+import { getApiV1Base } from "@/lib/apiBaseUrl";
 
 export async function loginAction(email, password) {
   try {
-    const res = await fetch(`${BACKEND_URL}/admin/auth/login`, {
+    const res = await fetch(`${getApiV1Base()}/admin/auth/login`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json"
@@ -29,7 +28,7 @@ export async function loginAction(email, password) {
 
 export async function signupAction(userData) {
     try {
-        const res = await fetch(`${BACKEND_URL}/admin/auth/register`, {
+        const res = await fetch(`${getApiV1Base()}/admin/auth/register`, {
           method: "POST",
           headers: { 
             "Content-Type": "application/json"
@@ -51,7 +50,7 @@ export async function signupAction(userData) {
 
 export async function logoutAction() {
     try {
-        const res = await fetch(`${BACKEND_URL}/admin/auth/logout`, {
+        const res = await fetch(`${getApiV1Base()}/admin/auth/logout`, {
           method: "POST",
           credentials: "include"
         });

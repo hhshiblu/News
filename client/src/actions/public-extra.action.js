@@ -1,10 +1,10 @@
 "use server";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+import { getApiV1Base } from "@/lib/apiBaseUrl";
 
 export async function getPublicTeamMembersAction() {
   try {
-    const res = await fetch(`${API_BASE}/public/team-members`, { cache: "no-store" });
+    const res = await fetch(`${getApiV1Base()}/public/team-members`, { cache: "no-store" });
     if (!res.ok) return [];
     const json = await res.json();
     return json?.data || [];
@@ -15,7 +15,7 @@ export async function getPublicTeamMembersAction() {
 
 export async function getPublicPartnersAction() {
   try {
-    const res = await fetch(`${API_BASE}/public/partners`, { cache: "no-store" });
+    const res = await fetch(`${getApiV1Base()}/public/partners`, { cache: "no-store" });
     if (!res.ok) return [];
     const json = await res.json();
     return json?.data || [];
@@ -26,7 +26,7 @@ export async function getPublicPartnersAction() {
 
 export async function getPublicCategoryBySlugAction(slug) {
   try {
-    const res = await fetch(`${API_BASE}/public/categories/${slug}`, { cache: "no-store" });
+    const res = await fetch(`${getApiV1Base()}/public/categories/${slug}`, { cache: "no-store" });
     if (!res.ok) return null;
     return await res.json();
   } catch (_) {
@@ -36,7 +36,7 @@ export async function getPublicCategoryBySlugAction(slug) {
 export async function getPublicStoriesAction(query = "") {
   try {
     const q = query ? `?${query}` : "";
-    const res = await fetch(`${API_BASE}/public/stories${q}`, { cache: "no-store" });
+    const res = await fetch(`${getApiV1Base()}/public/stories${q}`, { cache: "no-store" });
     if (!res.ok) return { stories: [], total: 0, totalPages: 1 };
     return await res.json();
   } catch (_) {
@@ -46,7 +46,7 @@ export async function getPublicStoriesAction(query = "") {
 
 export async function getPublicStoryBySlugAction(slug) {
   try {
-    const res = await fetch(`${API_BASE}/public/stories/${slug}`, { cache: "no-store" });
+    const res = await fetch(`${getApiV1Base()}/public/stories/${slug}`, { cache: "no-store" });
     if (!res.ok) return null;
     const json = await res.json();
     return json?.data || null;

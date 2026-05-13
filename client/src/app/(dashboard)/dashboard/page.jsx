@@ -15,7 +15,7 @@ import {
   CategoryBarChart,
 } from "@/components/DashboardCharts";
 import TrafficRangeFilter from "@/components/dashboard/TrafficRangeFilter";
-import { getMe } from "@/lib/server-auth";
+import { getMe } from "@/actions/me.action";
 import { getAdminPostsAction } from "@/actions/admin-data.action";
 
 export default async function DashboardPage() {

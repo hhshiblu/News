@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getMe } from "@/lib/server-auth";
+import { getMe } from "@/actions/me.action";
 import AccountProfileClient from "@/components/dashboard/account/AccountProfileClient";
 
 export const metadata = { title: "My account" };

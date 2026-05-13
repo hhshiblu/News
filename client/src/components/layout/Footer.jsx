@@ -2,9 +2,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
+import { getPublicApiBase } from "@/lib/apiBaseUrl";
 import { Facebook, Twitter, Youtube, Instagram, Mail, Phone, MapPin } from "lucide-react";
-
-// Using SVG icons directly since lucide-react v1.x doesn't have social icons
 const SocialIcons = {
   Facebook: () => (
     <svg className="w-[18px] h-[18px]" fill="currentColor" viewBox="0 0 24 24">
@@ -71,7 +70,7 @@ export default function Footer({ navigationCategories = [] }) {
     if(!email) return;
     setLoading(true);
     try {
-        const res = await fetch("http://localhost:5000/api/v1/public/newsletter/subscribe", {
+        const res = await fetch(`${getPublicApiBase()}/newsletter/subscribe`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email })

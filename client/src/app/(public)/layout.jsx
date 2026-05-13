@@ -28,7 +28,7 @@ export default async function PublicLayout({ children }) {
       <BreakingNewsTicker />
 
       {/* Page Content */}
-      <main className="w-full min-h-[calc(100dvh-18rem)]">{children}</main>
+      <main className="w-full">{children}</main>
 
       {/* Footer */}
       <Footer navigationCategories={navCategories} />

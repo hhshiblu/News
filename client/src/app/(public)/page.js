@@ -146,7 +146,7 @@ async function HomePageContent() {
   const infiniteOffset = 40; 
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-white">
 
       {/* ─── SECTION 1: HERO ─────────────────────────────────────── */}
       <div className="max-w-[1280px] mx-auto px-4 pt-6 pb-0">

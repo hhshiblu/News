@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Mail, Phone, MapPin, Send, MessageSquare, Info, Camera, X, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+import { getPublicApiBase } from "@/lib/apiBaseUrl";
 
 export default function ContactPage() {
   const [showNewsModal, setShowNewsModal] = useState(false);
@@ -22,7 +22,7 @@ export default function ContactPage() {
     }
     setSubmittingContact(true);
     try {
-      const res = await fetch(`${API_BASE}/public/contact`, {
+      const res = await fetch(`${getPublicApiBase()}/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(contactData),
@@ -70,7 +70,7 @@ export default function ContactPage() {
 
      setSubmittingNews(true);
      try {
-         const res = await fetch(`${API_BASE}/public/submissions`, {
+         const res = await fetch(`${getPublicApiBase()}/submissions`, {
              method: "POST",
              body: formData
          });

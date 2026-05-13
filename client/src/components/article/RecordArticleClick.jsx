@@ -1,15 +1,14 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+import { getApiV1Base } from "@/lib/apiBaseUrl";
 
 export default function RecordArticleClick({ slug }) {
   const done = useRef(false);
   useEffect(() => {
     if (!slug || done.current) return;
     done.current = true;
-    fetch(`${API}/public/posts/${encodeURIComponent(slug)}/click`, {
+    fetch(`${getApiV1Base()}/public/posts/${encodeURIComponent(slug)}/click`, {
       method: "POST",
       mode: "cors",
       credentials: "omit",

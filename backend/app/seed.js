@@ -1,89 +1,43 @@
-const { PrismaClient } = require('@prisma/client');
-const bcrypt = require('bcrypt');
+require("dotenv").config();
+const bcrypt = require("bcrypt");
+const prisma = require("./db_query/prisma");
 
-const prisma = new PrismaClient();
+const ADMIN_EMAIL = "hhshiblu5555@gmail.com";
+const ADMIN_PASSWORD = "123456";
 
 async function main() {
-    console.log("Seeding started...");
+  await prisma.$transaction(async (tx) => {
+    await tx.issue.deleteMany();
+    await tx.postTag.deleteMany();
+    await tx.post.deleteMany();
+    await tx.teamMember.deleteMany();
+    await tx.department.deleteMany();
+    await tx.partner.deleteMany();
+    await tx.advertisement.deleteMany();
+    await tx.publicSubmission.deleteMany();
+    await tx.newsletterSubscriber.deleteMany();
+    await tx.contactMessage.deleteMany();
+    await tx.story.deleteMany();
+    await tx.tag.deleteMany();
+    await tx.category.deleteMany({ where: { parentId: { not: null } } });
+    await tx.category.deleteMany();
+    await tx.setting.deleteMany();
+    await tx.siteConfig.deleteMany();
+    await tx.user.deleteMany();
+  });
 
-    const commonPassword = await bcrypt.hash('123456', 10);
+  const password = await bcrypt.hash(ADMIN_PASSWORD, 10);
+  await prisma.user.create({
+    data: {
+      name: "Admin",
+      email: ADMIN_EMAIL,
+      password,
+      role: "ADMIN",
+      status: "ACTIVE",
+    },
+  });
 
-    // 1. Create Default Admin
-    const admin = await prisma.user.upsert({
-        where: { email: 'news12@gmail.com' },
-        update: { password: commonPassword },
-        create: {
-            name: 'Super Admin',
-            email: 'news12@gmail.com',
-            password: commonPassword,
-            role: 'ADMIN',
-            status: 'ACTIVE',
-            bio: 'Chief editor and system administrator.',
-            avatar: 'https://i.pravatar.cc/150?u=admin'
-        }  
-    });
-    console.log("Admin ensured:", admin.email);
-
-    // 2. Create Sample Reporters
-    const authorsData = [
-        { name: 'Reporter One', email: 'reporter1@gmail.com', bio: 'Senior reporter for special projects.' },
-        { name: 'Reporter Two', email: 'reporter2@gmail.com', bio: 'Lifestyle and culture columnist.' },
-        { name: 'Ariful Islam', email: 'ariful@news.com', bio: 'Senior crime reporter with 10 years experience.' },
-        { name: 'Sultana Razia', email: 'razia@news.com', bio: 'Lifestyle and culture enthusiast.' },
-        { name: 'Kamal Ahmed', email: 'kamal@news.com', bio: 'Sports analyst and former athlete.' },
-        { name: 'Nasrin Akter', email: 'nasrin@news.com', bio: 'Economics correspondent focusing on local markets.' },
-        { name: 'Tanvir Hasan', email: 'tanvir@news.com', bio: 'Tech reviewer and gadget geek.' }
-    ];
-
-    for (const data of authorsData) {
-        const author = await prisma.user.upsert({
-            where: { email: data.email },
-            update: { password: commonPassword },
-            create: {
-                ...data,
-                password: commonPassword,
-                role: 'REPORTER',
-                status: 'ACTIVE',
-                avatar: `https://i.pravatar.cc/150?u=${data.email}`
-            }
-        });
-        console.log(`Reporter ensured: ${author.name} (${author.email})`);
-    }
-    
-    // 3. Create Basic Tags
-    const tags = [
-        { name: 'Breaking News', slug: 'breaking-news' },
-        { name: 'Hot News', slug: 'hot-news' },
-        { name: 'Exclusive', slug: 'exclusive' },
-        { name: 'Politics', slug: 'politics' },
-        { name: 'International', slug: 'international' }
-    ];
-
-    for (const tag of tags) {
-        await prisma.tag.upsert({
-            where: { slug: tag.slug },
-            update: {},
-            create: tag
-        });
-    }
-    console.log("Tags seeded.");
-
-    // 4. Create Categories
-    const categories = [
-        { name: 'General', slug: 'general' },
-        { name: 'Politics', slug: 'politics' },
-        { name: 'Sports', slug: 'sports' },
-        { name: 'Health', slug: 'health' }
-    ];
-
-    for (const cat of categories) {
-        await prisma.category.upsert({
-            where: { slug: cat.slug },
-            update: {},
-            create: cat
-        });
-    }
-    console.log("Categories seeded.");
+  console.log(`Seeded single admin: ${ADMIN_EMAIL} (password: ${ADMIN_PASSWORD})`);
 }
 
 main()
@@ -93,5 +47,4 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
-    console.log("Seeding completed successfully.");
   });

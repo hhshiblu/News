@@ -2,16 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+import { getApiV1Base } from "@/lib/apiBaseUrl";
+import { cookieStoreToHeader } from "@/lib/cookieHeader";
 
 async function authFetch(path, options = {}) {
   const cookieStore = await cookies();
-  return fetch(`${API_BASE}${path}`, {
+  return fetch(`${getApiV1Base()}${path}`, {
     ...options,
     headers: {
       ...(options.headers || {}),
-      Cookie: cookieStore.toString(),
+      Cookie: cookieStoreToHeader(cookieStore),
     },
     cache: "no-store",
   });
